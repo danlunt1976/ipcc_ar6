@@ -1,0 +1,66 @@
+#!/bin/ksh
+
+nmod=17
+mod_array=(CCSM4 CCSM4-UoT CCSM4-Utrecht CESM1.2 CESM2.0 COSMOS EC-Earth3.3 GISS-E2-1-G HadCM3 HadGEM3 IPSL-CM6A-LR IPSLCM5A IPSLCM5A2 MIROC4m MRI-CGCM2.3 NorESM-L NorESM1-F)
+
+ens_array=(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)
+
+for var in SST NearSurfaceTemperature ; do
+
+echo ${var}
+
+filelist_pi=''
+filelist_pl=''
+
+for mod in {0..$(( ${nmod} - 1 ))} ; do
+
+echo ${mod_array[${mod}]}
+
+thisexp_pi=DAN/${mod_array[${mod}]}/${mod_array[${mod}]}.E280.${var}.allmean.nc
+thisexp_pl=DAN/${mod_array[${mod}]}/${mod_array[${mod}]}.EOI400.${var}.allmean.nc
+
+if [ ${ens_array[${mod}]} -eq 1 ] ; then
+filelist_pi=${filelist_pi}${thisexp_pi}' '
+filelist_pl=${filelist_pl}${thisexp_pl}' '
+fi
+
+# create a zonal mean for each model
+cdo -b 32 -O sub ${thisexp_pl} ${thisexp_pi} mod_${mod_array[${mod}]}_${var}_pl-pi.nc
+cdo -b 32 -O zonavg mod_${mod_array[${mod}]}_${var}_pl-pi.nc mod_${mod_array[${mod}]}_pl-pi_${var}_zonavg.nc
+cdo -b 32 -O zonmean mod_${mod_array[${mod}]}_${var}_pl-pi.nc mod_${mod_array[${mod}]}_pl-pi_${var}_zonmean.nc
+
+#ncdump -h ${thisexp_pl} | grep long_name
+
+done
+
+echo 'models ensemble list is: '${filelist_pi}
+
+# create an ensemble mean PI, ensemble mean pliocene, and ensemble mean pliocene-PI. using ensmean.
+cdo -O ensmean ${filelist_pi} ensmean_pi_${var}.nc
+cdo -O ensmean ${filelist_pl} ensmean_pl_${var}.nc
+cdo -O sub ensmean_pl_${var}.nc ensmean_pi_${var}.nc ensmean_pl-pi_${var}.nc
+ncatted -a _FillValue,tos,m,f,'NaN' ensmean_pl-pi_${var}.nc
+
+# create an ensemble mean PI, ensemble mean pliocene, and ensemble mean pliocene-PI. using ensavg.
+cdo -O ensavg ${filelist_pi} ensavg_pi_${var}.nc
+cdo -O ensavg ${filelist_pl} ensavg_pl_${var}.nc
+cdo -O sub ensavg_pl_${var}.nc ensavg_pi_${var}.nc ensavg_pl-pi_${var}.nc
+
+# zonal mean of the ensemble mean.  using zonmean and zonavg.  from ensmean.
+cdo -O zonmean ensmean_pl-pi_${var}.nc ensmean_pl-pi_${var}_zonmean.nc 
+cdo -O zonavg ensmean_pl-pi_${var}.nc ensmean_pl-pi_${var}_zonavg.nc 
+
+#cdo setattribute,s@missing_value=NaN
+#cdo -setattribute,tas@units="K" infile outfile
+
+# zonal mean of the ensemble mean.  using zonmean and zonavg.  from ensavg.
+cdo -O zonmean ensavg_pl-pi_${var}.nc ensavg_pl-pi_${var}_zonmean.nc 
+cdo -O zonavg ensavg_pl-pi_${var}.nc ensavg_pl-pi_${var}_zonavg.nc 
+
+done
+
+
+
+
+
+exit

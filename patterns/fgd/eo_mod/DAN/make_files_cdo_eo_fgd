@@ -1,0 +1,284 @@
+#!/bin/bash
+
+gridfile=/home/bridge/ggdjl/ipcc_ar6/patterns/sod/pl_mod/DAN/IPSLCM5A/EOI400.SST.allmean.nc
+
+
+#for model in CESM1.2_CAM5-deepmip_stand_6xCO2 CESM1.2_CAM5-deepmip_sens_9xCO2 COSMOS-landveg_r2413-deepmip_sens_4xCO2 GFDL_CM2.1-deepmip_sens_4xCO2 GFDL_CM2.1-deepmip_stand_6xCO2 INM-CM4-8-deepmip_stand_6xCO2 NorESM1_F-deepmip_sens_4xCO2; do
+
+for model in CESM2.1slab_3x ; do
+
+cop_raw=1 # copy raw data from rawdata directory
+pro_raw=1 # process raw data
+rem_raw=1 # remove raw data
+pos_pro=1 # post-process data
+
+mkdir -p rawdata
+mkdir -p ${model}
+
+new_name=(tas tos tas tos)
+
+# -------------------------------
+
+
+
+if [ ${model} == 'CESM1.2_CAM5-deepmip_sens_9xCO2' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+CESM1.2_CAM5-piControl-tas-v1.0.mean.nc
+CESM1.2_CAM5-piControl-tos-v1.0.mean.nc
+CESM1.2_CAM5-deepmip_sens_9xCO2-tas-v1.0.mean.nc
+CESM1.2_CAM5-deepmip_sens_9xCO2-tos-v1.0.mean.nc
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(1 1 1 1)
+timname=(month month month month)
+fi
+
+if [ ${model} == 'CESM1.2_CAM5-deepmip_stand_6xCO2' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+CESM1.2_CAM5-piControl-tas-v1.0.mean.nc
+CESM1.2_CAM5-piControl-tos-v1.0.mean.nc
+CESM1.2_CAM5-deepmip_stand_6xCO2-tas-v1.0.mean.nc
+CESM1.2_CAM5-deepmip_stand_6xCO2-tos-v1.0.mean.nc
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(1 1 1 1)
+timname=(month month month month)
+fi
+
+if [ ${model} == 'COSMOS-landveg_r2413-deepmip_sens_4xCO2' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+COSMOS-landveg_r2413-piControl-tas-v1.0.mean.nc
+COSMOS-landveg_r2413-piControl-tos-v1.0.mean.nc
+COSMOS-landveg_r2413-deepmip_sens_4xCO2-tas-v1.0.mean.nc
+COSMOS-landveg_r2413-deepmip_sens_4xCO2-tos-v1.0.mean.nc
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(1 1 1 1)
+timname=(time time time time)
+fi
+
+if [ ${model} == 'GFDL_CM2.1-deepmip_sens_4xCO2' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+GFDL_CM2.1-piControl-tas-v1.0.mean.nc
+GFDL_CM2.1-piControl-tos-v1.0.mean.nc
+GFDL_CM2.1-deepmip_sens_4xCO2-tas-v1.0.mean.nc
+GFDL_CM2.1-deepmip_sens_4xCO2-tos-v1.0.mean.nc
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(1 1 1 1)
+timname=(time time time time)
+fi
+
+if [ ${model} == 'GFDL_CM2.1-deepmip_stand_6xCO2' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+GFDL_CM2.1-piControl-tas-v1.0.mean.nc
+GFDL_CM2.1-piControl-tos-v1.0.mean.nc
+GFDL_CM2.1-deepmip_stand_6xCO2-tas-v1.0.mean.nc
+GFDL_CM2.1-deepmip_stand_6xCO2-tos-v1.0.mean.nc
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(1 1 1 1)
+timname=(time time time time)
+fi
+
+if [ ${model} == 'INM-CM4-8-deepmip_stand_6xCO2' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+INM-CM4-8-piControl-tas-v1.0.mean.nc
+INM-CM4-8-piControl-tos-v1.0.mean.nc
+INM-CM4-8-deepmip_stand_6xCO2-tas-v1.0.mean.nc
+INM-CM4-8-deepmip_stand_6xCO2-tos-v1.0.mean.nc
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(1 1 1 1)
+timname=(time time time time)
+fi
+
+if [ ${model} == 'NorESM1_F-deepmip_sens_4xCO2' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+NorESM1_F-piControl-tas-v1.0.mean.nc
+NorESM1_F-piControl-tos-v1.0.mean.nc
+NorESM1_F-deepmip_sens_4xCO2-tas-v1.0.mean.nc
+NorESM1_F-deepmip_sens_4xCO2-tos-v1.0.mean.nc
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(1 1 1 1)
+timname=(time time time time)
+fi
+
+if [ ${model} == 'CESM2.1slab_3x' ] ; then
+remaptype=(remapbil remapbil remapbil remapnn)
+filein=(\
+b.e21.B1850.f09_g17.CMIP6-piControl.001.cam.h0.tas.1951-2000.climo.nc
+b.e21.B1850.f09_g17.CMIP6-piControl.001.pop.h.tos.1900-2000.climo.nc
+e.e21.E1850.f09_g17.PETM03x.02.cam.h0.tas.0041-0060.climo.nc
+e.e21.E1850.f09_g17.PETM03x.02.cice.h.tos.0041-0060.climo.nc
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(1 1 1 1)
+timname=(time time time time)
+fi
+
+# -------------------------------
+
+
+
+
+fileout=( \
+"${model}.preind.NearSurfaceTemperature.allmean.nc" \
+"${model}.preind.SST.allmean.nc" \
+"${model}.Eocene.NearSurfaceTemperature.allmean.nc" \
+"${model}.Eocene.SST.allmean.nc" \
+)
+
+my_start=0
+my_end=3
+for (( i=${my_start}; i<=${my_end}; i++ )) ; do
+
+if [ ${cop_raw} -eq 1 ] ; then
+\cp rawdata/${model}/${filein[${i}]} rawdata/
+fi
+
+if [ ${pro_raw} -eq 1 ] ; then
+
+if [ ${do_lev[${i}]} -eq 1 ] ; then
+cdo sellevidx,1 rawdata/${filein[${i}]} rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_mon[${i}]} -eq 1 ] ; then
+cdo seltimestep,${mon_time[${i}]} rawdata/${filein[${i}]} rawdata/tmp1.${i}.nc
+cdo timmean rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_mov[${i}]} -eq 1 ] ; then
+cdo seltimestep,${mov_time[${i}]} rawdata/${filein[${i}]} rawdata/tmp0.${i}.nc
+cdo timmean rawdata/tmp0.${i}.nc rawdata/tmp1.${i}.nc
+ncks -O -v ${old_name[${i}]} rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_exl[${i}]} -eq 1 ] ; then
+cdo sellevidx,1 rawdata/${filein[${i}]} rawdata/tmp1.${i}.nc
+cdo selvar,${exlname} rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_exv[${i}]} -eq 1 ] ; then
+cdo selvar,${exvname} rawdata/${filein[${i}]} rawdata/tmp0.${i}.nc
+cdo seltimestep,${mon_time[${i}]} rawdata/tmp0.${i}.nc rawdata/tmp1.${i}.nc
+cdo timmean rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_ser[${i}]} -eq 1 ] ; then
+cdo -O ensmean rawdata/${filein[${i}]} rawdata/tmp1.${i}.nc
+cdo timmean rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_att[${i}]} -eq 1 ] ; then
+cdo timmean rawdata/${filein[${i}]} rawdata/tmp0.${i}.nc
+ncatted -O -a units,latitude,a,c,'degrees_north' rawdata/tmp0.${i}.nc rawdata/tmp1.${i}.nc
+ncatted -O -a units,longitude,a,c,'degrees_east' rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_tim[${i}]} -eq 1 ] ; then
+ncwa -O -a ${timname[${i}]} rawdata/${filein[${i}]} rawdata/tmp2.${i}.nc
+fi
+
+cdo -O -${remaptype[${i}]},${gridfile} rawdata/tmp2.${i}.nc ${model}/${fileout[${i}]}
+
+fi # end pro_raw
+
+if [ ${pos_pro} -eq 1 ] ; then
+echo 'Working on: '${model}/${fileout[${i}]}
+ncks -O -v ${old_name[${i}]} ${model}/${fileout[${i}]} ${model}/${fileout[${i}]}
+if [ ${old_name[${i}]} != ${new_name[${i}]} ] ; then
+ncrename -O -v .${old_name[${i}]},${new_name[${i}]} ${model}/${fileout[${i}]}
+fi
+if [ ${do_off[${i}]} != 0 ] ; then
+\cp ${model}/${fileout[${i}]} rawdata/tmp3.${i}.nc
+cdo -O addc,${do_off[${i}]} rawdata/tmp3.${i}.nc ${model}/${fileout[${i}]}
+\rm -f rawdata/tmp3.${i}.nc
+fi
+fi
+
+if [ ${rem_raw} -eq 1 ] ; then
+\rm -f rawdata/${filein[${i}]}
+\rm -f rawdata/tmp0.${i}.nc
+\rm -f rawdata/tmp1.${i}.nc
+\rm -f rawdata/tmp2.${i}.nc
+fi
+
+done # end i loop
+
+done # end model loop
+
+
+exit

@@ -1,0 +1,90 @@
+#!/bin/ksh
+
+nmod=8
+mod_array=(CESM1.2_CAM5-deepmip_sens_9xCO2 GFDL_CM2.1-deepmip_stand_6xCO2 GFDL_CM2.1-deepmip_sens_4xCO2 CESM1.2_CAM5-deepmip_stand_6xCO2 INM-CM4-8-deepmip_stand_6xCO2 COSMOS-landveg_r2413-deepmip_sens_4xCO2 NorESM1_F-deepmip_sens_4xCO2 CESM2.1slab_3x)
+
+map_array=(0 1 1 1 1 1 0 0)
+zon_array=(0 1 1 1 1 1 0 0)
+all_array=(0 1 1 1 1 1 1 1)
+
+for var in SST NearSurfaceTemperature ; do
+
+filelist_pi_map=''
+filelist_eo_map=''
+filelist_pi_zon=''
+filelist_eo_zon=''
+filelist_pi_all=''
+filelist_eo_all=''
+
+for mod in {0..$(( ${nmod} - 1 ))} ; do
+
+echo ${mod_array[${mod}]}
+
+# create a zonal mean pi for all models:
+thisexp_pi_ini=DAN/${mod_array[${mod}]}/${mod_array[${mod}]}.preind.${var}.allmean.nc
+cdo -b 32 -O zonmean ${thisexp_pi_ini} tmp0.nc
+cdo enlarge,${thisexp_pi_ini} tmp0.nc DAN/${mod_array[${mod}]}/${mod_array[${mod}]}.preind.${var}.allmean_enlarge.nc
+\rm tmp0.nc
+
+thisexp_pi=DAN/${mod_array[${mod}]}/${mod_array[${mod}]}.preind.${var}.allmean_enlarge.nc
+thisexp_eo=DAN/${mod_array[${mod}]}/${mod_array[${mod}]}.Eocene.${var}.allmean.nc
+
+if [ ${map_array[${mod}]} -eq 1 ] ; then
+filelist_pi_map=${filelist_pi_map}${thisexp_pi}' '
+filelist_eo_map=${filelist_eo_map}${thisexp_eo}' '
+fi
+
+if [ ${zon_array[${mod}]} -eq 1 ] ; then
+filelist_pi_zon=${filelist_pi_zon}${thisexp_pi}' '
+filelist_eo_zon=${filelist_eo_zon}${thisexp_eo}' '
+fi
+
+if [ ${all_array[${mod}]} -eq 1 ] ; then
+filelist_pi_all=${filelist_pi_all}${thisexp_pi}' '
+filelist_eo_all=${filelist_eo_all}${thisexp_eo}' '
+fi
+
+# create a map anomaly for all models
+cdo -b 32 -O sub ${thisexp_eo} ${thisexp_pi} mod_${mod_array[${mod}]}_${var}_eo-pi.nc
+
+# create a zonal mean anomaly for all models
+cdo -b 32 -O zonavg mod_${mod_array[${mod}]}_${var}_eo-pi.nc mod_${mod_array[${mod}]}_eo-pi_${var}_zonavg.nc
+cdo -b 32 -O zonmean mod_${mod_array[${mod}]}_${var}_eo-pi.nc mod_${mod_array[${mod}]}_eo-pi_${var}_zonmean.nc
+
+#ncdump -h ${thisexp_eo} | grep long_name
+
+done
+
+# create an ensemble mean PI, ensemble mean Eocene, and ensemble mean Eocene-PI. using ensmean or ensavg.  map and models
+for fortype in map zon all ; do
+for enstype in ensmean ensavg ; do
+eval pivar=\$filelist_pi_${fortype}
+eval eovar=\$filelist_eo_${fortype}
+cdo -O ${enstype} ${pivar} ${enstype}_pi_${var}_for${fortype}.nc
+cdo -O ${enstype} ${eovar} ${enstype}_eo_${var}_for${fortype}.nc
+cdo -O sub ${enstype}_eo_${var}_for${fortype}.nc ${enstype}_pi_${var}_for${fortype}.nc ${enstype}_eo-pi_${var}_for${fortype}.nc
+#ncatted -a _FillValue,tos,m,f,'NaN' ensmean_eo-pi_${var}.nc
+done
+done
+
+
+
+# zonal mean of the ensemble mean.  using zonmean and zonavg.  from ensmean or ensavg.  map and models
+for fortype in map zon all ; do
+for enstype in ensmean ensavg ; do
+cdo -O zonmean ${enstype}_eo-pi_${var}_for${fortype}.nc ${enstype}_eo-pi_${var}_zonmean_for${fortype}.nc 
+cdo -O zonavg ${enstype}_eo-pi_${var}_for${fortype}.nc ${enstype}_eo-pi_${var}_zonavg_for${fortype}.nc 
+#cdo setattribute,s@missing_value=NaN
+#cdo -setattribute,tas@units="K" infile outfile
+done
+done
+
+
+
+
+
+done
+
+
+
+exit

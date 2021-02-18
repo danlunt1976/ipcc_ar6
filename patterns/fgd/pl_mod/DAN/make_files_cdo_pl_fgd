@@ -1,0 +1,464 @@
+#!/bin/bash
+
+gridfile=/home/bridge/ggdjl/ipcc_ar6/patterns/sod/pl_mod/DAN/IPSLCM5A/EOI400.SST.allmean.nc
+
+
+## To get GISS and IPSLCM6 data from ESGF:
+# https://esgf-index1.ceda.ac.uk/projects/esgf-ceda/
+# https://esgf-index1.ceda.ac.uk/search/cmip6-ceda/
+# Activity: PMIP
+# Experiment ID: midPliocene-eoi400
+# Institution ID: NASA-GISS
+# variable: tas,tos
+# List files
+
+#from pliomip database (use get_raw):
+#for model in IPSLCM5A IPSLCM5A2 COSMOS CCSM4 CESM1.2 CESM2.0 EC-Earth3.3 CCSM4-UoT CCSM4-Utrecht HadCM3 MIROC4m MRI-CGCM2.3 NorESM1-F NorESM-L HadGEM3 ; do
+#from esgf (use cop_raw):
+#for model in GISS-E2-1-G IPSL-CM6A-LR ; do
+
+for model in IPSL-CM6A-LR ; do
+
+get_raw=0 # download raw data from PlioMIP database
+cop_raw=0 # copy raw data from ESGF directory
+rem_raw=0 # remove raw data
+pro_raw=0 # process raw data
+pos_pro=1 # post-process data
+
+mkdir -p rawdata
+mkdir -p ${model}
+
+new_name=(tas tos tas tos)
+
+# -------------------------------
+
+if [ ${model} == 'IPSLCM5A' ] ; then
+dirin=(IPSLCM5A IPSLCM5A IPSLCM5A IPSLCM5A)
+filein=(\
+'PI.NearSurfaceTemp_tas_3600_3699_monthly_TS.nc' \
+'PI.SeasurfaceTemp_sst_3600_3699_monthly_TS.nc' \
+'Eoi400.NearSurfaceTemp_tas_3581_3680_monthly_TS.nc' \
+'Eoi400.Seasurfacetemp_sst_3581_3680_monthly_TS.nc' \
+)
+old_name=(tas sst tas sst)
+do_lev=(0 0 0 0)
+do_mon=(1 1 1 1)
+mon_time=(601/1200 601/1200 601/1200 601/1200)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'IPSLCM5A2' ] ; then
+dirin=(IPSLCM5A2 IPSLCM5A2 IPSLCM5A2 IPSLCM5A2)
+filein=(\
+'PI.NearSurfaceTemp_tas_6110_6209_monthly_TS.nc' \
+'PI.SeasurfaceTemp_sst_6110_6209_monthly_TS.nc' \
+'Eoi400.NearSurfaceTemp_tas_3381_3480_monthly_TS.nc' \
+'Eoi400.SeasurfaceTemp_sst_3381_3480_monthly_TS.nc' \
+)
+old_name=(tas sst t2m sst)
+do_lev=(0 0 0 0)
+do_mon=(1 1 1 1)
+mon_time=(601/1200 601/1200 601/1200 601/1200)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'COSMOS' ] ; then
+dirin=(AWI/COSMOS/E280 AWI/COSMOS/E280 AWI/COSMOS/Eoi400 AWI/COSMOS/Eoi400)
+filein=(\
+E280.tas_2650-2749_monthly_mean_time_series.nc \
+E280.tos_2650-2749_monthly_mean_time_series_remapbil.nc \
+Eoi400.tas_2650-2749_monthly_mean_time_series.nc \
+Eoi400.tos_2650-2749_monthly_mean_time_series_remapbil.nc \
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(1 1 1 1)
+mon_time=(601/1200 601/1200 601/1200 601/1200)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(273.15 0 273.15 0)
+fi
+
+if [ ${model} == 'CCSM4' ] ; then
+dirin=(NCAR NCAR NCAR NCAR)
+filein=(\
+b40.B1850.f09_g16.preind.cam.h0.TREFHT.0081.0180.nc \
+b40.B1850.f09_g16.preind.pop.h.TEMP.0081-0180.annavg.nc \
+b40.B1850.f09_g16.PMIP4-pliomip2.TREFHT.1001.1100.nc \
+b40.B1850.f09_g16.PMIP4-pliomip2.pop.h.TEMP.1001-1100.annavg.nc \
+)
+old_name=(TREFHT TEMP TREFHT TEMP)
+do_lev=(0 1 0 1)
+do_mon=(1 0 1 0)
+mon_time=(601/1200 x 601/1200 x)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'CESM1.2' ] ; then
+dirin=(NCAR NCAR NCAR NCAR)
+filein=(\
+b.e12.B1850.f09_g16.preind.cam.h0.TREFHT.0701.0800.nc \
+b.e12.B1850.f09_g16.preind.pop.h.TEMP.0707-0806.annavg.nc \
+b.e12.B1850.f09_g16.PMIP4-pliomip2.cam.h0.TREFHT.1101.1200.nc \
+b.e12.B1850.f09_g16.PMIP4-pliomip2.pop.h.TEMP.1100-1199.annavg.nc \
+)
+old_name=(TREFHT TEMP TREFHT TEMP)
+do_lev=(0 1 0 1)
+do_mon=(1 0 1 0)
+mon_time=(601/1200 x 601/1200 x)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'CESM2.0' ] ; then
+dirin=(NCAR NCAR NCAR NCAR)
+filein=(\
+b.e21.B1850.f09_g17.CMIP6-piControl.001.cam.h0.TREFHT.110001-120012.nc \
+b.e21.B1850.f09_g16.preind.pop.h.TEMP.1100-1200.annavg.nc \
+b.e21.B1850.f09_g17.PMIP4-midPliocene-eoi400.001.cam.h0.TREFHT.1101.1200.nc \
+b.e21.B1850.f09_g16.PMIP4-pliomip2.pop.h.TEMP.1100-1199.annavg.nc \
+)
+old_name=(TREFHT TEMP TREFHT TEMP)
+do_lev=(0 1 0 1)
+do_mon=(0 0 0 0)
+do_mov=(1 0 1 0)
+mov_time=(601/1200 x 601/1200 x)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'EC-Earth3.3' ] ; then
+dirin=(EC-Earth3.3 EC-Earth3.3 EC-Earth3.3 EC-Earth3.3)
+filein=(\
+EC-Earth3.3_PI_surface.nc \
+EC-Earth3.3_PI_T.S.mean.nc \
+EC-Earth3.3_mPlio_surface.nc \
+EC-Earth3.3_mPlio_T.S.mean.nc \
+)
+old_name=(tas thetao tas thetao)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(1 0 1 0)
+exvname='tas'
+mon_time=(601/1200 x 601/1200 x)
+do_exl=(0 1 0 1)
+exlname='thetao'
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'CCSM4-UoT' ] ; then
+dirin=(UofT/UofT-CCSM4/E280/Amon/native_grid UofT/UofT-CCSM4/for_julia/E280/Omon UofT/UofT-CCSM4/Eoi400/Amon/native_grid UofT/UofT-CCSM4/for_julia/Eoi400/Omon)
+filein=(\
+tas_Amon_UofT-CCSM4_piControl_r1i1p1f1_gn_150101-160012.nc \
+tos_Omon_E280_UofT-CCSM4_gr.nc \
+tas_Amon_UofT-CCSM4_midPliocene-eoi400_r1i1p1f1_gn_160101-170012.nc \
+tos_Omon_Eoi400_UofT-CCSM4_gr.nc \
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(1 1 1 1)
+mon_time=(601/1200 601/1200 601/1200 601/1200)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'CCSM4-Utrecht' ] ; then
+dirin=(Utrecht/CESM1.0.5/E280 Utrecht/CESM1.0.5/E280 Utrecht/CESM1.0.5/Eoi400 Utrecht/CESM1.0.5/Eoi400)
+filein=(\
+tas_Amon_CESM1.0.5_E280_r1i1p1f1_gn_275001-285012.nc \
+tos_Omon_CESM1.0.5_E280_r1i1p1f1_gn_275001-285012.nc \
+tas_Amon_CESM1.0.5_Eoi400_r1i1p1f1_gn_190001-200012.nc \
+tos_Omon_CESM1.0.5_Eoi400_r1i1p1f1_gn_190001-200012.nc \
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(1 1 1 1)
+mon_time=(601/1200 601/1200 601/1200 601/1200)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(273.15 0 273.15 0)
+fi
+
+if [ ${model} == 'HadCM3' ] ; then
+dirin=(LEEDS/HadCM3/e280/NearSurfaceTemperature LEEDS/HadCM3/e280/SST LEEDS/HadCM3/eoi400/NearSurfaceTemperature LEEDS/HadCM3/eoi400/SST)
+filein=(\
+e280.NearSurfaceTemperature.0[5-9]?.nc \
+e280.SST.0[5-9]?.nc \
+eoi400.NearSurfaceTemperature.0[5-9]?.nc \
+eoi400.SST.0[5-9]?.nc \
+)
+old_name=(temp temp temp temp)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(1 1 1 1)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'MIROC4m' ] ; then
+dirin=(MIROC4m/tas MIROC4m/tos MIROC4m/tas MIROC4m/tos)
+filein=(\
+MIROC4m_E280_Amon_tas.nc \
+MIROC4m_E280_Omon_tos.nc \
+MIROC4m_Eoi400_Amon_tas.nc \
+MIROC4m_Eoi400_Omon_tos.nc \
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(1 1 1 1)
+mon_time=(601/1200 601/1200 601/1200 601/1200)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(273.15 0 273.15 0)
+fi
+
+if [ ${model} == 'MRI-CGCM2.3' ] ; then
+dirin=(MRI-CGCM2.3/tas MRI-CGCM2.3/tos MRI-CGCM2.3/tas MRI-CGCM2.3/tos)
+filein=(\
+e280.tas.0[5-9]?.nc \
+e280.tos.0[5-9]?.nc \
+eoi400.tas.0[5-9]?.nc \
+eoi400.tos.0[5-9]?.nc \
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(1 1 1 1)
+do_att=(0 0 0 0)
+do_off=(273.15 0 273.15 0)
+fi
+
+if [ ${model} == 'NorESM1-F' ] ; then
+dirin=(NorESM1-F NorESM1-F NorESM1-F NorESM1-F)
+filein=(\
+NorESM1-F_E280_TREFHT.nc \
+NorESM1-F_E280_sst.nc \
+NorESM1-F_Eoi400_TREFHT.nc \
+NorESM1-F_Eoi400_sst.nc \
+)
+old_name=(TREFHT sst TREFHT sst)
+do_lev=(0 0 0 0)
+do_mon=(1 1 1 1)
+mon_time=(601/1200 601/1200 601/1200 601/1200)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'NorESM-L' ] ; then
+dirin=(NorESM-L NorESM-L NorESM-L NorESM-L)
+filein=(\
+NorESM-L_E280_TREFHT.nc \
+NorESM-L_E280_sst.nc \
+NorESM-L_Eoi400_TREFHT.nc \
+NorESM-L_Eoi400_sst.nc \
+)
+old_name=(TREFHT sst TREFHT sst)
+do_lev=(0 0 0 0)
+do_mon=(1 1 1 1)
+mon_time=(601/1200 601/1200 601/1200 601/1200)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'HadGEM3' ] ; then
+dirin=(HadGEM3_new/E280 HadGEM3_new/E280 HadGEM3_new/Eoi400 HadGEM3_new/Eoi400)
+filein=(\
+clims_hadgem3_pi_airtemp_final.nc \
+clims_hadgem3_pi_sst.nc \
+clims_hadgem3_pliocene_airtemp_final.nc \
+clims_hadgem3_pliocene_sst_final.nc \
+)
+old_name=(temp tos temp tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(1 1 1 1)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'GISS-E2-1-G' ] ; then
+dirin=(GISS-E2-1-G GISS-E2-1-G GISS-E2-1-G GISS-E2-1-G)
+filein=(\
+tas_Amon_GISS-E2-1-G_piControl_r1i1p1f1_gn_460101-465012.nc \
+tos_Omon_GISS-E2-1-G_piControl_r1i1p1f1_gn_460101-465012.nc \
+tas_Amon_GISS-E2-1-G_midPliocene-eoi400_r1i1p1f1_gn_310101-315012.nc \
+tos_Omon_GISS-E2-1-G_midPliocene-eoi400_r1i1p1f1_gn_310101-315012.nc \
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(1 1 1 1)
+mon_time=(1/600 1/600 1/600 1/600)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'IPSL-CM6A-LR' ] ; then
+dirin=(IPSL-CM6A-LR IPSL-CM6A-LR IPSL-CM6A-LR IPSL-CM6A-LR)
+filein=(\
+tas_Amon_IPSL-CM6A-LR_piControl_r1i1p1f1_gr_355001-384912.nc \
+tos_Omon_IPSL-CM6A-LR_piControl_r1i1p1f1_gn_355001-384912.nc \
+tas_Amon_IPSL-CM6A-LR_midPliocene-eoi400_r1i1p1f1_gr_185001-204912.nc \
+tos_Omon_IPSL-CM6A-LR_midPliocene-eoi400_r1i1p1f1_gn_185001-204912.nc \
+)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(1 1 1 1)
+mov_time=(3001/3600 3001/3600 1801/2400 1801/2400)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+# -------------------------------
+
+
+
+
+fileout=( \
+"${model}.E280.NearSurfaceTemperature.allmean.nc" \
+"${model}.E280.SST.allmean.nc" \
+"${model}.EOI400.NearSurfaceTemperature.allmean.nc" \
+"${model}.EOI400.SST.allmean.nc" \
+)
+
+for (( i=0; i<=3; i++ )) ; do
+
+if [ ${get_raw} -eq 1 ] ; then
+lftp sftp://pliomip2:Che4gooKu8@see-gw-01.leeds.ac.uk -e "lcd rawdata ; mget ${dirin[${i}]}/${filein[${i}]} ; bye"
+fi
+
+if [ ${cop_raw} -eq 1 ] ; then
+\cp rawdata/${model}/${filein[${i}]} rawdata/
+fi
+
+if [ ${pro_raw} -eq 1 ] ; then
+
+if [ ${do_lev[${i}]} -eq 1 ] ; then
+cdo sellevidx,1 rawdata/${filein[${i}]} rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_mon[${i}]} -eq 1 ] ; then
+cdo seltimestep,${mon_time[${i}]} rawdata/${filein[${i}]} rawdata/tmp1.${i}.nc
+cdo timmean rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_mov[${i}]} -eq 1 ] ; then
+cdo seltimestep,${mov_time[${i}]} rawdata/${filein[${i}]} rawdata/tmp0.${i}.nc
+cdo timmean rawdata/tmp0.${i}.nc rawdata/tmp1.${i}.nc
+ncks -O -v ${old_name[${i}]} rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_exl[${i}]} -eq 1 ] ; then
+cdo sellevidx,1 rawdata/${filein[${i}]} rawdata/tmp1.${i}.nc
+cdo selvar,${exlname} rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_exv[${i}]} -eq 1 ] ; then
+cdo selvar,${exvname} rawdata/${filein[${i}]} rawdata/tmp0.${i}.nc
+cdo seltimestep,${mon_time[${i}]} rawdata/tmp0.${i}.nc rawdata/tmp1.${i}.nc
+cdo timmean rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_ser[${i}]} -eq 1 ] ; then
+cdo -O ensmean rawdata/${filein[${i}]} rawdata/tmp1.${i}.nc
+cdo timmean rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_att[${i}]} -eq 1 ] ; then
+cdo timmean rawdata/${filein[${i}]} rawdata/tmp0.${i}.nc
+ncatted -O -a units,latitude,a,c,'degrees_north' rawdata/tmp0.${i}.nc rawdata/tmp1.${i}.nc
+ncatted -O -a units,longitude,a,c,'degrees_east' rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+cdo -remapbil,${gridfile} rawdata/tmp2.${i}.nc ${model}/${fileout[${i}]}
+
+fi # end pro_raw
+
+if [ ${pos_pro} -eq 1 ] ; then
+echo 'Working on: '${model}/${fileout[${i}]}
+ncks -O -v ${old_name[${i}]} ${model}/${fileout[${i}]} ${model}/${fileout[${i}]}
+if [ ${old_name[${i}]} != ${new_name[${i}]} ] ; then
+ncrename -O -v .${old_name[${i}]},${new_name[${i}]} ${model}/${fileout[${i}]}
+fi
+if [ ${do_off[${i}]} != 0 ] ; then
+\cp ${model}/${fileout[${i}]} rawdata/tmp3.${i}.nc
+cdo -O addc,${do_off[${i}]} rawdata/tmp3.${i}.nc ${model}/${fileout[${i}]}
+\rm -f rawdata/tmp3.${i}.nc
+fi
+fi
+
+if [ ${rem_raw} -eq 1 ] ; then
+\rm -f rawdata/${filein[${i}]}
+\rm -f rawdata/tmp0.${i}.nc
+\rm -f rawdata/tmp1.${i}.nc
+\rm -f rawdata/tmp2.${i}.nc
+fi
+
+done # end i loop
+
+done # end model loop
+
+
+exit

@@ -1,0 +1,359 @@
+#!/bin/bash
+
+gridfile=/home/bridge/ggdjl/ipcc_ar6/patterns/sod/pl_mod/DAN/IPSLCM5A/EOI400.SST.allmean.nc
+
+## To get data from ESGF:
+# https://esgf-index1.ceda.ac.uk/projects/esgf-ceda/
+# https://esgf-index1.ceda.ac.uk/search/cmip6-ceda/
+# Activity: PMIP
+# Experiment ID: ??
+# Institution ID: ??
+# variable: tas,tos
+# List files
+
+#for model in MIROC-ES2L MPI-ESM1-2-LR AWI-ESM-1-1-LR AWIESM1 AWIESM2 UofT-CCSM4 CESM1_2 CESM2_1 IPSLCM5A2 INM-CM4-8 ; do
+for model in IPSLCM5A2 ; do
+
+cop_raw=1 # copy raw data from ESGF directory
+pro_raw=1 # process raw data
+rem_raw=1 # remove raw data
+pos_pro=1 # post-process data
+
+mkdir -p rawdata
+mkdir -p ${model}
+
+new_name=(tas tos tas tos)
+
+# -------------------------------
+
+
+
+if [ ${model} == 'MIROC-ES2L' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+tas_Amon_MIROC-ES2L_piControl_r1i1p1f2_gn_225001-234912.nc \
+tos_Omon_MIROC-ES2L_piControl_r1i1p1f2_gn_225001-234912.nc \
+tas_Amon_MIROC-ES2L_lgm_r1i1p1f2_gn_320001-329912.nc \
+tos_Omon_MIROC-ES2L_lgm_r1i1p1f2_gn_320001-329912.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(1 1 1 1)
+mon_time=(601/1200 601/1200 601/1200 601/1200)
+do_mol=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+# N.B. 40 years
+if [ ${model} == 'MPI-ESM1-2-LR' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+tas_Amon_MPI-ESM1-2-LR_piControl_r1i1p1f1_gn_28*.nc \
+tos_Omon_MPI-ESM1-2-LR_piControl_r1i1p1f1_gn_28*.nc \
+tas_Amon_MPI-ESM1-2-LR_lgm_r1i1p1f1_gn_23*.nc \
+tos_Omon_MPI-ESM1-2-LR_lgm_r1i1p1f1_gn_23*.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mol=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(1 1 1 1)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+
+if [ ${model} == 'AWI-ESM-1-1-LR' ] ; then
+remaptype=(remapbil remaplaf remapbil remaplaf)
+filein=(\
+tas_Amon_AWI-ESM-1-1-LR_piControl_r1i1p1f1_gn_19[0-4]*.nc \
+tos_Omon_AWI-ESM-1-1-LR_piControl_r1i1p1f1_gn_19[0-4]*.nc \
+tas_Amon_AWI-ESM-1-1-LR_lgm_r1i1p1f1_gn_39[5-9]*.nc \
+tos_Omon_AWI-ESM-1-1-LR_lgm_r1i1p1f1_gn_39[5-9]*.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mol=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(1 1 1 1)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+
+if [ ${model} == 'AWIESM1' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+surface_air_temperature_PI_AWIESM1.nc \
+sea_surface_temperature_PI_AWIESM1.nc \
+surface_air_temperature_LGM_AWIESM1.nc \
+sea_surface_temperature_LGM_AWIESM1.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tsurf tos tsurf tos)
+do_lev=(0 0 0 0)
+do_mon=(1 0 1 0)
+mon_time=(601/1200 XX 601/1200 XX)
+do_mol=(0 1 0 1)
+mol_time=(XX 601/1200 XX 601/1200)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+
+if [ ${model} == 'AWIESM2' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+surface_air_temperature_PI_AWIESM2.nc \
+sea_surface_temperature_PI_AWIESM2.nc \
+surface_air_temperature_LGM_AWIESM2.nc \
+sea_surface_temperature_LGM_AWIESM2.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tsurf sst tsurf sst)
+do_lev=(0 0 0 0)
+do_mon=(1 0 1 0)
+mon_time=(601/1200 XX 601/1200 XX)
+do_mol=(0 1 0 1)
+mol_time=(XX 601/1200 XX 601/1200)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+
+if [ ${model} == 'UofT-CCSM4' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+tas_Amon_UofT-CCSM4_piControl_r1i1p1f1_gn_460101-470012.nc \
+tos_Omon_UofT-CCSM4_piControl_r1i1p1f1_gr1_460101-470012.nc \
+tas_Amon_UofT-CCSM4_lgm_r1i1p1f1_gn_110101-120012.nc \
+tos_Omon_UofT-CCSM4_lgm_r1i1p1f1_gr1_110101-120012.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(1 1 1 1)
+mon_time=(601/1200 601/1200 601/1200 601/1200)
+do_mol=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+
+if [ ${model} == 'CESM1_2' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+b.e12.B1850C5.f19_g16.iPI.01.cam.h0.tas.080101-090012.nc \
+b.e12.B1850C5.f19_g16.iPI.01.pop.h.tos.080101-090012.1x1d.nc \
+b.e12.B1850C5.f19_g16.i21ka.03.cam.h0.tas.080101-090012.nc \
+b.e12.B1850C5.f19_g16.i21ka.03.pop.h.tos.080101-090012.1x1d.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mol=(0 0 0 0)
+do_mov=(1 1 1 1)
+mov_time=(601/1200 601/1200 601/1200 601/1200)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 -273.15 0 -273.15)
+fi
+
+
+if [ ${model} == 'CESM2_1' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+b.e21.B1850CLM50SP.f09_g17.PI.01.cam.h0.tas.0251-0300.climo.nc \
+b.e21.B1850CLM50SP.f09_g17.PI.01.pop.h.tos.0251-0300.climo.nc \
+b.e21.B1850CLM50SP.f09_g17.21ka.01.cam.h0.tas.0451-0500.climo.nc \
+b.e21.B1850CLM50SP.f09_g17.21ka.01.pop.h.tos.0451-0500.climo.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mol=(0 0 0 0)
+do_mov=(1 1 1 1)
+mov_time=(1/12 1/12 1/12 1/12)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+
+if [ ${model} == 'IPSLCM5A2' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+c32.8.60g_SE_5880_5979_1M_histmth_PI_IPSLCM5A2_100yrs_selected_vars.nc \
+X \
+lgm5a2P3_SE_3200_3299_1M_histmth_selectedvars_tas_moclim.nc \
+tos_ipslcm5a2_lgm_degC.nc \
+)
+do_var=(1 0 1 1)
+old_name=(t2m X tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mol=(0 0 0 0)
+do_mov=(1 X 1 1)
+mov_time=(1/12 X 1/12 1/12)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+
+if [ ${model} == 'INM-CM4-8' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+tas_Amon_INM-CM4-8_piControl_r1i1p1f1_gr1_226401-236312.nc \
+tos_Omon_INM-CM4-8_piControl_r1i1p1f1_gr1_231401-236312.nc \
+tas_Amon_INM-CM4-8_lgm_r1i1p1f1_gr1_200001-209912.nc \
+tos_Omon_INM-CM4-8_lgm_r1i1p1f1_gr1_205001-209912.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mol=(0 0 0 0)
+do_mov=(1 1 1 1)
+mov_time=(601/1200 1/600 601/1200 1/600)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+# -------------------------------
+
+
+
+
+fileout=( \
+"${model}.PI.NearSurfaceTemperature.allmean.nc" \
+"${model}.PI.SST.allmean.nc" \
+"${model}.LGM.NearSurfaceTemperature.allmean.nc" \
+"${model}.LGM.SST.allmean.nc" \
+)
+
+my_start=0
+my_end=3
+for (( i=${my_start}; i<=${my_end}; i++ )) ; do
+
+if [ ${do_var[${i}]} -eq 1 ] ; then
+
+if [ ${cop_raw} -eq 1 ] ; then
+\cp rawdata/${model}/${filein[${i}]} rawdata/
+fi
+
+if [ ${pro_raw} -eq 1 ] ; then
+
+if [ ${do_lev[${i}]} -eq 1 ] ; then
+cdo sellevidx,1 rawdata/${filein[${i}]} rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_mon[${i}]} -eq 1 ] ; then
+cdo seltimestep,${mon_time[${i}]} rawdata/${filein[${i}]} rawdata/tmp1.${i}.nc
+cdo timmean rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_mol[${i}]} -eq 1 ] ; then
+ncatted -O -a CDI_grid_type,tos,d,, rawdata/${filein[${i}]} rawdata/tmp1.${i}.nc
+cdo seltimestep,${mol_time[${i}]} rawdata/tmp1.${i}.nc rawdata/tmp3.${i}.nc
+cdo timmean rawdata/tmp3.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_mov[${i}]} -eq 1 ] ; then
+cdo seltimestep,${mov_time[${i}]} rawdata/${filein[${i}]} rawdata/tmp0.${i}.nc
+cdo timmean rawdata/tmp0.${i}.nc rawdata/tmp1.${i}.nc
+ncks -O -v ${old_name[${i}]} rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_exl[${i}]} -eq 1 ] ; then
+cdo sellevidx,1 rawdata/${filein[${i}]} rawdata/tmp1.${i}.nc
+cdo selvar,${exlname} rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_exv[${i}]} -eq 1 ] ; then
+cdo selvar,${exvname} rawdata/${filein[${i}]} rawdata/tmp0.${i}.nc
+cdo seltimestep,${mon_time[${i}]} rawdata/tmp0.${i}.nc rawdata/tmp1.${i}.nc
+cdo timmean rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_ser[${i}]} -eq 1 ] ; then
+cdo -O ensmean rawdata/${filein[${i}]} rawdata/tmp1.${i}.nc
+cdo timmean rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_att[${i}]} -eq 1 ] ; then
+cdo timmean rawdata/${filein[${i}]} rawdata/tmp0.${i}.nc
+ncatted -O -a units,latitude,a,c,'degrees_north' rawdata/tmp0.${i}.nc rawdata/tmp1.${i}.nc
+ncatted -O -a units,longitude,a,c,'degrees_east' rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+cdo -${remaptype[${i}]},${gridfile} rawdata/tmp2.${i}.nc ${model}/${fileout[${i}]}
+
+fi # end pro_raw
+
+if [ ${pos_pro} -eq 1 ] ; then
+echo 'Working on: '${model}/${fileout[${i}]}
+ncks -O -v ${old_name[${i}]} ${model}/${fileout[${i}]} ${model}/${fileout[${i}]}
+if [ ${old_name[${i}]} != ${new_name[${i}]} ] ; then
+ncrename -O -v .${old_name[${i}]},${new_name[${i}]} ${model}/${fileout[${i}]}
+fi
+if [ ${do_off[${i}]} != 0 ] ; then
+\cp ${model}/${fileout[${i}]} rawdata/tmp3.${i}.nc
+cdo -O addc,${do_off[${i}]} rawdata/tmp3.${i}.nc ${model}/${fileout[${i}]}
+\rm -f rawdata/tmp3.${i}.nc
+fi
+fi
+
+if [ ${rem_raw} -eq 1 ] ; then
+\rm -f rawdata/${filein[${i}]}
+\rm -f rawdata/tmp0.${i}.nc
+\rm -f rawdata/tmp1.${i}.nc
+\rm -f rawdata/tmp2.${i}.nc
+\rm -f rawdata/tmp3.${i}.nc
+fi
+
+fi # end do_var
+
+done # end i loop
+
+done # end model loop
+
+
+exit
