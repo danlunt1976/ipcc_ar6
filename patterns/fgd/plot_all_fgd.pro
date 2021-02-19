@@ -17,10 +17,11 @@ make_map_plots=0
 make_map_mod_plots=0
 make_gmt_plots=1
 
-make_pdf=0
+make_pdf=1
 make_png=0
 
 do_checks=0
+do_tcheck=0
 do_mod_leg=0
 plot_names_gmt=0
 make_nodata=0
@@ -2091,11 +2092,16 @@ ncdf_close,id1
 
 ; 0 -> 1850 ; 165 -> 2015
 ; Thorsten's email says he used:
-; post-1975:   1975-1985 vs. 2005-2014
 ; historical:  1850-1900 vs. 2000-2014
+; post-1975:   1975-1985 vs. 2005-2014
+;def_hi=[1850,1900,2000,2014]
+;def_pn=[1975,1985,2005,2014]
+; But now we use:
+def_hi=[1850,1900,2005,2014]
+def_pn=[1975,1984,2005,2014]
 bb=1850
-modh_gmt_flex(m,3,0)=mean(dummy(2005-bb:2014-bb))-mean(dummy(1850-bb:1899-bb))
-modh_gmt_flex(m,4,0)=mean(dummy(2005-bb:2014-bb))-mean(dummy(1975-bb:1984-bb))
+modh_gmt_flex(m,3,0)=mean(dummy(def_hi(2)-bb:def_hi(3)-bb))-mean(dummy(def_hi(0)-bb:def_hi(1)-bb))
+modh_gmt_flex(m,4,0)=mean(dummy(def_pn(2)-bb:def_pn(3)-bb))-mean(dummy(def_pn(0)-bb:def_pn(1)-bb))
 
 endif else begin
 print,'No file'
@@ -2103,6 +2109,35 @@ endelse
 
 endfor
 
+; Now read in observed temperatures from Peter Thorne's spreadsheet
+
+do_blend=0
+if (do_blend eq 1) then begin
+read_hi=19 ; blended
+endif else begin
+read_hi=15 ; Cowton+Way
+endelse
+nrows_d=171
+hi_year=intarr(nrows_d)
+hi_temp=fltarr(nrows_d)
+row_head=strarr(2)
+row_temp=strarr(1)
+close,2
+openr,2,'/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/hi_data/AR6_FGD_assessment_time_series-GMST_and_GSAT_ipcc.csv'
+print,'STARTING READ THISTORICAL'
+readf,2,row_head
+for i=0,nrows_d-1 do begin
+readf,2,row_temp
+data_row=strsplit(row_temp,',',/extract,/preserve_null)
+hi_year(i)=data_row(0)
+hi_temp(i)=data_row(read_hi)
+endfor
+close,2
+
+print,'blended years:'
+print,hi_year
+print,'blended temps:'
+print,hi_temp
 
 
 ; Now read in Thorsten's ECS:
@@ -2149,7 +2184,15 @@ ass_vlik(0:2,0)=[2.5,-7,10]
 ass_vlik(0:2,1)=[4.0,-5,18]
 ass_c(0:2)=0.5*(ass_vlik(0:2,0)+ass_vlik(0:2,1))
 
-ass_c(3:4)=[0.86335,0.53187]
+
+; These numbers come from Thorsten's email.
+ass_ct=ass_c
+ass_ct(3:4)=[0.86335,0.53187]
+ass_c(3:4)=[mean( hi_temp( where(hi_year ge def_hi(2) and hi_year le def_hi(3))))- $
+            mean( hi_temp( where(hi_year ge def_hi(0) and hi_year le def_hi(1)))), $
+            mean( hi_temp( where(hi_year ge def_pn(2) and hi_year le def_pn(3))))- $
+            mean( hi_temp( where(hi_year ge def_pn(0) and hi_year le def_pn(1))))]
+
 ass_s(3:4)=[0.2,0.15]
 ass_vlik(3:4,0)=ass_c(3:4)-ass_s(3:4)
 ass_vlik(3:4,1)=ass_c(3:4)+ass_s(3:4)
@@ -2273,12 +2316,16 @@ endif
 
 
 ; plot likely range
+tvlct,r_0,g_0,b_0
 oplot,[my_xposp(xx),my_xposp(xx)],[ass_vlik(t,0),ass_vlik(t,1)],thick=obs_thick
 oplot,[my_xposp(xx)-my_del2,my_xposp(xx)+my_del2],[ass_vlik(t,0),ass_vlik(t,0)],thick=obs_thick
 oplot,[my_xposp(xx)-my_del2,my_xposp(xx)+my_del2],[ass_vlik(t,1),ass_vlik(t,1)],thick=obs_thick
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
 if (do_dots eq 1) then begin
 plots,my_xposp(xx),ass_c(t),psym=8,symsize=my_siz(g)
+if (do_tcheck=1) then begin
+plots,my_xposp(xx),ass_ct(t),psym=8,symsize=my_siz(g)/2.0,color=50 ; plot check to see original Thorste data
+endif
 endif
 
 for p=0,1 do begin
@@ -2319,8 +2366,11 @@ endif
 
 if (p eq 1) then begin
 USERSYM, COS(Aaa), SIN(Aaa)
-;plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g),color=0,thick=my_thick,NOCLIP= 0
-plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g)/2.0,color=0,NOCLIP = 0
+;plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g),color=0,thick=my_thick,NOCLIP=
+;0 ; for extra blak circle around model points
+if (do_tcheck eq 1) then begin
+plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g)/2.0,color=0,NOCLIP = 0 ; plot thorsten's original model output
+endif
 
 if (plot_names_gmt eq 1) then begin
 xyouts,my_xposm(xx)+0.1+my_delt,modh_gmt_flex(m,t,0),modnamesh(t,m),size=0.5
