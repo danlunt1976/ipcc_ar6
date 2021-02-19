@@ -12,12 +12,12 @@ pro pa
 ;;;;;;;;;;
 read_mod=1
 read_proxy=1
-make_zon_plots=1
+make_zon_plots=0
 make_map_plots=0
 make_map_mod_plots=0
-make_gmt_plots=0
+make_gmt_plots=1
 
-make_pdf=1
+make_pdf=0
 make_png=0
 
 do_checks=0
@@ -2037,6 +2037,9 @@ nmodmaxh=max(nmodh)
 modh_gmt=fltarr(nmodmaxh,ntimeh,nvar)
 modh_gmt(0:nmodmax-1,0:2,0:1)=mod_gmt(*,*,*)
 
+modh_gmt_flex=fltarr(nmodmaxh,ntimeh,nvar)
+modh_gmt_flex(0:nmodmax-1,0:2,0:1)=mod_gmt(*,*,*)
+
 modnamesh=strarr(ntimeh,nmodmaxh)
 modnamesh(0:2,0:nmodmax-1)=modnames(*,*)
 modnamesh(3,0:nmodh(3)-1)=['ACCESS-CM2','ACCESS-ESM1-5','AWI-CM-1-1-MR','BCC-CSM2-MR','BCC-ESM1','CAMS-CSM1-0','CAS-ESM2-0','CESM2','CESM2-FV2','CESM2-WACCM','CESM2-WACCM-FV2','CMCC-CM2-SR5','CNRM-CM6-1','CNRM-CM6-1-HR','CNRM-ESM2-1','CanESM5','E3SM-1-0','EC-Earth3-Veg','FGOALS-f3-L','FGOALS-g3','GISS-E2-1-G','GISS-E2-1-H','HadGEM3-GC31-LL','HadGEM3-GC31-MM','INM-CM4-8','INM-CM5-0','IPSL-CM6A-LR','KACE-1-0-G','MCM-UA-1-0','MIROC-ES2L','MIROC6','MPI-ESM-1-2-HAM','MPI-ESM1-2-HR','MPI-ESM1-2-LR','MRI-ESM2-0','NESM3','NorCPM1','NorESM2-LM','NorESM2-MM','SAM0-UNICON','TaiESM1','UKESM1-0-LL']
@@ -2073,6 +2076,34 @@ endelse
 
 endfor
 endfor
+
+; Now read in Thorsten's absolutes:
+h=3
+for m=0,nmodh(h)-1 do begin
+print,m
+if (existh(h,m) eq 1) then begin
+print,modnamesh(h,m)
+filenamex='hi_mod/Historical_warming_vs_ECS/CMIP6_means/tas_'+modnamesh(h,m)+'_historical.nc'
+print,filenamex
+id1=ncdf_open(filenamex)
+ncdf_varget,id1,'tas',dummy
+ncdf_close,id1
+
+; 0 -> 1850 ; 165 -> 2015
+; Thorsten's email says he used:
+; post-1975:   1975-1985 vs. 2005-2014
+; historical:  1850-1900 vs. 2000-2014
+bb=1850
+modh_gmt_flex(m,3,0)=mean(dummy(2005-bb:2014-bb))-mean(dummy(1850-bb:1899-bb))
+modh_gmt_flex(m,4,0)=mean(dummy(2005-bb:2014-bb))-mean(dummy(1975-bb:1984-bb))
+
+endif else begin
+print,'No file'
+endelse
+
+endfor
+
+
 
 ; Now read in Thorsten's ECS:
 
@@ -2148,7 +2179,7 @@ tvlct,r_39,g_39,b_39
 
 ngmt=5
 gmtname=strarr(ngmt)
-gmtname(*)=['a','b','c','d','e']
+gmtname(*)=['a','b','c','d','e'] ; e is the current "best"
 my_siz=fltarr(ngmt)
 my_siz(*)=[0.5,2,2,2,2]
 my_xsize=fltarr(ngmt)
@@ -2283,14 +2314,16 @@ endif
 
 if (p eq 0) then begin
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
-plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g),color=my_col,NOCLIP = 0
+plots,my_xposm(xx)+my_delt,modh_gmt_flex(m,t,0),psym=my_sym,symsize=my_siz(g),color=my_col,NOCLIP = 0
 endif
 
 if (p eq 1) then begin
 USERSYM, COS(Aaa), SIN(Aaa)
-;plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g),color=0,thick=my_thick,NOCLIP = 0
+;plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g),color=0,thick=my_thick,NOCLIP= 0
+plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g)/2.0,color=0,NOCLIP = 0
+
 if (plot_names_gmt eq 1) then begin
-xyouts,my_xposm(xx)+0.1+my_delt,modh_gmt(m,t,0),modnamesh(t,m),size=0.5
+xyouts,my_xposm(xx)+0.1+my_delt,modh_gmt_flex(m,t,0),modnamesh(t,m),size=0.5
 endif
 endif
 
