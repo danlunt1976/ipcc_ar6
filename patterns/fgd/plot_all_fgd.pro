@@ -2323,7 +2323,7 @@ oplot,[my_xposp(xx)-my_del2,my_xposp(xx)+my_del2],[ass_vlik(t,1),ass_vlik(t,1)],
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
 if (do_dots eq 1) then begin
 plots,my_xposp(xx),ass_c(t),psym=8,symsize=my_siz(g)
-if (do_tcheck=1) then begin
+if (do_tcheck eq 1) then begin
 plots,my_xposp(xx),ass_ct(t),psym=8,symsize=my_siz(g)/2.0,color=50 ; plot check to see original Thorste data
 endif
 endif
