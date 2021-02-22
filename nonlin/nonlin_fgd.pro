@@ -2,6 +2,8 @@ pro nl
 
 ; TO DO:
 ; differentiate g-ig from pre-quat?
+; check all values
+; include etminan forcing
 
 forcing=3.7
 
