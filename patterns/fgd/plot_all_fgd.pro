@@ -4,10 +4,15 @@ pro pa
 ;;;;;;;;;;
 read_mod=1
 read_proxy=1
-make_zon_plots=1
+make_zon_plots=1 ; plot zonal mean ensemble mean [default=0 or 1]
+make_map_plots=1 ; plot maps ensemble mean [default=0 or 1]
+make_map_mod_plots=0 ; plot maps of each individual model [default=0]
+make_gmt_plots=0 ; plot gmst [default=0 or 1]
+
+if (make_gmt_plots eq 1) then begin
 make_map_plots=0
-make_map_mod_plots=0
-make_gmt_plots=0
+endif
+
 
 make_pdf=0
 make_png=0
@@ -55,7 +60,7 @@ ntime=3
 timnames=strarr(ntime)
 timnames(0:ntime-1)=['pl','lg','eo']
 timnameslong=strarr(ntime)
-timnameslong(0:ntime-1)=['Pliocene','LGM','Eocene']
+timnameslong(0:ntime-1)=['MPWP','LGM','EECO']
 
 mipnames=strarr(ntime)
 mipnames(0:ntime-1)=['PlioMIP','PMIP4','DeepMIP']
