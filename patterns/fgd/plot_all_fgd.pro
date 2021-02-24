@@ -1,31 +1,23 @@
-;;;;;;;;;;
-; TO DO
-
-; check consistency with Julia's figure
-; check consistency with Masa's figure
-
-;;;;;;;;;;
-
 pro pa
 
 ;;;;;;;;;;
 ;;;;;;;;;;
 read_mod=1
 read_proxy=1
-make_zon_plots=0
+make_zon_plots=1
 make_map_plots=0
 make_map_mod_plots=0
-make_gmt_plots=1
+make_gmt_plots=0
 
-make_pdf=1
+make_pdf=0
 make_png=0
 
-do_checks=0
-do_tcheck=0
-do_mod_leg=0
-plot_names_gmt=0
-make_nodata=0
-do_dots=1
+do_checks=0 ; plot extra lines on zonal mean plots [default=0]
+do_tcheck=0 ; plot old and new values of historical obs [default=0]
+do_mod_leg=0 ; plot model names on model zonal mean lines [default=0]
+plot_names_gmt=0 ; plot model names on gmst plot [default=0]
+make_nodata=0 ; plot maps without data [default=0]
+do_dots=1 ; plot circles at centre of assessed obs of GMST [default=1]
 
 ;;;;;;;;;;
 ;;;;;;;;;;
@@ -892,13 +884,21 @@ endif
 
 ; Now read in Jess's uncertainties
 
+; for old or new data (change in site 609)
+jess_file='new'
+;jess_file='orig'
+
 ; first mg/ca
 n_j1=12
 row_temp=strarr(1)
 close,2
-openr,2,'/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/pl_data/PlioVar_mgca_orig_unix_erin.csv'
+openr,2,'/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/pl_data/PlioVar_mgca_'+jess_file+'_unix_erin.csv'
 print,'STARTING READ Jess'
 print,'mg/ca'
+; file created by manually removing ^M symbols (dos2unix didn't
+; work...), and then changing names of sites to match those in
+; Pangaea: odp131 -> u1313 ; odp603 -> dsdp603 ; remove odp590 ; added
+; comment on 603
 
 names_j1=strarr(n_j1)
 lats_j1=fltarr(n_j1)
