@@ -1,20 +1,24 @@
 pro pa
 
 ;;;;;;;;;;
-;;;;;;;;;;
 read_mod=1
 read_proxy=1
-make_zon_plots=1 ; plot zonal mean ensemble mean [default=0 or 1]
-make_map_plots=1 ; plot maps ensemble mean [default=0 or 1]
+make_zon_plots=0 ; plot zonal mean ensemble mean [default=0 or 1]
+make_map_plots=0 ; plot maps ensemble mean [default=0 or 1]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
-make_gmt_plots=0 ; plot gmst [default=0 or 1]
+make_gmt_plots=1 ; plot gmst [default=0 or 1]
+;;;;;;;;;;
 
+;;;;;;;;;;
+; becasue IDL default plot sizes get overwritten when using met-idl
+; routines, and I can't figure out how to re-set them. 
 if (make_gmt_plots eq 1) then begin
 make_map_plots=0
 endif
+;;;;;;;;;;
 
 
-make_pdf=0
+make_pdf=1
 make_png=0
 
 do_checks=0 ; plot extra lines on zonal mean plots [default=0]
