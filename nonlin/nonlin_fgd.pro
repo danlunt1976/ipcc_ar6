@@ -7,8 +7,8 @@ pro nl
 
 forcing=3.7
 
-make_pdf=1
-make_png=1
+make_pdf=0
+make_png=0
 make_eps=1
 
 npp=3
@@ -18,6 +18,7 @@ plot_uncert=1
 do_ass=intarr(npp)
 do_ass(0:npp-1)=[0,0,1]
 plot_range=0
+horiz_ass=1
 
 ; plot limits
 xmin=-10
@@ -25,7 +26,7 @@ xmax=26
 ymax=0
 ymin=-2.3
 
-; for IPCC assessed range (table 7.10)
+; for IPCC assessed range (table 7.10) and table 7.13
 l_ass=[-1.54,-0.78]
 vl_ass=[-1.81,-0.51]
 t_ass=[0,3]
@@ -452,13 +453,16 @@ data_l_s(0:data_n(xx)-1,xx)=[0.5*(1.0/1.45-1.0/0.93),0.5*(1.0/2.45-1.0/1.66)]
 
 
 ; Snyder (2019)
-; Section 4 gives best estimate of 0.84 and 67% range of 0.69 to 1.0
-; Section 3 gives 0.53 for glacial climates
-; figure 4a; range is 0 to -3.5 for non-glacial and -7 to -3.5 for glacial
+; Section 4 gives best interglacial estimate of 0.84 and 67% range of 0.69 to 1.0
+; [95% range 0.2 to 1.9]
+; Section 3 gives 0.53 for glacial climates [67% range not given; assume same as interglacial]
+; [95% range 0.08 to 1.5]
+; figure 4a; temp range is 0 to -3.5 for non-glacial and -7 to -3.5 for glacial
 xx=14
 data_t(0:data_n(xx)-1,xx)=[0.5*(-7-3.5),0.5*(0-3.5)]
 data_t_s(0:data_n(xx)-1,xx)=[1,1]
 data_l(0:data_n(xx)-1,xx)=[-1.0/0.53,-1.0/0.84]
+data_l_s(0:data_n(xx)-1,xx)=[0.5*(1.0/0.69-1.0/1.0),0.5*(1.0/0.69-1.0/1.0)]
 
 
 ; Duan (2019)
@@ -480,14 +484,14 @@ data_l_r(0:data_n(xx)-1,xx)=[-0.81,-0.9,-0.95,-0.97]
 ; Their Supp info, part 2. 
 ; Table of ECS and time.  
 ; Take EECO (as defined by Hollis, 49.14 to 53.26).  Mean ECS gives
-; 4.5, +- 1 s.d. gives 3.6 to 5.4  Mean temp gives 28.8
+; 4.5, +- 1 s.d. gives 3.6 to 5.4  Mean temp gives 28.8, stdev temp gives 2.55
 ; Take late Eocene (41.2 to 33.9).  Mean ECS gives 3.0, 
-;   +- 1s.d. gives 1.9 to 4.1   Mean temp gives 22.2
+;   +- 1s.d. gives 1.9 to 4.1   Mean temp gives 22.2, stdev temp gives 0.64
 xx=16
 data_t(0:data_n(xx)-1,xx)=[22.2,28.8]-14.0
+data_t_s(0:data_n(xx)-1,xx)=[2.55,0.64]
 data_l(0:data_n(xx)-1,xx)=-1*forcing*[1/3.0,1/4.5]
-
-
+data_l_s(0:data_n(xx)-1,xx)=forcing*[0.5*(1.0/1.9-1.0/4.1),0.5*(1.0/3.6-1.0/5.4)]
 
 ; NOW THE PLOTS
 
@@ -560,9 +564,21 @@ axis,yaxis=1,color=0,yrange=[ymin,ymax],ystyle=1
 axis,yaxis=0,color=0,yrange=[ymin,ymax],ystyle=1
 
 tvlct,col_all(*,0,1),col_all(*,1,1),col_all(*,2,1)
-arrow,23,vl_ass(0),23,vl_ass(1),/data,/solid,color=101,hsize=!D.X_SIZE / 128.
-arrow,23,vl_ass(1),23,vl_ass(0),/data,/solid,color=101,hsize=!D.X_SIZE / 128.
-xyouts,24,0.5*(vl_ass(0)+vl_ass(1)),'assessed very likely range of '+greekLetter,orientation=90,alignment=0.5,charsize=0.8,color=101
+
+if (horiz_ass eq 0) then begin
+lpos=23
+arrow,lpos,vl_ass(0),lpos,vl_ass(1),/data,/solid,color=101,hsize=!D.X_SIZE / 128.
+arrow,lpos,vl_ass(1),lpos,vl_ass(0),/data,/solid,color=101,hsize=!D.X_SIZE / 128.
+xyouts,lpos+1,0.5*(vl_ass(0)+vl_ass(1)),'assessed very likely range of '+greekLetter,orientation=90,alignment=0.5,charsize=0.8,color=101
+endif
+
+if (horiz_ass eq 1) then begin
+lpos=t_ass(1)+0.5
+arrow,lpos,vl_ass(0),lpos,vl_ass(1),/data,/solid,color=101,hsize=!D.X_SIZE / 128.
+arrow,lpos,vl_ass(1),lpos,vl_ass(0),/data,/solid,color=101,hsize=!D.X_SIZE / 128.
+xyouts,t_ass(1),vl_ass(1)+0.1,'assessed !8very likely!3 range of '+greekLetter,alignment=0,charsize=0.8,color=101
+plots,[lpos,lpos+2],[-0.7,-0.45],color=101
+endif
 
 endif
 
