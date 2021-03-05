@@ -1,9 +1,5 @@
 pro nl
 
-; TO DO:
-; differentiate g-ig from pre-quat?
-; check all values
-
 make_pdf=1
 make_png=1
 make_eps=1
@@ -16,6 +12,8 @@ do_ass=intarr(npp)
 do_ass(0:npp-1)=[0,0,1]
 plot_range=0
 horiz_ass=1
+do_sym=0
+name_proxy=0
 
 ; plot limits
 xmin=-10
@@ -28,9 +26,9 @@ l_ass=[-1.54,-0.78]
 vl_ass=[-1.81,-0.51]
 t_ass=[0,3]
 
-; used to convert soem of the paleo estimates of ECS to a value of alpha 
-; also tried with 3.93 (our assessed value), but makes very little
-; difference to the plot, adn also 3.7 is consistent with soem of the
+; used to convert some of the paleo estimates of ECS to a value of alpha. 
+; Also tried with 3.93 (our assessed value), but makes very little
+; difference to the plot, and 3.7 is consistent with some of the
 ; values assumed in the underlying papers.
 forcing=3.7
 
@@ -113,6 +111,8 @@ studbar(*)=[1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,0]
 ;     data_t_s is the range of temperature
 ;     data_l is the alpha
 ;     data_t_l is the range of alpha
+;     data_l_s is the uncertainty in the feedback parameter
+;     data_l_u is the max and min alpha
 
 ; for models: 
 ;   data_t is the upper of the two simulation temperatures [used in 'old']
@@ -123,7 +123,7 @@ studbar(*)=[1,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,0]
 ;     transition [used in 'new' and 'final']
 ;   data_l is the feedback parameter for each transition; if defined
 ;     using temperature then relative to control [used in 'old']
-;   data_l_s is the uncertainty in the feedback parameter
+;   data_l_s is the uncertainty in the feedback parameter [mostly 0, and not plotted]
 ;   data_l_r is the feedback parameter for each transition; if defined
 ;     using temperature then relative to next temp in step [used in 'new' and 'final']
 
@@ -133,7 +133,9 @@ data_t_r=fltarr(3,data_n_max,nstudies)
 data_t_s=fltarr(data_n_max,nstudies)
 data_l=fltarr(data_n_max,nstudies)
 data_l_s=fltarr(data_n_max,nstudies)
+data_l_u=fltarr(2,data_n_max,nstudies)
 data_l_r=fltarr(data_n_max,nstudies)
+
 
 
 data_n=intarr(nstudies)
@@ -244,6 +246,13 @@ data_t(0:data_n(xx)-1,xx)=[-5.5,0]
 data_t_s(0:data_n(xx)-1,xx)=[1,1]
 data_l(0:data_n(xx)-1,xx)=-1.0/[0.48,1.32]
 data_l_s(0:data_n(xx)-1,xx)=[0.5*(1.0/0.41-1.0/0.55),0.5*(1.0/1.16-1.0/1.47)]
+if (do_sym eq 1) then begin
+data_l_u(0,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)+data_l_s(0:data_n(xx)-1,xx)
+data_l_u(1,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)-data_l_s(0:data_n(xx)-1,xx)
+endif else begin
+data_l_u(0,0:data_n(xx)-1,xx)=[-1.0/0.41,-1.0/1.16]
+data_l_u(1,0:data_n(xx)-1,xx)=[-1.0/0.55,-1.0/1.47]
+endelse
 
 ; Kohler (2017)
 ; Figure 6.  Right hand part.  S[CO2,LI].  Honish plot, red lines.
@@ -257,6 +266,13 @@ data_t(0:data_n(xx)-1,xx)=[-4.5,-2.0]
 data_t_s(0:data_n(xx)-1,xx)=[1,1]
 data_l(0:data_n(xx)-1,xx)=-1.0/([1.07,1.51])
 data_l_s(0:data_n(xx)-1,xx)=[0.5*(1.0/0.83-1.0/1.36),0.5*(1.0/0.96-1.0/2.19)]
+if (do_sym eq 1) then begin
+data_l_u(0,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)+data_l_s(0:data_n(xx)-1,xx)
+data_l_u(1,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)-data_l_s(0:data_n(xx)-1,xx)
+endif else begin
+data_l_u(0,0:data_n(xx)-1,xx)=[-1.0/0.83,-1.0/0.96]
+data_l_u(1,0:data_n(xx)-1,xx)=[-1.0/1.36,-1.0/2.19]
+endelse
 
 ; Anagnostou (2016)
 ; DT from text:
@@ -279,6 +295,9 @@ data_t(0:data_n(xx)-1,xx)=[9,14]
 data_t_s(0:data_n(xx)-1,xx)=[3,3]
 data_l(0:data_n(xx)-1,xx)=[-1.48,-0.99]
 data_l_s(0:data_n(xx)-1,xx)=[0.25,0.25]
+; symmetric uncertainties only
+data_l_u(0,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)+data_l_s(0:data_n(xx)-1,xx)
+data_l_u(1,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)-data_l_s(0:data_n(xx)-1,xx)
 
 ; Shaffer
 ; DT from "discussions and conclusions:
@@ -299,7 +318,13 @@ data_t(0:data_n(xx)-1,xx)=[11,16]
 data_t_s(0:data_n(xx)-1,xx)=[3,3]
 data_l(0:data_n(xx)-1,xx)=[rf/shaff(2,0),rf/shaff(2,1)]
 data_l_s(0:data_n(xx)-1,xx)=[0.5*(rf/shaff(2,0)-rf/shaff(0,0))+(rf/shaff(1,0)-rf/shaff(2,0)),0.5*(rf/shaff(2,1)-rf/shaff(0,1))+(rf/shaff(1,1)-rf/shaff(2,1))]
-
+if (do_sym eq 1) then begin
+data_l_u(0,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)+data_l_s(0:data_n(xx)-1,xx)
+data_l_u(1,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)-data_l_s(0:data_n(xx)-1,xx)
+endif else begin
+data_l_u(0,0:data_n(xx)-1,xx)=[rf/shaff(0,0),rf/shaff(0,1)]
+data_l_u(1,0:data_n(xx)-1,xx)=[rf/shaff(1,0),rf/shaff(1,1)]
+endelse
 
 ; Zhu
 ; PI = 13.5 (their figure 1A)
@@ -425,7 +450,13 @@ data_t(0:data_n(xx)-1,xx)=[0.5*(-2.7+(-4.3)),0.5*(0.8+(-2.7))]
 data_t_s(0:data_n(xx)-1,xx)=[0.5*(-2.7-(-4.3)),0.5*(0.8-(-2.7))]
 data_l(0:data_n(xx)-1,xx)=-1.0/[0.69,0.94]
 data_l_s(0:data_n(xx)-1,xx)=[0.5*(1.0/0.45-1.0/1.25),0.5*(1.0/0.84-1.0/1.46)]
-
+if (do_sym eq 1) then begin
+data_l_u(0,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)+data_l_s(0:data_n(xx)-1,xx)
+data_l_u(1,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)-data_l_s(0:data_n(xx)-1,xx)
+endif else begin
+data_l_u(0,0:data_n(xx)-1,xx)=-1.0/[0.45,0.84]
+data_l_u(1,0:data_n(xx)-1,xx)=-1.0/[1.25,1.46]
+endelse
 
 ; Royer (2016)
 ; Section 4.  S[CO2,LI] has a mean of 7.7K.  Table 1 - range is 3.7 to
@@ -433,13 +464,20 @@ data_l_s(0:data_n(xx)-1,xx)=[0.5*(1.0/0.45-1.0/1.25),0.5*(1.0/0.84-1.0/1.46)]
 ; Figure 1a:
 ; take steps 1-2 to 5-6 as warm estimates
 ; take steps 7-8 to 11-12 as cold estimates
-; temp for cold is about -1.5
-; temp for warm is about +0.5
+; temp for cold is about -1.5 (+-1)
+; temp for warm is about +0.5 (+-1)
 xx=12
 data_t(0:data_n(xx)-1,xx)=[-1.5,0.5]
 data_t_s(0:data_n(xx)-1,xx)=[1,1]
-data_l(0:data_n(xx)-1,xx)=[-1*forcing/mean([3.7,5.0,4.1,5.2]),-1*forcing/mean([7.1,11.3,11.5,8.9,12.2])]
-data_l_s(0:data_n(xx)-1,xx)=[-1*forcing/stddev([3.7,5.0,4.1,5.2]),-1*forcing/stddev([7.1,11.3,11.5,8.9,12.2])]
+
+;data_l(0:data_n(xx)-1,xx)=[-1*forcing/mean([3.7,5.0,4.1,5.2]),-1*forcing/mean([7.1,11.3,11.5,8.9,12.2])]
+;data_l_s(0:data_n(xx)-1,xx)=[-1*forcing/stddev([3.7,5.0,4.1,5.2]),-1*forcing/stddev([7.1,11.3,11.5,8.9,12.2])]
+
+data_l(0:data_n(xx)-1,xx)=[mean(-1*forcing/[3.7,5.0,4.1,5.2]),mean(-1*forcing/[7.1,11.3,11.5,8.9,12.2])]
+data_l_s(0:data_n(xx)-1,xx)=[stddev(-1*forcing/[3.7,5.0,4.1,5.2]),stddev(-1*forcing/[7.1,11.3,11.5,8.9,12.2])]
+; symmetric uncertainties
+data_l_u(0,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)+data_l_s(0:data_n(xx)-1,xx)
+data_l_u(1,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)-data_l_s(0:data_n(xx)-1,xx)
 
 
 ; Stap (2019)
@@ -453,12 +491,19 @@ data_t(0:data_n(xx)-1,xx)=[-5,0]
 data_t_s(0:data_n(xx)-1,xx)=[1,1]
 data_l(0:data_n(xx)-1,xx)=-1/[0.5*(1.45+0.93),0.5*(2.45+1.66)]
 data_l_s(0:data_n(xx)-1,xx)=[0.5*(1.0/1.45-1.0/0.93),0.5*(1.0/2.45-1.0/1.66)]
-
+if (do_sym eq 1) then begin
+data_l_u(0,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)+data_l_s(0:data_n(xx)-1,xx)
+data_l_u(1,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)-data_l_s(0:data_n(xx)-1,xx)
+endif else begin
+data_l_u(0,0:data_n(xx)-1,xx)=-1.0/[0.93,1.66]
+data_l_u(1,0:data_n(xx)-1,xx)=-1.0/[1.45,2.45]
+endelse
 
 ; Snyder (2019)
 ; Section 4 gives best interglacial estimate of 0.84 and 67% range of 0.69 to 1.0
 ; [95% range 0.2 to 1.9]
-; Section 3 gives 0.53 for glacial climates [67% range not given; assume same as interglacial]
+; Section 3 gives 0.53 for glacial climates [67% range not given;
+; assume same as interglacial: (0.69 to 1.0)+(0.53-0.69) = 0.38 to 0.69]
 ; [95% range 0.08 to 1.5]
 ; figure 4a; temp range is 0 to -3.5 for non-glacial and -7 to -3.5 for glacial
 xx=14
@@ -466,7 +511,13 @@ data_t(0:data_n(xx)-1,xx)=[0.5*(-7-3.5),0.5*(0-3.5)]
 data_t_s(0:data_n(xx)-1,xx)=[1,1]
 data_l(0:data_n(xx)-1,xx)=[-1.0/0.53,-1.0/0.84]
 data_l_s(0:data_n(xx)-1,xx)=[0.5*(1.0/0.69-1.0/1.0),0.5*(1.0/0.69-1.0/1.0)]
-
+if (do_sym eq 1) then begin
+data_l_u(0,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)+data_l_s(0:data_n(xx)-1,xx)
+data_l_u(1,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)-data_l_s(0:data_n(xx)-1,xx)
+endif else begin
+data_l_u(0,0:data_n(xx)-1,xx)=-1.0/[0.38,0.69]
+data_l_u(1,0:data_n(xx)-1,xx)=-1.0/[0.69,1.0]
+endelse
 
 ; Duan (2019)
 ; values from their Table 1 and SI Table S1.
@@ -495,10 +546,19 @@ data_t(0:data_n(xx)-1,xx)=[22.2,28.8]-14.0
 data_t_s(0:data_n(xx)-1,xx)=[2.55,0.64]
 data_l(0:data_n(xx)-1,xx)=-1*forcing*[1/3.0,1/4.5]
 data_l_s(0:data_n(xx)-1,xx)=forcing*[0.5*(1.0/1.9-1.0/4.1),0.5*(1.0/3.6-1.0/5.4)]
+if (do_sym eq 1) then begin
+data_l_u(0,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)+data_l_s(0:data_n(xx)-1,xx)
+data_l_u(1,0:data_n(xx)-1,xx)=data_l(0:data_n(xx)-1,xx)-data_l_s(0:data_n(xx)-1,xx)
+endif else begin
+data_l_u(0,0:data_n(xx)-1,xx)=-1*forcing/[1.9,3.6]
+data_l_u(1,0:data_n(xx)-1,xx)=-1*forcing/[4.1,5.4]
+endelse
 
 ; NOW THE PLOTS
 
 
+loadct,0
+tvlct,r_0,g_0,b_0,/get
 
 for pp=0,npp-1 do begin
 
@@ -514,7 +574,6 @@ USERSYM, A2a, A2b, /FILL
 
 
 ; colours...
-loadct,0
 tvlct,r_0,g_0,b_0,/get
 ;loadct,39
 ;tvlct,r_39,g_39,b_39,/get
@@ -555,7 +614,7 @@ device,/portrait
 my_filename='plots/nonlin_ipcc_fgd_'+pname(pp)
 
 device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica',xsize=9,ysize=5,/inches
-plot,data_t(*,0),data_l(*,0),yrange=[ymin,ymax],xrange=[xmin,xmax],xtitle='Global mean temperature anomaly relative to preindustrial [!Eo!NC]',psym=2,/nodata,/noerase,ystyle=1,xmargin=[7,5],ytitle='Feedback parameter, '+greekLetter+' [Wm!E-2 o!NC!E-1!N]',xcharsize=1.0,ycharsize=1.0,position=[0.2,0.2,0.8,0.8],xstyle=1,title='Temperature-dependence of '+greekLetter+' from ESMs and paleoclimate proxies'
+plot,data_t(*,0),data_l(*,0),yrange=[ymin,ymax],xrange=[xmin,xmax],xtitle='Global mean temperature anomaly relative to pre-industrial [!Eo!NC]',psym=2,/nodata,/noerase,ystyle=1,xmargin=[7,5],ytitle='Feedback parameter, '+greekLetter+' [Wm!E-2 o!NC!E-1!N]',xcharsize=1.0,ycharsize=1.0,position=[0.2,0.2,0.8,0.8],xstyle=1,title='Temperature-dependence of '+greekLetter+' from ESMs and paleoclimate proxies'
 
 
 if (do_ass(pp) eq 1) then begin
@@ -616,8 +675,19 @@ oplot,data_t(0:data_n(s)-1,s),data_l(0:data_n(s)-1,s),color=studcols(s),thick=l_
 if (plot_uncert eq 1) then begin
 ; plot uncertainties on proxies if plot_uncert
 oplot,[data_t(d,s)-data_t_s(d,s),data_t(d,s)+data_t_s(d,s)],[data_l(d,s),data_l(d,s)],color=studcols(s),thick=e_thick
-oplot,[data_t(d,s),data_t(d,s)],[data_l(d,s)-data_l_s(d,s),data_l(d,s)+data_l_s(d,s)],color=studcols(s),thick=e_thick
+;oplot,[data_t(d,s),data_t(d,s)],[data_l(d,s)-data_l_s(d,s),data_l(d,s)+data_l_s(d,s)],color=studcols(s),thick=e_thick
+
+oplot,[data_t(d,s),data_t(d,s)],[data_l_u(0,d,s),data_l_u(1,d,s)],color=studcols(s),thick=e_thick
+
 endif
+
+if (name_proxy) then begin
+this_pal=0
+if (d eq this_pal) then begin
+xyouts,data_t(this_pal,s),data_l(this_pal,s),refname(s),charsize=0.6
+endif
+endif
+
 endif
 endif
 
