@@ -3,12 +3,9 @@ pro nl
 ; TO DO:
 ; differentiate g-ig from pre-quat?
 ; check all values
-; include etminan forcing
 
-forcing=3.7
-
-make_pdf=0
-make_png=0
+make_pdf=1
+make_png=1
 make_eps=1
 
 npp=3
@@ -30,6 +27,12 @@ ymin=-2.3
 l_ass=[-1.54,-0.78]
 vl_ass=[-1.81,-0.51]
 t_ass=[0,3]
+
+; used to convert soem of the paleo estimates of ECS to a value of alpha 
+; also tried with 3.93 (our assessed value), but makes very little
+; difference to the plot, adn also 3.7 is consistent with soem of the
+; values assumed in the underlying papers.
+forcing=3.7
 
 ; for models
 l_thick=2
@@ -285,7 +288,7 @@ data_l_s(0:data_n(xx)-1,xx)=[0.25,0.25]
 ; lambda from Shaffer abstract: CS from 3.3-5.6, goes to 3.7-6.5
 ; assume forcing is 3.7.
 ; assume uncertaintes of +-3 degrees for now for temp.
-rf=-3.7
+rf=-1.0*forcing
 shaff=fltarr(3,2)
 shaff(0:1,0)=[3.3,5.6]
 shaff(0:1,1)=[3.7,6.5]
