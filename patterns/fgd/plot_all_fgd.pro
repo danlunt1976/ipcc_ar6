@@ -3,10 +3,10 @@ pro pa
 ;;;;;;;;;;
 read_mod=1
 read_proxy=1
-make_zon_plots=0 ; plot zonal mean ensemble mean [default=0 or 1]
-make_map_plots=0 ; plot maps ensemble mean [default=0 or 1]
+make_zon_plots=1 ; plot zonal mean ensemble mean [default=0 or 1]
+make_map_plots=1 ; plot maps ensemble mean [default=0 or 1]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
-make_gmt_plots=1 ; plot gmst [default=0 or 1]
+make_gmt_plots=0 ; plot gmst [default=0 or 1]
 ;;;;;;;;;;
 
 ;;;;;;;;;;
@@ -18,7 +18,7 @@ endif
 ;;;;;;;;;;
 
 
-make_pdf=1
+make_pdf=0
 make_png=0
 
 do_checks=0 ; plot extra lines on zonal mean plots [default=0]
@@ -1628,17 +1628,19 @@ if (make_zon_plots eq 1) then begin
 ; nstarty is where the labels start; nscaley is how many sapces there
 ;   are for names in the whole plot
 
+dxxx=0.06 ; distance between lines in main legend
 nstarty1=0.93
-nstarty2=0.88
-nstarty=0.83
-nstarty3=0.78
-nstarty4=0.73
-nscaley=30.0
+nstarty2=nstarty1-1.0*dxxx
+nstarty=nstarty1-2.0*dxxx
+nstarty3=nstarty1-3.0*dxxx
+nstarty4=nstarty1-4.0*dxxx
+nscaley=60.0 ; distance between lines in indiviudal model legend - big number = less gap
 my_thick1=0.1
 my_thick2=6 ; merid: thickness of ensemble mean
 my_thick3=8 ; merid: thickness of band mean
 my_charsize=0.8
-my_charsize1=1.0
+my_charsize1=1.3 ; charsize for main legend
+my_charsize2=1.3 ; charsize for amplification
 my_errslen=0.5
 my_proxampy=0.05
 my_modampy=0.1
@@ -1660,8 +1662,26 @@ if (fact_mod_sign(t) eq -1) then begin
 thistitle=varnametitle(v)+' (preindustrial - '+timnameslong(t)+')'
 endif
 
+tvlct,r_39,g_39,b_39
+
 ; axes etc:
 plot,lats(*),ensmean_zon(*,t,0),color=0,psym=8,yrange=my_yrange5(t,v,*),xrange=[-90,90],ystyle=1,xstyle=1,title=thistitle,xtitle='latitude',ytitle='temperature anomaly [!Eo!NC]',/nodata,xcharsize=1,ycharsize=1,charsize=1.25,xticks=6,xtickname=['90S','60S','30S','EQ','30N','60N','90N']
+
+
+tvlct,r_0,g_0,b_0
+my_proxycol=180
+
+; plot proxies
+for dd=0,ndata(t,v)-1 do begin
+plots,lats_d(dd,t,v),temps_d(dd,t,v),color=my_proxycol,psym=8,symsize=0.8,NOCLIP = 0
+endfor
+for dd=0,ndata(t,v)-1 do begin
+oplot,[lats_d(dd,t,v),lats_d(dd,t,v)],[temps_d(dd,t,v)-errs_d(0,dd,t,v),temps_d(dd,t,v)+errs_d(1,dd,t,v)],color=my_proxycol
+oplot,[lats_d(dd,t,v)-my_errslen,lats_d(dd,t,v)+my_errslen],[temps_d(dd,t,v)+errs_d(1,dd,t,v),temps_d(dd,t,v)+errs_d(1,dd,t,v)],color=my_proxycol
+oplot,[lats_d(dd,t,v)-my_errslen,lats_d(dd,t,v)+my_errslen],[temps_d(dd,t,v)-errs_d(0,dd,t,v),temps_d(dd,t,v)-errs_d(0,dd,t,v)],color=my_proxycol
+endfor
+
+tvlct,r_39,g_39,b_39
 
 ; spectrum.cat 8 lines
 tvlct,127,68,170,1
@@ -1675,9 +1695,14 @@ tvlct,204,64,74,7
 tvlct,250,0,0,250 ; red
 tvlct,250,0,0,251 ; red
 tvlct,250,180,180,252 ; light-red
-
 tvlct,0,250,0,253 ; green
 tvlct,0,0,250,254 ; blue
+
+indmodcol=252
+ensmeancol=251
+;indmodcol=6
+;ensmeancol=7
+
 
 ; plot zero line
 oplot,[-90,90],[0,0],thick=0.2,color=0
@@ -1694,12 +1719,12 @@ if (total([t,m,v] ne problem_missing) ne 0) then begin
 if (do_mod_leg eq 0) then begin 
 ; model lines:
 if (plot_zon(t,m) eq 1) then begin
-oplot,lats(*),mod_zon(*,m,t,v),color=252,thick=my_thick1,linestyle=linestyle_mod
+oplot,lats(*),mod_zon(*,m,t,v),color=indmodcol,thick=my_thick1,linestyle=linestyle_mod
 endif
 ; legend:
 if (xx eq 0) then begin 
-oplot,legendline,[my_yrange5(t,v,1)*nstarty1-dxx*xx,my_yrange5(t,v,1)*nstarty1-dxx*xx],color=252,thick=my_thick1,linestyle=linestyle_mod
-xyouts,legendtext,my_yrange5(t,v,1)*nstarty1-dxx*xx,mipnames(t)+' models zonal mean (N='+strtrim(fix(total(plot_zon(t,0:nmod(t)-1) eq 1)),2)+')',color=252,charsize=my_charsize1
+oplot,legendline,[my_yrange5(t,v,1)*nstarty1-dxx*xx,my_yrange5(t,v,1)*nstarty1-dxx*xx],color=indmodcol,thick=my_thick1,linestyle=linestyle_mod
+xyouts,legendtext,my_yrange5(t,v,1)*nstarty1-dxx*xx,mipnames(t)+' models zonal mean (N='+strtrim(fix(total(plot_zon(t,0:nmod(t)-1) eq 1)),2)+')',color=indmodcol,charsize=my_charsize1
 endif
 endif
 
@@ -1730,14 +1755,14 @@ endif
 
 ; legend ensemble mean:
 if (do_mod_leg eq 0) then begin 
-oplot,legendline,[my_yrange5(t,v,1)*nstarty2,my_yrange5(t,v,1)*nstarty2],color=251,thick=my_thick2,linestyle=linestyle_mod
-xyouts,legendtext,my_yrange5(t,v,1)*nstarty2,mipnames(t)+' ensemble zonal mean',color=251,charsize=my_charsize1
-oplot,legendline,[my_yrange5(t,v,1)*nstarty,my_yrange5(t,v,1)*nstarty],color=251,thick=my_thick2,linestyle=linestyle_band
-xyouts,legendtext,my_yrange5(t,v,1)*nstarty,mipnames(t)+' ensemble site mean',color=251,charsize=my_charsize1
+oplot,legendline,[my_yrange5(t,v,1)*nstarty2,my_yrange5(t,v,1)*nstarty2],color=ensmeancol,thick=my_thick2,linestyle=linestyle_mod
+xyouts,legendtext,my_yrange5(t,v,1)*nstarty2,mipnames(t)+' ensemble zonal mean',color=ensmeancol,charsize=my_charsize1
+oplot,legendline,[my_yrange5(t,v,1)*nstarty,my_yrange5(t,v,1)*nstarty],color=ensmeancol,thick=my_thick2,linestyle=linestyle_band
+xyouts,legendtext,my_yrange5(t,v,1)*nstarty,mipnames(t)+' ensemble site mean',color=ensmeancol,charsize=my_charsize1
 endif
 
 ; plot model ensemble mean:
-oplot,lats(*),ensaver_zon(*,t,v),color=251,thick=my_thick2,linestyle=linestyle_mod
+oplot,lats(*),ensaver_zon(*,t,v),color=ensmeancol,thick=my_thick2,linestyle=linestyle_mod
 if (do_opp eq 1) then begin
 oplot,lats(*),ensaver_zon(*,t,1-v),color=0,thick=my_thick2,linestyle=linestyle_mod
 endif
@@ -1752,7 +1777,7 @@ endif
 for b=0,nbands-1 do begin
 
 if (finite(band_model_mean(b,t,v))) then begin
-plots,[bandlim(b,0),bandlim(b,1)],[band_model_mean(b,t,v),band_model_mean(b,t,v)],thick=my_thick3,color=251,NOCLIP = 0,linestyle=linestyle_band
+plots,[bandlim(b,0),bandlim(b,1)],[band_model_mean(b,t,v),band_model_mean(b,t,v)],thick=my_thick3,color=ensmeancol,NOCLIP = 0,linestyle=linestyle_band
 endif
 
 if (do_checks eq 1) then begin
@@ -1765,29 +1790,19 @@ endfor
 
 if (bandtype eq '3-bnd') then begin
 if (finite(band_model_mean(0,t,v)) and finite(band_model_mean(1,t,v))) then begin
-xyouts,my_shampx,my_yrange5(t,v,0)+my_proxampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'SH proxy amp: '+strtrim(string(band_data(0,t,v)-band_data(1,t,v),format='(F4.1)'),2)+' !Eo!NC',color=0
-xyouts,my_shampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'SH model amp: '+strtrim(string(band_model_aver(0,t,v)-band_model_aver(1,t,v),format='(F4.1)'),2)+' !Eo!NC',color=251
+xyouts,my_shampx,my_yrange5(t,v,0)+my_proxampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'SH proxy amp: '+strtrim(string(band_data(0,t,v)-band_data(1,t,v),format='(F4.1)'),2)+' !Eo!NC',color=0,charsize=my_charsize2
+xyouts,my_shampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'SH model amp: '+strtrim(string(band_model_aver(0,t,v)-band_model_aver(1,t,v),format='(F4.1)'),2)+' !Eo!NC',color=ensmeancol,charsize=my_charsize2
 endif
 if (finite(band_model_mean(2,t,v)) and finite(band_model_mean(1,t,v))) then begin
-xyouts,my_nhampx,my_yrange5(t,v,0)+my_proxampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'NH proxy amp: '+strtrim(string(band_data(2,t,v)-band_data(1,t,v),format='(F4.1)'),2)+' !Eo!NC',alignment=1,color=0
-xyouts,my_nhampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'NH model amp: '+strtrim(string(band_model_aver(2,t,v)-band_model_aver(1,t,v),format='(F4.1)'),2)+' !Eo!NC',alignment=1,color=251
+xyouts,my_nhampx,my_yrange5(t,v,0)+my_proxampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'NH proxy amp: '+strtrim(string(band_data(2,t,v)-band_data(1,t,v),format='(F4.1)'),2)+' !Eo!NC',alignment=1,color=0,charsize=my_charsize2
+xyouts,my_nhampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'NH model amp: '+strtrim(string(band_model_aver(2,t,v)-band_model_aver(1,t,v),format='(F4.1)'),2)+' !Eo!NC',alignment=1,color=ensmeancol,charsize=my_charsize2
 endif
 endif
 
 ; DATA:
+
 tvlct,r_0,g_0,b_0
 my_proxycol=180
-
-
-; plot proxies
-for dd=0,ndata(t,v)-1 do begin
-plots,lats_d(dd,t,v),temps_d(dd,t,v),color=my_proxycol,psym=8,symsize=0.8,NOCLIP = 0
-endfor
-for dd=0,ndata(t,v)-1 do begin
-oplot,[lats_d(dd,t,v),lats_d(dd,t,v)],[temps_d(dd,t,v)-errs_d(0,dd,t,v),temps_d(dd,t,v)+errs_d(1,dd,t,v)],color=my_proxycol
-oplot,[lats_d(dd,t,v)-my_errslen,lats_d(dd,t,v)+my_errslen],[temps_d(dd,t,v)+errs_d(1,dd,t,v),temps_d(dd,t,v)+errs_d(1,dd,t,v)],color=my_proxycol
-oplot,[lats_d(dd,t,v)-my_errslen,lats_d(dd,t,v)+my_errslen],[temps_d(dd,t,v)-errs_d(0,dd,t,v),temps_d(dd,t,v)-errs_d(0,dd,t,v)],color=my_proxycol
-endfor
 
 if (do_mod_leg eq 0) then begin
 ; plot proxy legend
@@ -1885,12 +1900,12 @@ my_arr=modmean_map(*,*,t,v)
 endif
 endelse
 
-
+map_charsize=230
 
 ; filename
 my_filename=timnames(t)+'_modeldata_cont_'+varnameshort(v)+'_ipcc_czt_'+pname(p)+'_'+mapname(map)
 print,my_filename
-psopen,file=my_filename+'.ps',tcharsize=my_tcharsize,charsize=200
+psopen,file=my_filename+'.ps',tcharsize=my_tcharsize,charsize=map_charsize
 nncols=2.0+(temp_max_e(t,v)-temp_min_e(t,v))/nnstep(t,v)
 if (nncols ne my_ncols) then begin
 print,'wrong number of colours specified',nncols,my_ncols
