@@ -8,17 +8,58 @@ make_map_plots=1
 make_pdf=0
 make_png=0
 
-ntime=3
+ntime=11
+nnew=8
+nold=ntime-nnew
+
+mytype=intarr(ntime)
+mytype(0:nnew-1)=0
+mytype(nnew:ntime-1)=1
 
 ; ** change ntime
 timnames=strarr(ntime)
-timnames(0:ntime-1)=['ssp126','ssp370','ssp585']
 timnameslong=strarr(ntime)
-timnameslong(0:ntime-1)=['SSP1-2.6','SSP3-7.0','SSP5-8.5']
 basenameslong=strarr(ntime)
-basenameslong(0:ntime-1)=['1995-2014','1995-2014','1995-2014']
 pernameslong=strarr(ntime)
-pernameslong(0:ntime-1)=['2081-2100','2081-2100','2081-2100']
+yearnames=strarr(ntime)
+histnames=strarr(ntime)
+
+nssp=2
+nyear=2
+nhist=2
+namessp=strarr(nssp)
+namessp=['ssp126','ssp585']
+namessplong=strarr(nssp)
+namessplong=['SSP1-2.6','SSP5-8.5']
+nameyear=strarr(nyear)
+nameyear=['2100','2300']
+nameyearlong=strarr(nyear)
+nameyearlong=['2081-2100','2281-2300']
+namehist=strarr(nhist)
+namehist=['1850','1995']
+namehistlong=strarr(nhist)
+namehistlong=['1850-1900','1995-2014']
+
+xx=0
+for s=0,nssp-1 do begin
+for y=0,nyear-1 do begin
+for h=0,nhist-1 do begin
+timnames(xx)=namessp(s)
+timnameslong(xx)=namessplong(s)
+basenameslong(xx)=namehistlong(h)
+pernameslong(xx)=nameyearlong(y)
+yearnames(xx)=nameyear(y)
+histnames(xx)=namehist(h)
+xx=xx+1
+endfor
+endfor
+endfor
+
+
+timnames(nnew:ntime-1)=['ssp126','ssp370','ssp585']
+timnameslong(nnew:ntime-1)=['SSP1-2.6','SSP3-7.0','SSP5-8.5']
+basenameslong(nnew:ntime-1)=['1995-2014','1995-2014','1995-2014']
+pernameslong(nnew:ntime-1)=['2081-2100','2081-2100','2081-2100']
 
 nvar=1
 ; ** change ntime
@@ -40,10 +81,10 @@ my_ndecs=intarr(ntime,nvar)
 my_ncols=20
 
 ; colour for sat map
-temp_min_e(*,0)=[-18,-18,-18]
-temp_max_e(*,0)=[18,18,18]
-nnstep(*,0)=[2,2,2]
-my_ndecs(*,0)=[1,1,1]
+temp_min_e(*,*)=-18
+temp_max_e(*,*)=18
+nnstep(*,*)=2
+my_ndecs(*,*)=1
 
 legendline=[-45,-35]
 legendtext=-30
@@ -69,7 +110,14 @@ for t=0,ntime-1 do begin
 for v=0,nvar-1 do begin
 
 ; read ensemble mean map
+if (mytype(t) eq 0) then begin
+filenamex='ssp_mod/CMIP6_BRIDGE/ensmean_tas_'+timnames(t)+'_'+yearnames(t)+'-'+'historical_'+histnames(t)+'_regrid.nc'
+endif
+if (mytype(t) eq 1) then begin
 filenamex='ssp_mod/tas_annual_longterm_'+timnames(t)+'.nc'
+endif
+
+
 print,filenamex
 id1=ncdf_open(filenamex)
 ncdf_varget,id1,varname(t,v),dummy_map
@@ -132,7 +180,13 @@ my_arr=ensmean_map(*,*,t,v)
 map_charsize=230
 
 ; filename
+if (mytype(t) eq 0) then begin
+my_filename=timnames(t)+'_'+yearnames(t)+'-'+'historical_'+histnames(t)+'_modeldata_cont_'+varname(v)+'_ipcc_czt_nodata_ensmean'
+endif
+
+if (mytype(t) eq 1) then begin
 my_filename=timnames(t)+'_modeldata_cont_'+varname(v)+'_ipcc_czt_nodata_ensmean'
+endif
 print,my_filename
 psopen,file=my_filename+'.ps',tcharsize=my_tcharsize,charsize=map_charsize
 nncols=2.0+(temp_max_e(t,v)-temp_min_e(t,v))/nnstep(t,v)
