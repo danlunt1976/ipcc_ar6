@@ -4,9 +4,12 @@ pro pa
 read_mod=1
 read_proxy=1
 make_zon_plots=1 ; plot zonal mean ensemble mean [default=0 or 1]
-make_map_plots=1 ; plot maps ensemble mean [default=0 or 1]
+make_map_plots=1 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
 make_gmt_plots=0 ; plot gmst [default=0 or 1]
+rev_lgm=0 ; re-reverse LGM [default=0;=1 for TS]
+all_proxies=0 ; plot all proxies [default=0;=1 for TS]
+make_nodata=0 ; plot maps without data [default=0;=1 for TS version B]
 ;;;;;;;;;;
 
 ;;;;;;;;;;
@@ -25,8 +28,10 @@ do_checks=0 ; plot extra lines on zonal mean plots [default=0]
 do_tcheck=0 ; plot old and new values of historical obs [default=0]
 do_mod_leg=0 ; plot model names on model zonal mean lines [default=0]
 plot_names_gmt=0 ; plot model names on gmst plot [default=0]
-make_nodata=0 ; plot maps without data [default=0]
 do_dots=1 ; plot circles at centre of assessed obs of GMST [default=1]
+
+
+
 
 ;;;;;;;;;;
 ;;;;;;;;;;
@@ -72,6 +77,15 @@ mipnames(0:ntime-1)=['PlioMIP','PMIP4','DeepMIP']
 ; ** change ntime
 fact_mod_sign=fltarr(ntime)
 fact_mod_sign(*)=[1,-1,1]
+name_sign=strarr(ntime)
+name_sign(*)=''
+if (rev_lgm eq 1) then begin
+fact_mod_sign(1)=fact_mod_sign(1)*(-1)
+name_sign(1)='_-1'
+make_zon_plots=0
+make_gmt_plots=0
+endif
+
 
 ; ** change ntime
 topofile=strarr(ntime)
@@ -211,6 +225,11 @@ legendtext=-30
 
 linestyle_mod=0
 linestyle_band=2
+
+name_all=''
+if (all_proxies eq 1) then begin
+name_all='_allproxies'
+endif
 
 ;;;;;
 
@@ -1212,7 +1231,7 @@ if (finite(dummy_sst(x,y))) then begin
 
 lons_d(my_count,1,1)=dummy_lons(x)
 lats_d(my_count,1,1)=dummy_lats(y)
-temps_d(my_count,1,1)=-1.0*dummy_sst(x,y)
+temps_d(my_count,1,1)=fact_mod_sign(1)*dummy_sst(x,y)
 errs_d(0,my_count,1,1)=dummy_std(x,y)
 errs_d(1,my_count,1,1)=dummy_std(x,y)
 
@@ -1250,7 +1269,7 @@ for y=0,nyd-1 do begin
 if (finite(dummy_sst(x,y))) then begin
 lons_d(my_count,1,1)=dummy_lons(x)
 lats_d(my_count,1,1)=dummy_lats(y)
-temps_d(my_count,1,1)=-1.0*dummy_sst(x,y)
+temps_d(my_count,1,1)=fact_mod_sign(1)*dummy_sst(x,y)
 errs_d(0,my_count,1,1)=dummy_std(x,y)
 errs_d(1,my_count,1,1)=dummy_std(x,y)
 
@@ -1291,7 +1310,7 @@ if (data_row(3) ne '') then begin
 lons_d(xx,1,1)=data_row(1)
 lats_d(xx,1,1)=data_row(0)
 
-temps_d(xx,1,1)=-1.0*data_row(3)
+temps_d(xx,1,1)=fact_mod_sign(1)*data_row(3)
 errs_d(0,xx,1,1)=1.0*data_row(3)-1.0*data_row(2)
 errs_d(1,xx,1,1)=1.0*data_row(4)-1.0*data_row(3)
 
@@ -1350,7 +1369,7 @@ if (finite(dummy_sat(x,y))) then begin
 ;print,x,y,my_count,dummy_sat(x,y)
 lons_d(my_count,1,0)=dummy_lons(x)
 lats_d(my_count,1,0)=dummy_lats(y)
-temps_d(my_count,1,0)=-1.0*dummy_sat(x,y)
+temps_d(my_count,1,0)=fact_mod_sign(1)*dummy_sat(x,y)
 errs_d(0,my_count,1,0)=dummy_std(x,y)
 errs_d(1,my_count,1,0)=dummy_std(x,y)
 
@@ -1398,7 +1417,7 @@ data_row=strsplit(row_temp,',',/extract,/preserve_null)
 if (data_row(4) ne '  nan') then begin
 cleat_lons(i)=data_row(1)
 cleat_lats(i)=data_row(0)
-cleat_temps(i)=-1.0*data_row(4)
+cleat_temps(i)=fact_mod_sign(1)*data_row(4)
 cleat_sd(i)=data_row(10)
 endif else begin
 cleat_lons(i)=-1e30
@@ -1651,7 +1670,7 @@ for t=0,ntime-1 do begin
 for v=0,nvar-1 do begin
 
 ; filename
-my_filename=timnames(t)+'_temp_lat_corr_tuned_data_ipcc_'+varnameshort(v)
+my_filename=timnames(t)+'_temp_lat_corr_tuned_data_ipcc_'+varnameshort(v)+name_sign(t)
 print,my_filename
 device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica'
 
@@ -1864,9 +1883,9 @@ mapnamelong(0:nmod(t)-1)=modnames(t,0:nmod(t)-1)
 mapname(0:nmod(t)+1)=[mapname(0:nmod(t)-1),'ensmean','mapmean']
 mapnamelong(0:nmod(t)+1)=[mapname(0:nmod(t)-1),'','mapmean']
 endif else begin
-nmap=2
-mapname=['ensmean','mapmean']
-mapnamelong=['','mapmean']
+nmap=1
+mapname=['ensmean']
+mapnamelong=['']
 endelse
 
 for map=0,nmap-1 do begin
@@ -1890,20 +1909,15 @@ endif
 
 endif else begin
 
-if (map eq 0) then begin
 my_arr=ensmean_map(*,*,t,v)
 ;my_arr=ensaver_map(*,*,t,v)
-endif
-if (map eq 1) then begin
-my_arr=modmean_map(*,*,t,v)
-;my_arr=modaver_map(*,*,t,v)
-endif
+
 endelse
 
 map_charsize=230
 
 ; filename
-my_filename=timnames(t)+'_modeldata_cont_'+varnameshort(v)+'_ipcc_czt_'+pname(p)+'_'+mapname(map)
+my_filename=timnames(t)+'_modeldata_cont_'+varnameshort(v)+'_ipcc_czt_'+pname(p)+'_'+mapname(map)+name_sign(t)+name_all
 print,my_filename
 psopen,file=my_filename+'.ps',tcharsize=my_tcharsize,charsize=map_charsize
 nncols=2.0+(temp_max_e(t,v)-temp_min_e(t,v))/nnstep(t,v)
@@ -2013,9 +2027,7 @@ CON,F=topo_map(*,*,t),x=lons,y=lats,/nomap,/nocolbar,/NOFILL,/NOAXES,TITLE='',/N
 if (p eq 0) then begin
 ; Data:
 for d=0,ndata(t,v)-1 do begin
-
 my_dat=temps_d(d,t,v)
-
 colind=fix((my_dat-temp_min_e(t,v))/nnstep(t,v))+3
 colind=max([colind,2])
 colind=min([colind,nncols+1])
@@ -2026,6 +2038,23 @@ plots,lons_d(d,t,v),lats_d(d,t,v),psym=8,symsize=2.2,thick=8
 usersym,cos(aaa),sin(aaa),color=0
 plots,lons_d(d,t,v),lats_d(d,t,v),psym=8,symsize=2,thick=8
 endfor
+
+if (all_proxies eq 1) then begin
+for d=0,ndata(t,1-v)-1 do begin
+my_dat=temps_d(d,t,1-v)
+colind=fix((my_dat-temp_min_e(t,1-v))/nnstep(t,1-v))+3
+colind=max([colind,2])
+colind=min([colind,nncols+1])
+sss=1.0*sqrt(!pi/4.0)
+USERSYM, [-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss], /FILL,color=colind
+plots,lons_d(d,t,1-v),lats_d(d,t,1-v),psym=8,symsize=2
+usersym,[-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss],color=1
+plots,lons_d(d,t,1-v),lats_d(d,t,1-v),psym=8,symsize=2.2,thick=8
+usersym,[-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss],color=0
+plots,lons_d(d,t,1-v),lats_d(d,t,1-v),psym=8,symsize=2,thick=8
+endfor
+endif
+
 endif
 
 
