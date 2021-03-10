@@ -227,6 +227,7 @@ LEVS, MIN=temp_min_e(t,v), MAX=temp_max_e(t,v), STEP=nnstep(t,v), ndecs=my_ndecs
 thistitle=strtrim(varnametitle(v)+' ('+timnameslong(t)+': '+pernameslong(t)+' - '+basenameslong(t)+')',2)
 
 CON, F=my_arr,x=lons(*),y=lats(*),TITLE=thistitle, CB_TITLE='temperature anomaly [!Eo!NC]',/NOLINES,/block,CB_NTH=2
+CON, F=my_arr,x=lons(*),y=lats(*),/NOLINES,/nocolbar
 
 nglon=5
 grids_lon=fltarr(nglon)
@@ -274,6 +275,7 @@ endfor ; end t
 endif ; end make map plots
 
 
+stop
 
 end
 
