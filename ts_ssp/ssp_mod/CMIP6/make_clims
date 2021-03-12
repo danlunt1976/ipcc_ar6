@@ -1,0 +1,206 @@
+#!/bin/bash
+
+root_dir='/home/bridge/ggdjl/ipcc_ar6/ts_ssp/ssp_mod/CMIP6'
+gridfile='/home/bridge/ggdjl/ipcc_ar6/ts_ssp/ssp_mod/tas_annual_longterm_grid.nc'
+
+gen_files=1
+gen_diffs=1
+gen_ens=1
+
+modlist_1850='CanESM5 IPSL-CM6A-LR MRI-ESM2-0 CESM2-WACCM UKESM1-0-LL'
+modlist_1995='CanESM5 IPSL-CM6A-LR MRI-ESM2-0'
+
+ssplist='ssp126 ssp585'
+yearlist='2300 2100'
+
+if [ ${gen_files} -eq 1 ] ; then
+
+for model in ${modlist_1850} ; do
+
+ens='r1i1p1f1'
+
+fileyears_2300_ssp126='210101-230012'
+fileyears_2100_ssp126='201501-210012'
+extyears_2300_ssp126='2161/2400'   # last 20 years
+extyears_2100_ssp126='793/1032'    # last 20 years
+
+fileyears_2300_ssp585='210101-230012'
+fileyears_2100_ssp585='201501-210012'
+extyears_2300_ssp585='2161/2400'   # last 20 years
+extyears_2100_ssp585='793/1032'    # last 20 years
+
+fileyears_1850_historical='185001-201412'
+fileyears_1995_historical='185001-201412'
+extyears_1850_historical='1/612'       # first 51 years
+extyears_1995_historical='1741/1980'   # last 20 years
+
+grid='gr'
+
+do_1995=1
+
+if [ ${model} == 'IPSL-CM6A-LR' ] ; then
+echo ${model}
+echo 'no change to defaults'
+fi
+
+if [ ${model} == 'MRI-ESM2-0' ] ; then
+echo ${model}
+grid='gn'
+fi
+
+if [ ${model} == 'CanESM5' ] ; then
+echo ${model}
+grid='gn'
+fileyears_2300_ssp585='218101-230012'
+extyears_2300_ssp585='1201/1440'   # last 20 years
+fi
+
+if [ ${model} == 'CESM2-WACCM' ] ; then
+fileyears_2300_ssp126='225101-229912'
+fileyears_2100_ssp126='206501-210012'
+extyears_2300_ssp126='349/588'   # last 20 years
+extyears_2100_ssp126='193/432'    # last 20 years
+fileyears_2300_ssp585='225101-229912'
+fileyears_2100_ssp585='201501-210012'
+extyears_2300_ssp585='349/588'   # last 20 years
+extyears_2100_ssp585='793/1032'    # last 20 years
+grid='gn'
+do_1995=0
+echo ${model}
+fi
+
+if [ ${model} == 'UKESM1-0-LL' ] ; then
+fileyears_2300_ssp126='225001-230012'
+fileyears_2100_ssp126='205001-210012'
+extyears_2300_ssp126='373/612'   # last 20 years
+extyears_2100_ssp126='373/612'    # last 20 years
+fileyears_2300_ssp585='225001-230012'
+fileyears_2100_ssp585='205001-210012'
+extyears_2300_ssp585='373/612'   # last 20 years
+extyears_2100_ssp585='373/612'    # last 20 years
+fileyears_1850_historical='185001-194912'
+ens='r4i1p1f2'
+grid='gn'
+do_1995=0
+echo ${model}
+fi
+
+for ssp in ${ssplist} ; do
+for year in ${yearlist} ; do
+
+echo ${ssp} 
+echo ${year}
+
+fileyear=fileyears_${year}_${ssp}
+filein=${root_dir}/${model}/tas_Amon_${model}_${ssp}_${ens}_${grid}_${!fileyear}.nc
+fileout=${root_dir}/${model}/tas_${ssp}_${year}.nc
+
+extyear=extyears_${year}_${ssp}
+
+echo ${filein}
+echo ${!extyear}
+
+cdo -O seltimestep,${!extyear} ${filein} tmp.nc
+cdo -O timmean tmp.nc ${fileout}
+
+echo ''
+
+\rm -f tmp.nc
+done
+done
+
+
+year='1850'
+for ssp in historical ; do
+fileyear=fileyears_${year}_${ssp}
+filein=${root_dir}/${model}/tas_Amon_${model}_${ssp}_${ens}_${grid}_${!fileyear}.nc
+fileout=${root_dir}/${model}/tas_${ssp}_${year}.nc
+extyear=extyears_${year}_${ssp}
+echo ${filein}
+echo ${!extyear}
+cdo -O seltimestep,${!extyear} ${filein} tmp.nc
+cdo -O timmean tmp.nc ${fileout}
+\rm -f tmp.nc
+echo ''
+done
+
+
+if [ ${do_1995} -eq 1 ]  ; then 
+year='1995'
+for ssp in historical ; do
+fileyear=fileyears_${year}_${ssp}
+filein=${root_dir}/${model}/tas_Amon_${model}_${ssp}_${ens}_${grid}_${!fileyear}.nc
+fileout=${root_dir}/${model}/tas_${ssp}_${year}.nc
+extyear=extyears_${year}_${ssp}
+echo ${filein}
+echo ${!extyear}
+cdo -O seltimestep,${!extyear} ${filein} tmp.nc
+cdo -O timmean tmp.nc ${fileout}
+\rm -f tmp.nc
+echo ''
+done
+fi
+
+done
+
+fi
+
+
+if [ ${gen_diffs} -eq 1 ] ; then
+
+for mod in ${modlist_1850} ; do
+base='1850'
+for ssp in ${ssplist} ; do
+for year in ${yearlist} ; do
+
+cdo -O sub ${mod}/tas_${ssp}_${year}.nc ${mod}/tas_historical_${base}.nc ${mod}/tas_${ssp}_${year}-historical_${base}.nc
+
+cdo -O remapbil,r360x180 -selname,tas ${mod}/tas_${ssp}_${year}-historical_${base}.nc ${mod}/tas_${ssp}_${year}-historical_${base}_regrid.nc
+
+done
+done
+done
+
+
+for mod in ${modlist_1995} ; do
+base='1995'
+for ssp in ${ssplist} ; do
+for year in ${yearlist} ; do
+
+cdo -O sub ${mod}/tas_${ssp}_${year}.nc ${mod}/tas_historical_${base}.nc ${mod}/tas_${ssp}_${year}-historical_${base}.nc
+
+cdo -O remapbil,r360x180 -selname,tas ${mod}/tas_${ssp}_${year}-historical_${base}.nc ${mod}/tas_${ssp}_${year}-historical_${base}_regrid.nc
+
+done
+done
+done
+
+
+fi
+
+
+if [ ${gen_ens} -eq 1 ] ; then
+
+for ssp in ${ssplist} ; do
+for year in ${yearlist} ; do
+
+base='1850'
+filelist=''
+for mod in ${modlist_1850} ; do
+filelist=${filelist}"${mod}/tas_${ssp}_${year}-historical_${base}_regrid.nc "
+done
+cdo -O ensmean ${filelist} ensmean_tas_${ssp}_${year}-historical_${base}_regrid.nc 
+
+base='1995'
+filelist=''
+for mod in ${modlist_1995} ; do
+filelist=${filelist}"${mod}/tas_${ssp}_${year}-historical_${base}_regrid.nc "
+done
+cdo -O ensmean ${filelist} ensmean_tas_${ssp}_${year}-historical_${base}_regrid.nc 
+
+done
+done
+
+fi
+
+exit
