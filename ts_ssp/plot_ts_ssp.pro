@@ -144,7 +144,7 @@ if (mytype(t) eq 0 or mytype(t) eq 1) then begin
 
 ; read ensemble mean map
 if (mytype(t) eq 0) then begin
-filenamex='ssp_mod/CMIP6_BRIDGE/ensmean_tas_'+timnames(t)+'_'+yearnames(t)+'-'+'historical_'+histnames(t)+'_regrid.nc'
+filenamex='ssp_mod/CMIP6/ensmean_tas_'+timnames(t)+'_'+yearnames(t)+'-'+'historical_'+histnames(t)+'_regrid.nc'
 endif
 if (mytype(t) eq 1) then begin
 filenamex='ssp_mod/tas_annual_longterm_'+timnames(t)+'.nc'
