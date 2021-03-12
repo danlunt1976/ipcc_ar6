@@ -1,20 +1,23 @@
 pro pt
 
 ;;;;;;;;;;
-read_mod=1
 make_map_plots=1
 ;;;;;;;;;;
 
 make_pdf=0
 make_png=0
 
-ntime=11
 nnew=8
-nold=ntime-nnew
+nold=3
+nerich2100=4
+nerich2300=2
+ntime=nnew+nold+nerich2100+nerich2300
 
 mytype=intarr(ntime)
 mytype(0:nnew-1)=0
-mytype(nnew:ntime-1)=1
+mytype(nnew:nnew+nold-1)=1
+mytype(nnew+nold:nnew+nold+nerich2100-1)=2
+mytype(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=3
 
 ; ** change ntime
 timnames=strarr(ntime)
@@ -24,6 +27,9 @@ pernameslong=strarr(ntime)
 yearnames=strarr(ntime)
 histnames=strarr(ntime)
 
+
+;;;;;;;;;;;;;;;;;;
+; SET UP 0:NNEW = my SSPs
 nssp=2
 nyear=2
 nhist=2
@@ -54,12 +60,37 @@ xx=xx+1
 endfor
 endfor
 endfor
+;;;;;;;;;;;;;;;;;;
 
 
-timnames(nnew:ntime-1)=['ssp126','ssp370','ssp585']
-timnameslong(nnew:ntime-1)=['SSP1-2.6','SSP3-7.0','SSP5-8.5']
-basenameslong(nnew:ntime-1)=['1995-2014','1995-2014','1995-2014']
-pernameslong(nnew:ntime-1)=['2081-2100','2081-2100','2081-2100']
+;;;;;;;;;;;;;;;;;;
+; SET UP NNEW:NNEW+NOLD = ERICH ORIGINAL SSPs
+timnames(nnew:nnew+nold-1)=['ssp126','ssp370','ssp585']
+timnameslong(nnew:nnew+nold-1)=['SSP1-2.6','SSP3-7.0','SSP5-8.5']
+basenameslong(nnew:nnew+nold-1)=['1995-2014','1995-2014','1995-2014']
+pernameslong(nnew:nnew+nold-1)=['2081-2100','2081-2100','2081-2100']
+;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;
+; SET UP NNEW+NOLD:NNEW+NOLD+NERICH2100 = ERICH NEW 2100 SSPs
+timnames(nnew+nold:nnew+nold+nerich2100-1)=['ssp126','ssp245','ssp370','ssp585']
+timnameslong(nnew+nold:nnew+nold+nerich2100-1)=['SSP1-2.6','SSP2-4.5','SSP3-7.0','SSP5-8.5']
+basenameslong(nnew+nold:nnew+nold+nerich2100-1)=['1850-1900','1850-1900','1850-1900','1850-1900']
+pernameslong(nnew+nold:nnew+nold+nerich2100-1)=['2081-2100','2081-2100','2081-2100','2081-2100']
+yearnames(nnew+nold:nnew+nold+nerich2100-1)=['2100','2100','2100','2100']
+histnames(nnew+nold:nnew+nold+nerich2100-1)=['1850','1850','1850','1850']
+;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;
+; SET UP NNEW+NOLD+NERICH2100:NNEW+NOLD+NERICH2100_NERIC2300 = ERICH NEW 2300 SSPs
+timnames(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['ssp126','ssp585']
+timnameslong(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['SSP1-2.6','SSP5-8.5']
+basenameslong(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['1850-1900','1850-1900']
+pernameslong(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['2080-2299','2080-2299']
+yearnames(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['2300','2300']
+histnames(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['1850','1850']
+;;;;;;;;;;;;;;;;;;
+
 
 nvar=1
 ; ** change ntime
@@ -100,14 +131,14 @@ linestyle_band=2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Now read in the model data...
 
-if (read_mod eq 1) then begin
-
 ensmean_map=fltarr(nx,ny,ntime,nvar)
 
 dummy_map=fltarr(nx,ny)
 
 for t=0,ntime-1 do begin
 for v=0,nvar-1 do begin
+
+if (mytype(t) eq 0 or mytype(t) eq 1) then begin
 
 ; read ensemble mean map
 if (mytype(t) eq 0) then begin
@@ -116,7 +147,6 @@ endif
 if (mytype(t) eq 1) then begin
 filenamex='ssp_mod/tas_annual_longterm_'+timnames(t)+'.nc'
 endif
-
 
 print,filenamex
 id1=ncdf_open(filenamex)
@@ -142,10 +172,50 @@ IF (count GT 0) THEN dummy_map[i] = !VALUES.F_NAN
 ensmean_map(*,*,t,v)=dummy_map
 ncdf_close,id1
 
+endif
+
+if (mytype(t) eq 2 or mytype(t) eq 3) then begin
+
+; read ensemble mean map
+if (mytype(t) eq 2) then begin
+filenamex='ssp_mod/tas_annual_longterm_4SSPs.nc'
+fileoffset=nold+nnew
+endif
+if (mytype(t) eq 3) then begin
+filenamex='ssp_mod/tas_annual_2300_ssp126_ssp585.nc'
+fileoffset=nold+nnew+nerich2100
+endif
+
+print,filenamex
+id1=ncdf_open(filenamex)
+ncdf_varget,id1,varname(t,v),dummy_map
+if (v eq 0 and t eq 0) then begin
+ncdf_varget,id1,'lon',lons
+ncdf_varget,id1,'lat',lats
+endif
+; check for missing values
+missing_value=-9999.99
+aa=ncdf_varinq(id1,varname(t,v))
+natts=aa.Natts
+for x=0,natts-1 do begin
+bb=ncdf_attname(id1,varname(t,v),x)
+;print,bb
+if (bb eq 'missing_value') then begin
+ncdf_attget,id1,varname(t,v),'missing_value',missing_value
+;print,'missing is:',missing_value
+endif
+endfor
+i = WHERE(dummy_map EQ missing_value, count)
+IF (count GT 0) THEN dummy_map[i] = !VALUES.F_NAN
+
+ensmean_map(*,*,t,v)=dummy_map(*,*,t-fileoffset)
+ncdf_close,id1
+
+endif
+
 endfor
 endfor
 
-endif ; end read_mod
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -183,10 +253,15 @@ map_charsize=230
 if (mytype(t) eq 0) then begin
 my_filename=timnames(t)+'_'+yearnames(t)+'-'+'historical_'+histnames(t)+'_modeldata_cont_'+varname(v)+'_ipcc_czt_nodata_ensmean'
 endif
-
 if (mytype(t) eq 1) then begin
 my_filename=timnames(t)+'_modeldata_cont_'+varname(v)+'_ipcc_czt_nodata_ensmean'
 endif
+if (mytype(t) eq 2 or mytype(t) eq 3) then begin
+my_filename=timnames(t)+'_erich_'+yearnames(t)+'-'+'historical_'+histnames(t)+'_modeldata_cont_'+varname(v)+'_ipcc_czt_nodata_ensmean'
+endif
+
+
+
 print,my_filename
 psopen,file=my_filename+'.ps',tcharsize=my_tcharsize,charsize=map_charsize
 nncols=2.0+(temp_max_e(t,v)-temp_min_e(t,v))/nnstep(t,v)
