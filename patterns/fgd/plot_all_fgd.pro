@@ -3,12 +3,12 @@ pro pa
 ;;;;;;;;;;
 read_mod=1
 read_proxy=1
-make_zon_plots=1 ; plot zonal mean ensemble mean [default=0 or 1]
+make_zon_plots=0 ; plot zonal mean ensemble mean [default=0 or 1]
 make_map_plots=1 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
 make_gmt_plots=0 ; plot gmst [default=0 or 1]
-rev_lgm=0 ; re-reverse LGM [default=0;=1 for TS]
-all_proxies=0 ; plot all proxies [default=0;=1 for TS]
+rev_lgm=1 ; re-reverse LGM [default=0;=1 for TS]
+all_proxies=1 ; plot all proxies [default=0;=1 for TS]
 make_nodata=0 ; plot maps without data [default=0;=1 for TS version B]
 ;;;;;;;;;;
 
@@ -452,6 +452,12 @@ endfor
 endfor
 endfor
 
+ensmean_mean=fltarr(ntime,nvar)
+for v=0,nvar-1 do begin
+for t=0,ntime-1 do begin
+ensmean_mean(t,v)=total(ensmean_zon(*,t,v)*weight_lat(*),/nan)*fact_mod_sign(t)
+endfor
+endfor
 
 for v=0,nvar-1 do begin
 for t=0,ntime-1 do begin
@@ -1986,6 +1992,10 @@ thistitle=strtrim(varnametitle(v)+' ('+timnameslong(t)+' - preindustrial) '+mapn
 endif
 if (fact_mod_sign(t) eq -1) then begin
 thistitle=strtrim(varnametitle(v)+' (preindustrial - '+timnameslong(t)+') '+mapnamelong(map),2)
+endif
+
+if (all_proxies eq 1) then begin
+thistitle=thistitle+': '+string(ensmean_mean(t,v),format='(F4.1)')+' !Eo!NC'
 endif
 
 CON, F=my_arr,x=lons(*),y=lats(*),TITLE=thistitle, CB_TITLE='temperature anomaly [!Eo!NC]',/nomap,/NOLINES,/block,CB_NTH=2
