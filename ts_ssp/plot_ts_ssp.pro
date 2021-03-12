@@ -102,6 +102,8 @@ varnametitle(0:nvar-1)=['SAT']
 
 nx=360
 ny=180
+lons=fltarr(nx,ntime)
+lats=fltarr(ny,ntime)
 
 ; ** change ntime
 
@@ -151,10 +153,10 @@ endif
 print,filenamex
 id1=ncdf_open(filenamex)
 ncdf_varget,id1,varname(t,v),dummy_map
-if (v eq 0 and t eq 0) then begin
-ncdf_varget,id1,'lon',lons
-ncdf_varget,id1,'lat',lats
-endif
+ncdf_varget,id1,'lon',dummy_lons
+ncdf_varget,id1,'lat',dummy_lats
+lons(0:nx-1,t)=dummy_lons(*)
+lats(0:ny-1,t)=dummy_lats(*)
 ; check for missing values
 missing_value=-9999.99
 aa=ncdf_varinq(id1,varname(t,v))
@@ -189,10 +191,10 @@ endif
 print,filenamex
 id1=ncdf_open(filenamex)
 ncdf_varget,id1,varname(t,v),dummy_map
-if (v eq 0 and t eq 0) then begin
-ncdf_varget,id1,'lon',lons
-ncdf_varget,id1,'lat',lats
-endif
+ncdf_varget,id1,'lon',dummy_lons
+ncdf_varget,id1,'lat',dummy_lats
+lons(0:nx-1,t)=dummy_lons(*)
+lats(0:ny-1,t)=dummy_lats(*)
 ; check for missing values
 missing_value=-9999.99
 aa=ncdf_varinq(id1,varname(t,v))
@@ -215,6 +217,32 @@ endif
 
 endfor
 endfor
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Global means...
+
+latsedge=fltarr(ny+1)
+weight_lat=fltarr(nx,ny)
+mod_gmt=fltarr(ntime,nvar)
+
+for t=0,ntime-1 do begin
+for v=0,nvar-1 do begin
+latsedge(0)=-90
+for j=1,ny-1 do begin
+latsedge(j)=0.5*(lats(j-1)+lats(j))
+endfor
+latsedge(ny)=90
+for j=0,ny-1 do begin
+weight_lat(*,j)=(sin(latsedge(j+1)*2*!pi/360.0)-sin(latsedge(j)*2*!pi/360.0))
+endfor
+mytot=1.0/total(weight_lat(0:nx-1,0:ny-1),/NAN)
+for i=0,nx-1 do begin
+weight_lat(i,0:ny-1)=weight_lat(i,0:ny-1)*mytot
+endfor
+mod_gmt(t,v)=total(ensmean_map(*,*,t,v)*weight_lat(*,*),/nan)
+endfor
+endfor
+
 
 
 
@@ -299,10 +327,10 @@ endif
 map,/robinson
 LEVS, MIN=temp_min_e(t,v), MAX=temp_max_e(t,v), STEP=nnstep(t,v), ndecs=my_ndecs(t,v)
 
-thistitle=strtrim(varnametitle(v)+' ('+timnameslong(t)+': '+pernameslong(t)+' - '+basenameslong(t)+')',2)
+thistitle=strtrim(varnametitle(v)+' ('+timnameslong(t)+': '+pernameslong(t)+' - '+basenameslong(t)+'): '+string(mod_gmt(t,v),format='(F4.1)')+' !Eo!NC',2)
 
-CON, F=my_arr,x=lons(*),y=lats(*),TITLE=thistitle, CB_TITLE='temperature anomaly [!Eo!NC]',/NOLINES,/block,CB_NTH=2
-CON, F=my_arr,x=lons(*),y=lats(*),/NOLINES,/nocolbar
+CON, F=my_arr,x=lons(*,t),y=lats(*,t),TITLE=thistitle, CB_TITLE='temperature anomaly [!Eo!NC]',/NOLINES,/block,CB_NTH=2
+CON, F=my_arr,x=lons(*,t),y=lats(*,t),/NOLINES,/nocolbar
 
 nglon=5
 grids_lon=fltarr(nglon)
@@ -330,12 +358,6 @@ plots,[grids_lat(g),grids_lat(g)],[90-inc*i,90-inc*(i+1)],color=1,linestyle=1,th
 endfor
 xyouts,grids_lat(g)+grids_lat_offset(g),-85,grids_lat_label(g),color=1,charsize=0.8
 endfor
-
-
-
-; Land-sea mask
-;LEVS,MANUAL=['0','100000']
-;CON,F=topo_map(*,*,t),x=lons,y=lats,/nomap,/nocolbar,/NOFILL,/NOAXES,TITLE='',/NOLINELABELS
 
 psclose,/noview
 spawn,'ps2epsi '+my_filename+'.ps '+my_filename+'.eps ; \rm '+my_filename+'.ps',dum
