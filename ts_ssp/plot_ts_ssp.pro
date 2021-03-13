@@ -86,7 +86,7 @@ histnames(nnew+nold:nnew+nold+nerich2100-1)=['1850','1850','1850','1850']
 timnames(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['ssp126','ssp585']
 timnameslong(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['SSP1-2.6','SSP5-8.5']
 basenameslong(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['1850-1900','1850-1900']
-pernameslong(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['2080-2299','2080-2299']
+pernameslong(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['2280-2299','2280-2299']
 yearnames(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['2300','2300']
 histnames(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['1850','1850']
 ;;;;;;;;;;;;;;;;;;
