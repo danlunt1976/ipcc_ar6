@@ -8,8 +8,6 @@
 \usepackage{color}
 \usepackage{pdflscape}
 
-
-
 % Page setup
 
 \textwidth=170mm
@@ -19,11 +17,11 @@
 \parskip=6mm
 
 % Arial font
-\usepackage{helvet}
-\renewcommand{\familydefault}{\sfdefault}
+%\usepackage{helvet}
+%\renewcommand{\familydefault}{\sfdefault}
 
 % Times New Roman fonts.
-%\renewcommand{\familydefault}{ptm}
+\renewcommand{\familydefault}{ptm}
 
 \DeclareMathAlphabet{\mhvrm}{OT1}{ptm}{m}{n}
 \DeclareMathAlphabet{\mhvit}{OT1}{ptm}{m}{sl}
@@ -31,6 +29,10 @@
 
 
 \newcommand{\hilight}[1]{\colorbox{yellow}{#1}}
+
+\addtolength{\subfigbottomskip}{-6pt}
+\addtolength{\subfigcapskip}{-6pt}
+
 
 \bibliographystyle{/home/bridge/ggdjl/ggdjl/bas/doc/chattian_veg/natbib}
 
@@ -42,9 +44,7 @@
 \begin{figure}[!h]
 \centering
 
-EECO, MPWP, LGM, SSP1-2.6, SSP3-7.0, SSP5-8.5
-
-
+%EECO, MPWP, LGM, SSP1-2.6, SSP3-7.0, SSP5-8.5
 
 \subfigure[]{
 \begin{minipage}[b]{0.25\textwidth}
@@ -150,6 +150,12 @@ EECO, MPWP, LGM, SSP1-2.6, SSP3-7.0, SSP5-8.5
 \begin{minipage}[b]{0.25\textwidth}
 \centering
 \includegraphics[width=28mm,angle=90]{/home/bridge/ggdjl/ipcc_ar6/ts_ssp/ssp585_erich_2300-historical_1850_modeldata_cont_tas_ipcc_czt_nodata_ensmean.eps}
+\end{minipage}}
+
+\subfigure[]{
+\begin{minipage}[b]{0.25\textwidth}
+\centering
+\includegraphics[width=28mm,angle=90]{/home/bridge/ggdjl/ipcc_ar6/ts_ssp/historical_1995-historical_1850_modeldata_cont_tas_ipcc_czt_nodata_ensmean.eps}
 \end{minipage}}
 
 \end{figure}

@@ -2,6 +2,7 @@ pro pt
 
 ;;;;;;;;;;
 make_map_plots=1
+latlonlabels=0
 ;;;;;;;;;;
 
 make_pdf=0
@@ -11,13 +12,16 @@ nnew=8
 nold=3
 nerich2100=4
 nerich2300=2
-ntime=nnew+nold+nerich2100+nerich2300
+nrecent=1
+ntime=nnew+nold+nerich2100+nerich2300+nrecent
 
 mytype=intarr(ntime)
 mytype(0:nnew-1)=0
 mytype(nnew:nnew+nold-1)=1
 mytype(nnew+nold:nnew+nold+nerich2100-1)=2
 mytype(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=3
+mytype(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=4
+
 
 ; ** change ntime
 timnames=strarr(ntime)
@@ -82,7 +86,7 @@ histnames(nnew+nold:nnew+nold+nerich2100-1)=['1850','1850','1850','1850']
 ;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;
-; SET UP NNEW+NOLD+NERICH2100:NNEW+NOLD+NERICH2100_NERIC2300 = ERICH NEW 2300 SSPs
+; SET UP NNEW+NOLD+NERICH2100:NNEW+NOLD+NERICH2100+NERIC2300 = ERICH NEW 2300 SSPs
 timnames(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['ssp126','ssp585']
 timnameslong(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['SSP1-2.6','SSP5-8.5']
 basenameslong(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['1850-1900','1850-1900']
@@ -91,6 +95,15 @@ yearnames(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['2300','2300'
 histnames(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['1850','1850']
 ;;;;;;;;;;;;;;;;;;
 
+;;;;;;;;;;;;;;;;;;
+; SET UP NNEW+NOLD+NERICH2100+NERICH2300:NNEW+NOLD+NERICH2100+NERIC2300+NRECENT = 1995 vs. 1850
+timnames(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=['historical']
+timnameslong(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=['RECENT']
+basenameslong(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=['1850-1900']
+pernameslong(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=['1995-2014']
+yearnames(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=['1995']
+histnames(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=['1850']
+;;;;;;;;;;;;;;;;;;
 
 nvar=1
 ; ** change ntime
@@ -140,10 +153,10 @@ dummy_map=fltarr(nx,ny)
 for t=0,ntime-1 do begin
 for v=0,nvar-1 do begin
 
-if (mytype(t) eq 0 or mytype(t) eq 1) then begin
+if (mytype(t) eq 0 or mytype(t) eq 1 or mytype(t) eq 4) then begin
 
 ; read ensemble mean map
-if (mytype(t) eq 0) then begin
+if (mytype(t) eq 0 or mytype(t) eq 4) then begin
 filenamex='ssp_mod/CMIP6/ensmean_tas_'+timnames(t)+'_'+yearnames(t)+'-'+'historical_'+histnames(t)+'_regrid.nc'
 endif
 if (mytype(t) eq 1) then begin
@@ -278,7 +291,7 @@ my_arr=ensmean_map(*,*,t,v)
 map_charsize=230
 
 ; filename
-if (mytype(t) eq 0) then begin
+if (mytype(t) eq 0 or mytype(t) eq 4) then begin
 my_filename=timnames(t)+'_'+yearnames(t)+'-'+'historical_'+histnames(t)+'_modeldata_cont_'+varname(v)+'_ipcc_czt_nodata_ensmean'
 endif
 if (mytype(t) eq 1) then begin
@@ -341,7 +354,9 @@ grids_lat_offset=[-5,-5,-5,-5,-5]
 for g=0,nglon-1 do begin
 plots,[0,180],[grids_lon(g),grids_lon(g)],color=1,linestyle=1,thick=0.1
 plots,[-180,-0.001],[grids_lon(g),grids_lon(g)],color=1,linestyle=1,thick=0.1
+if (latlonlabels eq 1) then begin
 xyouts,-175,grids_lon(g)+grids_lat_offset(g),grids_lon_label(g),color=1,charsize=0.8
+endif
 endfor
 
 nglat=3
@@ -356,7 +371,9 @@ ninc=180.0/inc
 for i=0,ninc-1 do begin
 plots,[grids_lat(g),grids_lat(g)],[90-inc*i,90-inc*(i+1)],color=1,linestyle=1,thick=0.1
 endfor
+if (latlonlabels eq 1) then begin
 xyouts,grids_lat(g)+grids_lat_offset(g),-85,grids_lat_label(g),color=1,charsize=0.8
+endif
 endfor
 
 psclose,/noview

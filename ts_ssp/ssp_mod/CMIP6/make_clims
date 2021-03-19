@@ -8,7 +8,7 @@ gen_diffs=1
 gen_ens=1
 
 modlist_1850='CanESM5 IPSL-CM6A-LR MRI-ESM2-0 CESM2-WACCM UKESM1-0-LL'
-modlist_1995='CanESM5 IPSL-CM6A-LR MRI-ESM2-0'
+modlist_1995='CanESM5 IPSL-CM6A-LR MRI-ESM2-0 CESM2-WACCM UKESM1-0-LL'
 
 ssplist='ssp126 ssp585'
 yearlist='2300 2100'
@@ -65,7 +65,7 @@ fileyears_2100_ssp585='201501-210012'
 extyears_2300_ssp585='349/588'   # last 20 years
 extyears_2100_ssp585='793/1032'    # last 20 years
 grid='gn'
-do_1995=0
+do_1995=1
 echo ${model}
 fi
 
@@ -79,9 +79,11 @@ fileyears_2100_ssp585='205001-210012'
 extyears_2300_ssp585='373/612'   # last 20 years
 extyears_2100_ssp585='373/612'    # last 20 years
 fileyears_1850_historical='185001-194912'
+fileyears_1995_historical='195001-201412'
+extyears_1995_historical='541/780'  # last 20 years
 ens='r4i1p1f2'
 grid='gn'
-do_1995=0
+do_1995=1
 echo ${model}
 fi
 
