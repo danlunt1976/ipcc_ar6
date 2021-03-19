@@ -85,6 +85,7 @@ do_1995=0
 echo ${model}
 fi
 
+#  make model-specific 2100 and 2300 SSP averages
 for ssp in ${ssplist} ; do
 for year in ${yearlist} ; do
 
@@ -110,6 +111,7 @@ done
 done
 
 
+#  make model-specific 1850-1900 historical averages
 year='1850'
 for ssp in historical ; do
 fileyear=fileyears_${year}_${ssp}
@@ -124,7 +126,7 @@ cdo -O timmean tmp.nc ${fileout}
 echo ''
 done
 
-
+#  make model-specific 1995-2014 historical averages
 if [ ${do_1995} -eq 1 ]  ; then 
 year='1995'
 for ssp in historical ; do
@@ -148,6 +150,8 @@ fi
 
 if [ ${gen_diffs} -eq 1 ] ; then
 
+
+# make model-specific SSP-(1850-1900)
 for mod in ${modlist_1850} ; do
 base='1850'
 for ssp in ${ssplist} ; do
@@ -161,7 +165,7 @@ done
 done
 done
 
-
+# make model-specific SSP-(1995-2014)
 for mod in ${modlist_1995} ; do
 base='1995'
 for ssp in ${ssplist} ; do
@@ -175,6 +179,20 @@ done
 done
 done
 
+# make model-specific (1995-2014)-(1850-1900)
+for mod in ${modlist_1995} ; do
+base='1850'
+
+for ssp in historical ; do
+for year in 1995 ; do
+
+cdo -O sub ${mod}/tas_${ssp}_${year}.nc ${mod}/tas_historical_${base}.nc ${mod}/tas_${ssp}_${year}-historical_${base}.nc
+
+cdo -O remapbil,r360x180 -selname,tas ${mod}/tas_${ssp}_${year}-historical_${base}.nc ${mod}/tas_${ssp}_${year}-historical_${base}_regrid.nc
+
+done
+done
+done
 
 fi
 
@@ -184,6 +202,7 @@ if [ ${gen_ens} -eq 1 ] ; then
 for ssp in ${ssplist} ; do
 for year in ${yearlist} ; do
 
+# make ensemble-mean SSP-(1850-1900)
 base='1850'
 filelist=''
 for mod in ${modlist_1850} ; do
@@ -191,6 +210,7 @@ filelist=${filelist}"${mod}/tas_${ssp}_${year}-historical_${base}_regrid.nc "
 done
 cdo -O ensmean ${filelist} ensmean_tas_${ssp}_${year}-historical_${base}_regrid.nc 
 
+# make ensemble-mean SSP-(1995-2014)
 base='1995'
 filelist=''
 for mod in ${modlist_1995} ; do
@@ -200,6 +220,20 @@ cdo -O ensmean ${filelist} ensmean_tas_${ssp}_${year}-historical_${base}_regrid.
 
 done
 done
+
+# make ensemble-mean (1995-2014)-(1850-1900)
+for ssp in historical ; do
+for year in 1995 ; do
+# make ensemble-mean SSP-(1995-2014)
+base='1850'
+filelist=''
+for mod in ${modlist_1995} ; do
+filelist=${filelist}"${mod}/tas_${ssp}_${year}-historical_${base}_regrid.nc "
+done
+cdo -O ensmean ${filelist} ensmean_tas_${ssp}_${year}-historical_${base}_regrid.nc 
+done
+done
+
 
 fi
 
