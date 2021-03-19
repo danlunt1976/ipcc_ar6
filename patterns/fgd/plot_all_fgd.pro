@@ -10,6 +10,7 @@ make_gmt_plots=0 ; plot gmst [default=0 or 1]
 rev_lgm=1 ; re-reverse LGM [default=0;=1 for TS]
 all_proxies=1 ; plot all proxies [default=0;=1 for TS]
 make_nodata=0 ; plot maps without data [default=0;=1 for TS version B]
+latlonlabels=0 ; label lats/lons [default=0;=1 for TS]
 ;;;;;;;;;;
 
 ;;;;;;;;;;
@@ -2010,7 +2011,9 @@ grids_lat_offset=[-5,-5,-5,-5,-5]
 for g=0,nglon-1 do begin
 plots,[0,180],[grids_lon(g),grids_lon(g)],color=1,linestyle=1,thick=0.1
 plots,[-180,-0.001],[grids_lon(g),grids_lon(g)],color=1,linestyle=1,thick=0.1
+if (latlonlabels eq 1) then begin
 xyouts,-175,grids_lon(g)+grids_lat_offset(g),grids_lon_label(g),color=1,charsize=0.8
+endif
 endfor
 
 nglat=3
@@ -2025,7 +2028,9 @@ ninc=180.0/inc
 for i=0,ninc-1 do begin
 plots,[grids_lat(g),grids_lat(g)],[90-inc*i,90-inc*(i+1)],color=1,linestyle=1,thick=0.1
 endfor
+if (latlonlabels eq 1) then begin
 xyouts,grids_lat(g)+grids_lat_offset(g),-85,grids_lat_label(g),color=1,charsize=0.8
+endif
 endfor
 
 
