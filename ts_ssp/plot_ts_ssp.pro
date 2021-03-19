@@ -3,6 +3,8 @@ pro pt
 ;;;;;;;;;;
 make_map_plots=1
 latlonlabels=0
+testing=1
+testing_t=18
 ;;;;;;;;;;
 
 make_pdf=0
@@ -13,7 +15,8 @@ nold=3
 nerich2100=4
 nerich2300=2
 nrecent=1
-ntime=nnew+nold+nerich2100+nerich2300+nrecent
+nhawkins=1
+ntime=nnew+nold+nerich2100+nerich2300+nrecent+nhawkins
 
 mytype=intarr(ntime)
 mytype(0:nnew-1)=0
@@ -21,6 +24,7 @@ mytype(nnew:nnew+nold-1)=1
 mytype(nnew+nold:nnew+nold+nerich2100-1)=2
 mytype(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=3
 mytype(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=4
+mytype(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent+nhawkins-1)=5
 
 
 ; ** change ntime
@@ -31,6 +35,12 @@ pernameslong=strarr(ntime)
 yearnames=strarr(ntime)
 histnames=strarr(ntime)
 
+do_plot=intarr(ntime)
+do_plot(0:ntime-1)=1
+if (testing eq 1) then begin
+do_plot(0:ntime-1)=0
+do_plot(testing_t)=1
+endif
 
 ;;;;;;;;;;;;;;;;;;
 ; SET UP 0:NNEW = my SSPs
@@ -69,40 +79,63 @@ endfor
 
 ;;;;;;;;;;;;;;;;;;
 ; SET UP NNEW:NNEW+NOLD = ERICH ORIGINAL SSPs
-timnames(nnew:nnew+nold-1)=['ssp126','ssp370','ssp585']
-timnameslong(nnew:nnew+nold-1)=['SSP1-2.6','SSP3-7.0','SSP5-8.5']
-basenameslong(nnew:nnew+nold-1)=['1995-2014','1995-2014','1995-2014']
-pernameslong(nnew:nnew+nold-1)=['2081-2100','2081-2100','2081-2100']
+istart=nnew
+istop=nnew+nold-1
+timnames(istart:istop)=['ssp126','ssp370','ssp585']
+timnameslong(istart:istop)=['SSP1-2.6','SSP3-7.0','SSP5-8.5']
+basenameslong(istart:istop)=['1995-2014','1995-2014','1995-2014']
+pernameslong(istart:istop)=['2081-2100','2081-2100','2081-2100']
 ;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;
 ; SET UP NNEW+NOLD:NNEW+NOLD+NERICH2100 = ERICH NEW 2100 SSPs
-timnames(nnew+nold:nnew+nold+nerich2100-1)=['ssp126','ssp245','ssp370','ssp585']
-timnameslong(nnew+nold:nnew+nold+nerich2100-1)=['SSP1-2.6','SSP2-4.5','SSP3-7.0','SSP5-8.5']
-basenameslong(nnew+nold:nnew+nold+nerich2100-1)=['1850-1900','1850-1900','1850-1900','1850-1900']
-pernameslong(nnew+nold:nnew+nold+nerich2100-1)=['2081-2100','2081-2100','2081-2100','2081-2100']
-yearnames(nnew+nold:nnew+nold+nerich2100-1)=['2100','2100','2100','2100']
-histnames(nnew+nold:nnew+nold+nerich2100-1)=['1850','1850','1850','1850']
+istart=nnew+nold
+istop=nnew+nold+nerich2100-1
+timnames(istart:istop)=['ssp126','ssp245','ssp370','ssp585']
+timnameslong(istart:istop)=['SSP1-2.6','SSP2-4.5','SSP3-7.0','SSP5-8.5']
+basenameslong(istart:istop)=['1850-1900','1850-1900','1850-1900','1850-1900']
+pernameslong(istart:istop)=['2081-2100','2081-2100','2081-2100','2081-2100']
+yearnames(istart:istop)=['2100','2100','2100','2100']
+histnames(istart:istop)=['1850','1850','1850','1850']
 ;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;
-; SET UP NNEW+NOLD+NERICH2100:NNEW+NOLD+NERICH2100+NERIC2300 = ERICH NEW 2300 SSPs
-timnames(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['ssp126','ssp585']
-timnameslong(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['SSP1-2.6','SSP5-8.5']
-basenameslong(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['1850-1900','1850-1900']
-pernameslong(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['2280-2299','2280-2299']
-yearnames(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['2300','2300']
-histnames(nnew+nold+nerich2100:nnew+nold+nerich2100+nerich2300-1)=['1850','1850']
+; SET UP NNEW+NOLD+NERICH2100:NNEW+NOLD+NERICH2100+NERIC2300 = ERICH
+; NEW 2300 SSPs
+istart=nnew+nold+nerich2100
+istop=nnew+nold+nerich2100+nerich2300-1
+timnames(istart:istop)=['ssp126','ssp585']
+timnameslong(istart:istop)=['SSP1-2.6','SSP5-8.5']
+basenameslong(istart:istop)=['1850-1900','1850-1900']
+pernameslong(istart:istop)=['2280-2299','2280-2299']
+yearnames(istart:istop)=['2300','2300']
+histnames(istart:istop)=['1850','1850']
 ;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;
-; SET UP NNEW+NOLD+NERICH2100+NERICH2300:NNEW+NOLD+NERICH2100+NERIC2300+NRECENT = 1995 vs. 1850
-timnames(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=['historical']
-timnameslong(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=['RECENT']
-basenameslong(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=['1850-1900']
-pernameslong(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=['1995-2014']
-yearnames(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=['1995']
-histnames(nnew+nold+nerich2100+nerich2300:nnew+nold+nerich2100+nerich2300+nrecent-1)=['1850']
+; SET UP
+; NNEW+NOLD+NERICH2100+NERICH2300:NNEW+NOLD+NERICH2100+NERIC2300+NRECENT = 1995 vs. 1850
+istart=nnew+nold+nerich2100+nerich2300
+istop=nnew+nold+nerich2100+nerich2300+nrecent-1
+timnames(istart:istop)=['historical']
+timnameslong(istart:istop)=['RECENT']
+basenameslong(istart:istop)=['1850-1900']
+pernameslong(istart:istop)=['1995-2014']
+yearnames(istart:istop)=['1995']
+histnames(istart:istop)=['1850']
+;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;
+; SET UP
+; NNEW+NOLD+NERICH2100+NERICH2300:NNEW+NOLD+NERICH2100+NERIC2300+NRECENT+NHAWKINS = 2020 vs. 1850
+istart=nnew+nold+nerich2100+nerich2300+nrecent
+istop=nnew+nold+nerich2100+nerich2300+nrecent+nhawkins-1
+timnames(istart:istop)=['historical']
+timnameslong(istart:istop)=['RECENT']
+basenameslong(istart:istop)=['1850-1900']
+pernameslong(istart:istop)=['2020']
+yearnames(istart:istop)=['2020']
+histnames(istart:istop)=['1850']
 ;;;;;;;;;;;;;;;;;;
 
 nvar=1
@@ -153,7 +186,7 @@ dummy_map=fltarr(nx,ny)
 for t=0,ntime-1 do begin
 for v=0,nvar-1 do begin
 
-if (mytype(t) eq 0 or mytype(t) eq 1 or mytype(t) eq 4) then begin
+if (mytype(t) eq 0 or mytype(t) eq 1 or mytype(t) eq 4 or mytype(t) eq 5) then begin
 
 ; read ensemble mean map
 if (mytype(t) eq 0 or mytype(t) eq 4) then begin
@@ -161,6 +194,9 @@ filenamex='ssp_mod/CMIP6/ensmean_tas_'+timnames(t)+'_'+yearnames(t)+'-'+'histori
 endif
 if (mytype(t) eq 1) then begin
 filenamex='ssp_mod/tas_annual_longterm_'+timnames(t)+'.nc'
+endif
+if (mytype(t) eq 5) then begin
+filenamex='ssp_mod/Hawkins/for_dan_TS_BK_regrid.nc'
 endif
 
 print,filenamex
@@ -280,6 +316,9 @@ if (make_map_plots) then begin
 ; make map plot
 
 for t=0,ntime-1 do begin
+
+if (do_plot(t) eq 1) then begin
+
 for v=0,nvar-1 do begin
 
 mapname='ensmean'
@@ -291,7 +330,7 @@ my_arr=ensmean_map(*,*,t,v)
 map_charsize=230
 
 ; filename
-if (mytype(t) eq 0 or mytype(t) eq 4) then begin
+if (mytype(t) eq 0 or mytype(t) eq 4 or mytype(t) eq 5) then begin
 my_filename=timnames(t)+'_'+yearnames(t)+'-'+'historical_'+histnames(t)+'_modeldata_cont_'+varname(v)+'_ipcc_czt_nodata_ensmean'
 endif
 if (mytype(t) eq 1) then begin
@@ -384,6 +423,9 @@ endif
 
 
 endfor ; end v
+
+endif ; end do_plot
+
 endfor ; end t
 
 endif ; end make map plots
