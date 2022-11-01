@@ -1,11 +1,18 @@
 #!/bin/ksh
 
-nmod=8
-mod_array=(CESM1.2_CAM5-deepmip_sens_9xCO2 GFDL_CM2.1-deepmip_stand_6xCO2 GFDL_CM2.1-deepmip_sens_4xCO2 CESM1.2_CAM5-deepmip_stand_6xCO2 INM-CM4-8-deepmip_stand_6xCO2 COSMOS-landveg_r2413-deepmip_sens_4xCO2 NorESM1_F-deepmip_sens_4xCO2 CESM2.1slab_3x)
+#nmod=8
+#mod_array=(CESM1.2_CAM5-deepmip_sens_9xCO2 GFDL_CM2.1-deepmip_stand_6xCO2 GFDL_CM2.1-deepmip_sens_4xCO2 CESM1.2_CAM5-deepmip_stand_6xCO2 INM-CM4-8-deepmip_stand_6xCO2 COSMOS-landveg_r2413-deepmip_sens_4xCO2 NorESM1_F-deepmip_sens_4xCO2 CESM2.1slab_3x)
+#do_ens=1
+#map_array=(0 1 1 1 1 1 0 0)
+#zon_array=(0 1 1 1 1 1 0 0)
+#all_array=(0 1 1 1 1 1 1 1)
 
-map_array=(0 1 1 1 1 1 0 0)
-zon_array=(0 1 1 1 1 1 0 0)
-all_array=(0 1 1 1 1 1 1 1)
+nmod=7
+mod_array=(cch4x cch8x ccw4x ccw8x gis4x had4x had6x)
+do_ens=0
+map_array=(0 0 0 0 0 0 0)
+zon_array=(0 0 0 0 0 0 0)
+all_array=(0 0 0 0 0 0 0)
 
 for var in SST NearSurfaceTemperature ; do
 
@@ -55,6 +62,9 @@ cdo -b 32 -O zonmean mod_${mod_array[${mod}]}_${var}_eo-pi.nc mod_${mod_array[${
 
 done
 
+
+if [ ${do_ens} -eq 1 ] ; then
+
 # create an ensemble mean PI, ensemble mean Eocene, and ensemble mean Eocene-PI. using ensmean or ensavg.  map and models
 for fortype in map zon all ; do
 for enstype in ensmean ensavg ; do
@@ -67,8 +77,6 @@ cdo -O sub ${enstype}_eo_${var}_for${fortype}.nc ${enstype}_pi_${var}_for${forty
 done
 done
 
-
-
 # zonal mean of the ensemble mean.  using zonmean and zonavg.  from ensmean or ensavg.  map and models
 for fortype in map zon all ; do
 for enstype in ensmean ensavg ; do
@@ -79,6 +87,7 @@ cdo -O zonavg ${enstype}_eo-pi_${var}_for${fortype}.nc ${enstype}_eo-pi_${var}_z
 done
 done
 
+fi
 
 
 

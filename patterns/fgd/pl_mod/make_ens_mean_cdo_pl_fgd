@@ -1,9 +1,14 @@
 #!/bin/ksh
 
-nmod=17
-mod_array=(CCSM4 CCSM4-UoT CCSM4-Utrecht CESM1.2 CESM2.0 COSMOS EC-Earth3.3 GISS-E2-1-G HadCM3 HadGEM3 IPSL-CM6A-LR IPSLCM5A IPSLCM5A2 MIROC4m MRI-CGCM2.3 NorESM-L NorESM1-F)
+#nmod=17
+#mod_array=(CCSM4 CCSM4-UoT CCSM4-Utrecht CESM1.2 CESM2.0 COSMOS EC-Earth3.3 GISS-E2-1-G HadCM3 HadGEM3 IPSL-CM6A-LR IPSLCM5A IPSLCM5A2 MIROC4m MRI-CGCM2.3 NorESM-L NorESM1-F)
+#do_ens=1
+#ens_array=(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)
 
-ens_array=(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)
+nmod=8
+mod_array=(CCSM4_plio1 COSMOS_plio1 GISS-E2-R_plio1 HadCM3_plio1 IPSLCM5A_plio1 MIROC4m_plio1 MRI2.3_plio1 NORESM-L_plio1)
+do_ens=0
+ens_array=(0 0 0 0 0 0 0 0)
 
 for var in SST NearSurfaceTemperature ; do
 
@@ -35,6 +40,8 @@ done
 
 echo 'models ensemble list is: '${filelist_pi}
 
+if [ ${do_ens} -eq 1 ] ; then
+
 # create an ensemble mean PI, ensemble mean pliocene, and ensemble mean pliocene-PI. using ensmean.
 cdo -O ensmean ${filelist_pi} ensmean_pi_${var}.nc
 cdo -O ensmean ${filelist_pl} ensmean_pl_${var}.nc
@@ -56,6 +63,8 @@ cdo -O zonavg ensmean_pl-pi_${var}.nc ensmean_pl-pi_${var}_zonavg.nc
 # zonal mean of the ensemble mean.  using zonmean and zonavg.  from ensavg.
 cdo -O zonmean ensavg_pl-pi_${var}.nc ensavg_pl-pi_${var}_zonmean.nc 
 cdo -O zonavg ensavg_pl-pi_${var}.nc ensavg_pl-pi_${var}_zonavg.nc 
+
+fi
 
 done
 
