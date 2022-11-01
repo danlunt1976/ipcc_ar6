@@ -5,11 +5,14 @@ gridfile=/home/bridge/ggdjl/ipcc_ar6/patterns/sod/pl_mod/DAN/IPSLCM5A/EOI400.SST
 
 #for model in CESM1.2_CAM5-deepmip_stand_6xCO2 CESM1.2_CAM5-deepmip_sens_9xCO2 COSMOS-landveg_r2413-deepmip_sens_4xCO2 GFDL_CM2.1-deepmip_sens_4xCO2 GFDL_CM2.1-deepmip_stand_6xCO2 INM-CM4-8-deepmip_stand_6xCO2 NorESM1_F-deepmip_sens_4xCO2; do
 
-for model in CESM2.1slab_3x ; do
+#for model in CESM2.1slab_3x ; do
+
+for model in had4x had6x ccw4x ccw8x cch4x cch8x gis4x ; do
+
 
 cop_raw=1 # copy raw data from rawdata directory
 pro_raw=1 # process raw data
-rem_raw=1 # remove raw data
+rem_raw=1 # remove raw (processed, not original) data
 pos_pro=1 # post-process data
 
 mkdir -p rawdata
@@ -19,7 +22,154 @@ new_name=(tas tos tas tos)
 
 # -------------------------------
 
+if [ ${model} == 'had4x' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+xbowca.pdclann.nc
+xbowco.pgclann_umsst_nn.nc
+tbpifa.pdclann.nc
+tbpifo.pgclann_umsst_nn.nc
+)
+old_name=(temp_mm_1_5m temp_ym_dpth temp_mm_1_5m temp_ym_dpth)
+do_cop=(1 0 1 0)
+do_lev=(0 1 0 1)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(0 0 0 0)
+fi
 
+if [ ${model} == 'had6x' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+xbowca.pdclann.nc
+xbowco.pgclann_umsst_nn.nc
+tbpiga.pdclann.nc
+tbpigo.pgclann_umsst_nn.nc
+)
+old_name=(temp_mm_1_5m temp_ym_dpth temp_mm_1_5m temp_ym_dpth)
+do_cop=(1 0 1 0)
+do_lev=(0 1 0 1)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(0 0 0 0)
+fi
+
+if [ ${model} == 'gis4x' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+GISS_0k_SAT_ANN_um.nc
+GISS_0k_OCN_TEMP_ANN_mask_umsst.nc
+GISS_55Ma_SAT_ANN_um.nc
+GISS_55Ma_OCN_TEMP_ANN_mask_umsst.nc
+)
+old_name=(var var var var)
+do_cop=(1 1 1 1)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(0 0 0 0)
+fi
+
+if [ ${model} == 'ccw4x' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+b30.105.cam2.h0.371-420_um.nc
+b30.105.pop.h.0371-0420_umsst.nc
+eofc2240.03.cam2.h0.2401-2500-tavg_um.nc
+eofc2240.03_PMIP_pop.h.1951-2000_umsst.nc
+)
+old_name=(TREFHT TEMP TREFHT TEMP)
+do_cop=(1 1 1 1)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(0 0 0 0)
+fi
+
+if [ ${model} == 'ccw8x' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+b30.105.cam2.h0.371-420_um.nc
+b30.105.pop.h.0371-0420_umsst.nc
+eofc2240.01.cam2.h0.2401-2500-tavg_um.nc
+eofc2240.01_PMIP_pop.h.1951-2000_umsst.nc
+)
+old_name=(TREFHT TEMP TREFHT TEMP)
+do_cop=(1 1 1 1)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(0 0 0 0)
+fi
+
+if [ ${model} == 'cch4x' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+b30.105.cam2.h0.371-420_um.nc
+b30.105.pop.h.0371-0420_umsst.nc
+b.EO2.00.cam2.climo.cat_um.nc
+b.EO2.00.pop.climo.cat_umsst.nc
+)
+old_name=(TREFHT TEMP TREFHT TEMP)
+do_cop=(1 1 0 1)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(0 0 1 0)
+timname=(x x time x)
+fi
+
+if [ ${model} == 'cch8x' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+b30.105.cam2.h0.371-420_um.nc
+b30.105.pop.h.0371-0420_umsst.nc
+b.EO3.00.cam2.climo.cat_um.nc
+b.EO3.00.pop.climo.cat_umsst.nc
+)
+old_name=(TREFHT TEMP TREFHT TEMP)
+do_cop=(1 1 0 1)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tim=(0 0 1 0)
+timname=(x x time x)
+fi
 
 if [ ${model} == 'CESM1.2_CAM5-deepmip_sens_9xCO2' ] ; then
 remaptype=(remapbil remapbil remapbil remapbil)
@@ -30,6 +180,7 @@ CESM1.2_CAM5-deepmip_sens_9xCO2-tas-v1.0.mean.nc
 CESM1.2_CAM5-deepmip_sens_9xCO2-tos-v1.0.mean.nc
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(0 0 0 0)
 do_mov=(0 0 0 0)
@@ -51,6 +202,7 @@ CESM1.2_CAM5-deepmip_stand_6xCO2-tas-v1.0.mean.nc
 CESM1.2_CAM5-deepmip_stand_6xCO2-tos-v1.0.mean.nc
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(0 0 0 0)
 do_mov=(0 0 0 0)
@@ -72,6 +224,7 @@ COSMOS-landveg_r2413-deepmip_sens_4xCO2-tas-v1.0.mean.nc
 COSMOS-landveg_r2413-deepmip_sens_4xCO2-tos-v1.0.mean.nc
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(0 0 0 0)
 do_mov=(0 0 0 0)
@@ -93,6 +246,7 @@ GFDL_CM2.1-deepmip_sens_4xCO2-tas-v1.0.mean.nc
 GFDL_CM2.1-deepmip_sens_4xCO2-tos-v1.0.mean.nc
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(0 0 0 0)
 do_mov=(0 0 0 0)
@@ -114,6 +268,7 @@ GFDL_CM2.1-deepmip_stand_6xCO2-tas-v1.0.mean.nc
 GFDL_CM2.1-deepmip_stand_6xCO2-tos-v1.0.mean.nc
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(0 0 0 0)
 do_mov=(0 0 0 0)
@@ -135,6 +290,7 @@ INM-CM4-8-deepmip_stand_6xCO2-tas-v1.0.mean.nc
 INM-CM4-8-deepmip_stand_6xCO2-tos-v1.0.mean.nc
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(0 0 0 0)
 do_mov=(0 0 0 0)
@@ -156,6 +312,7 @@ NorESM1_F-deepmip_sens_4xCO2-tas-v1.0.mean.nc
 NorESM1_F-deepmip_sens_4xCO2-tos-v1.0.mean.nc
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(0 0 0 0)
 do_mov=(0 0 0 0)
@@ -177,6 +334,7 @@ e.e21.E1850.f09_g17.PETM03x.02.cam.h0.tas.0041-0060.climo.nc
 e.e21.E1850.f09_g17.PETM03x.02.cice.h.tos.0041-0060.climo.nc
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(0 0 0 0)
 do_mov=(0 0 0 0)
@@ -250,6 +408,10 @@ fi
 
 if [ ${do_tim[${i}]} -eq 1 ] ; then
 ncwa -O -a ${timname[${i}]} rawdata/${filein[${i}]} rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_cop[${i}]} -eq 1 ] ; then
+ncks -O -v ${old_name[${i}]} rawdata/${filein[${i}]} rawdata/tmp2.${i}.nc
 fi
 
 cdo -O -${remaptype[${i}]},${gridfile} rawdata/tmp2.${i}.nc ${model}/${fileout[${i}]}

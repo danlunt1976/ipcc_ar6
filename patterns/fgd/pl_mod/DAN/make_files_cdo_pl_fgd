@@ -16,13 +16,23 @@ gridfile=/home/bridge/ggdjl/ipcc_ar6/patterns/sod/pl_mod/DAN/IPSLCM5A/EOI400.SST
 #for model in IPSLCM5A IPSLCM5A2 COSMOS CCSM4 CESM1.2 CESM2.0 EC-Earth3.3 CCSM4-UoT CCSM4-Utrecht HadCM3 MIROC4m MRI-CGCM2.3 NorESM1-F NorESM-L HadGEM3 ; do
 #from esgf (use cop_raw):
 #for model in GISS-E2-1-G IPSL-CM6A-LR ; do
+#for model in IPSL-CM6A-LR ; do
 
-for model in IPSL-CM6A-LR ; do
+
+#for model in CCSM4_plio1 ; do
+#for model in COSMOS_plio1 ; do
+#for model in GISS-E2-R_plio1 ; do
+#for model in HadCM3_plio1 ; do
+#for model in IPSLCM5A_plio1 ; do
+#for model in MIROC4m_plio1 ; do
+#for model in MRI2.3_plio1 ; do
+for model in NORESM-L_plio1 ; do
+
 
 get_raw=0 # download raw data from PlioMIP database
-cop_raw=0 # copy raw data from ESGF directory
-rem_raw=0 # remove raw data
-pro_raw=0 # process raw data
+cop_raw=1 # copy raw data from ESGF directory
+rem_raw=1 # remove raw data
+pro_raw=1 # process raw data
 pos_pro=1 # post-process data
 
 mkdir -p rawdata
@@ -31,6 +41,168 @@ mkdir -p ${model}
 new_name=(tas tos tas tos)
 
 # -------------------------------
+
+if [ ${model} == 'NORESM-L_plio1' ] ; then
+dirin=(NORESM-L_plio1 NORESM-L_plio1 NORESM-L_plio1 NORESM-L_plio1)
+filein=(\
+'NearSurfaceTemperature_NORESM-L_Cntl.nc' \
+'SST_NORESM-L_Cntl.nc' \
+'NearSurfaceTemperature_NORESM-L_Expt2.nc' \
+'SST_NORESM-L_Expt2.nc' \
+)
+old_name=(NOR_ctrl_sat NOR_ctrl_sst NOR_plio_sat NOR_plio_sst)
+do_cop=(1 1 1 1)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+
+if [ ${model} == 'MRI2.3_plio1' ] ; then
+dirin=(MRI2.3_plio1 MRI2.3_plio1 MRI2.3_plio1 MRI2.3_plio1)
+filein=(\
+'NearSurfaceTemperature_MRI2.3_Cntl.nc' \
+'SST_MRI2.3_Cntl.nc' \
+'NearSurfaceTemperature_MRI2.3_Expt2.nc' \
+'SST_MRI2.3_Expt2.nc' \
+)
+old_name=(MRI_ctrl_sat MRI_ctrl_sst MRI_plio_sat MRI_plio_sst)
+do_cop=(1 1 1 1)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'MIROC4m_plio1' ] ; then
+dirin=(MIROC4m_plio1 MIROC4m_plio1 MIROC4m_plio1 MIROC4m_plio1)
+filein=(\
+'NearSurfaceTemperature_MIROC4m_Cntl.nc' \
+'SST_MIROC4m_Cntl.nc' \
+'NearSurfaceTemperature_MIROC4m_Expt2.nc' \
+'SST_MIROC4m_Expt2.nc' \
+)
+old_name=(MIROC_ctrl_sat MIROC_ctrl_sst MIROC_plio_sat MIROC_plio_sst)
+do_cop=(1 1 1 1)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+
+if [ ${model} == 'IPSLCM5A_plio1' ] ; then
+dirin=(IPSLCM5A_plio1 IPSLCM5A_plio1 IPSLCM5A_plio1 IPSLCM5A_plio1)
+filein=(\
+'NearSurfaceTemperature_IPSLCM5A_Cntl.nc' \
+'SST_IPSLCM5A_Cntl.nc' \
+'NearSurfaceTemperature_IPSLCM5A_Expt2.nc' \
+'SST_IPSLCM5A_Expt2.nc' \
+)
+old_name=(IPSL_ctrl_sat IPSL_ctrl_sst IPSL_plio_sat IPSL_plio_sst)
+do_cop=(1 1 1 1)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'HadCM3_plio1' ] ; then
+dirin=(HadCM3_plio1 HadCM3_plio1 HadCM3_plio1 HadCM3_plio1)
+filein=(\
+'NearSurfaceTemperature_HadCM3_Cntl.nc' \
+'SST_HadCM3_Cntl.nc' \
+'NearSurfaceTemperature_HadCM3_Expt2.nc' \
+'SST_HadCM3_Expt2.nc' \
+)
+old_name=(HAD_Ctrl_SAT HAD_ctrl_sst HAD_Plio_SAT HAD_plio_sst)
+do_cop=(1 1 1 1)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'GISS-E2-R_plio1' ] ; then
+dirin=(GISS-E2-R_plio1 GISS-E2-R_plio1 GISS-E2-R_plio1 GISS-E2-R_plio1)
+filein=(\
+'NearSurfaceTemperature_GISS-E2-R_Cntl.nc' \
+'SST_GISS-E2-R_Cntl.nc' \
+'NearSurfaceTemperature_GISS-E2-R_Expt2.nc' \
+'SST_GISS-E2-R_Expt2.nc' \
+)
+old_name=(GISS_Ctrl_SAT GISS_Ctrl_SST GISS_Plio_SAT GISS_Plio_SST)
+do_cop=(1 1 1 1)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'COSMOS_plio1' ] ; then
+dirin=(COSMOS_plio1 COSMOS_plio1 COSMOS_plio1 COSMOS_plio1)
+filein=(\
+'NearSurfaceTemperature_COSMOS_Cntl.nc' \
+'SST_COSMOS_Cntl.nc' \
+'NearSurfaceTemperature_COSMOS_Expt2.nc' \
+'SST_COSMOS_Expt2.nc' \
+)
+old_name=(COSMOS_ctrl_sat COSMOS_Ctrl_SST COSMOS_plio_sat COSMOS_Plio_SST)
+do_cop=(1 1 1 1)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
+
+if [ ${model} == 'CCSM4_plio1' ] ; then
+dirin=(CCSM4_plio1 CCSM4_plio1 CCSM4_plio1 CCSM4_plio1)
+filein=(\
+'NearSurfaceTemperature_CCSM4_Cntl.nc' \
+'SST_CCSM4_Cntl.nc' \
+'NearSurfaceTemperature_CCSM4_Expt2.nc' \
+'SST_CCSM4_Expt2.nc' \
+)
+old_name=(CCSM_ctrl_sat CCSM_ctrl_sst CCSM_plio_sat CCSM_plio_sst)
+do_cop=(1 1 1 1)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+fi
 
 if [ ${model} == 'IPSLCM5A' ] ; then
 dirin=(IPSLCM5A IPSLCM5A IPSLCM5A IPSLCM5A)
@@ -41,6 +213,7 @@ filein=(\
 'Eoi400.Seasurfacetemp_sst_3581_3680_monthly_TS.nc' \
 )
 old_name=(tas sst tas sst)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(1 1 1 1)
 mon_time=(601/1200 601/1200 601/1200 601/1200)
@@ -61,6 +234,7 @@ filein=(\
 'Eoi400.SeasurfaceTemp_sst_3381_3480_monthly_TS.nc' \
 )
 old_name=(tas sst t2m sst)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(1 1 1 1)
 mon_time=(601/1200 601/1200 601/1200 601/1200)
@@ -81,6 +255,7 @@ Eoi400.tas_2650-2749_monthly_mean_time_series.nc \
 Eoi400.tos_2650-2749_monthly_mean_time_series_remapbil.nc \
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(1 1 1 1)
 mon_time=(601/1200 601/1200 601/1200 601/1200)
@@ -101,6 +276,7 @@ b40.B1850.f09_g16.PMIP4-pliomip2.TREFHT.1001.1100.nc \
 b40.B1850.f09_g16.PMIP4-pliomip2.pop.h.TEMP.1001-1100.annavg.nc \
 )
 old_name=(TREFHT TEMP TREFHT TEMP)
+do_cop=(0 0 0 0)
 do_lev=(0 1 0 1)
 do_mon=(1 0 1 0)
 mon_time=(601/1200 x 601/1200 x)
@@ -121,6 +297,7 @@ b.e12.B1850.f09_g16.PMIP4-pliomip2.cam.h0.TREFHT.1101.1200.nc \
 b.e12.B1850.f09_g16.PMIP4-pliomip2.pop.h.TEMP.1100-1199.annavg.nc \
 )
 old_name=(TREFHT TEMP TREFHT TEMP)
+do_cop=(0 0 0 0)
 do_lev=(0 1 0 1)
 do_mon=(1 0 1 0)
 mon_time=(601/1200 x 601/1200 x)
@@ -141,6 +318,7 @@ b.e21.B1850.f09_g17.PMIP4-midPliocene-eoi400.001.cam.h0.TREFHT.1101.1200.nc \
 b.e21.B1850.f09_g16.PMIP4-pliomip2.pop.h.TEMP.1100-1199.annavg.nc \
 )
 old_name=(TREFHT TEMP TREFHT TEMP)
+do_cop=(0 0 0 0)
 do_lev=(0 1 0 1)
 do_mon=(0 0 0 0)
 do_mov=(1 0 1 0)
@@ -161,6 +339,7 @@ EC-Earth3.3_mPlio_surface.nc \
 EC-Earth3.3_mPlio_T.S.mean.nc \
 )
 old_name=(tas thetao tas thetao)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(0 0 0 0)
 do_mov=(0 0 0 0)
@@ -183,6 +362,7 @@ tas_Amon_UofT-CCSM4_midPliocene-eoi400_r1i1p1f1_gn_160101-170012.nc \
 tos_Omon_Eoi400_UofT-CCSM4_gr.nc \
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(1 1 1 1)
 mon_time=(601/1200 601/1200 601/1200 601/1200)
@@ -203,6 +383,7 @@ tas_Amon_CESM1.0.5_Eoi400_r1i1p1f1_gn_190001-200012.nc \
 tos_Omon_CESM1.0.5_Eoi400_r1i1p1f1_gn_190001-200012.nc \
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(1 1 1 1)
 mon_time=(601/1200 601/1200 601/1200 601/1200)
@@ -223,6 +404,7 @@ eoi400.NearSurfaceTemperature.0[5-9]?.nc \
 eoi400.SST.0[5-9]?.nc \
 )
 old_name=(temp temp temp temp)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(0 0 0 0)
 do_mov=(0 0 0 0)
@@ -242,6 +424,7 @@ MIROC4m_Eoi400_Amon_tas.nc \
 MIROC4m_Eoi400_Omon_tos.nc \
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(1 1 1 1)
 mon_time=(601/1200 601/1200 601/1200 601/1200)
@@ -262,6 +445,7 @@ eoi400.tas.0[5-9]?.nc \
 eoi400.tos.0[5-9]?.nc \
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(0 0 0 0)
 do_mov=(0 0 0 0)
@@ -281,6 +465,7 @@ NorESM1-F_Eoi400_TREFHT.nc \
 NorESM1-F_Eoi400_sst.nc \
 )
 old_name=(TREFHT sst TREFHT sst)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(1 1 1 1)
 mon_time=(601/1200 601/1200 601/1200 601/1200)
@@ -301,6 +486,7 @@ NorESM-L_Eoi400_TREFHT.nc \
 NorESM-L_Eoi400_sst.nc \
 )
 old_name=(TREFHT sst TREFHT sst)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(1 1 1 1)
 mon_time=(601/1200 601/1200 601/1200 601/1200)
@@ -321,6 +507,7 @@ clims_hadgem3_pliocene_airtemp_final.nc \
 clims_hadgem3_pliocene_sst_final.nc \
 )
 old_name=(temp tos temp tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(0 0 0 0)
 do_mov=(0 0 0 0)
@@ -340,6 +527,7 @@ tas_Amon_GISS-E2-1-G_midPliocene-eoi400_r1i1p1f1_gn_310101-315012.nc \
 tos_Omon_GISS-E2-1-G_midPliocene-eoi400_r1i1p1f1_gn_310101-315012.nc \
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(1 1 1 1)
 mon_time=(1/600 1/600 1/600 1/600)
@@ -360,6 +548,7 @@ tas_Amon_IPSL-CM6A-LR_midPliocene-eoi400_r1i1p1f1_gr_185001-204912.nc \
 tos_Omon_IPSL-CM6A-LR_midPliocene-eoi400_r1i1p1f1_gn_185001-204912.nc \
 )
 old_name=(tas tos tas tos)
+do_cop=(0 0 0 0)
 do_lev=(0 0 0 0)
 do_mon=(0 0 0 0)
 do_mov=(1 1 1 1)
@@ -430,6 +619,10 @@ if [ ${do_att[${i}]} -eq 1 ] ; then
 cdo timmean rawdata/${filein[${i}]} rawdata/tmp0.${i}.nc
 ncatted -O -a units,latitude,a,c,'degrees_north' rawdata/tmp0.${i}.nc rawdata/tmp1.${i}.nc
 ncatted -O -a units,longitude,a,c,'degrees_east' rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_cop[${i}]} -eq 1 ] ; then
+ncks -O -v ${old_name[${i}]} rawdata/${filein[${i}]} rawdata/tmp2.${i}.nc
 fi
 
 cdo -remapbil,${gridfile} rawdata/tmp2.${i}.nc ${model}/${fileout[${i}]}
