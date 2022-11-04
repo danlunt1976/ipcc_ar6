@@ -12,7 +12,9 @@ gridfile=/home/bridge/ggdjl/ipcc_ar6/patterns/sod/pl_mod/DAN/IPSLCM5A/EOI400.SST
 # List files
 
 #for model in MIROC-ES2L MPI-ESM1-2-LR AWI-ESM-1-1-LR AWIESM1 AWIESM2 UofT-CCSM4 CESM1_2 CESM2_1 IPSLCM5A2 INM-CM4-8 ; do
-for model in IPSLCM5A2 ; do
+#for model in IPSLCM5A2 ; do
+#for model in CCSM4_pmip3 ; do
+for model in GISS-E2-R_pmip3 IPSL-CM5A-LR_pmip3 MIROC-ESM_pmip3 MPI-ESM-P_pmip3 MRI-CGCM3_pmip3 ; do
 
 cop_raw=1 # copy raw data from ESGF directory
 pro_raw=1 # process raw data
@@ -26,7 +28,143 @@ new_name=(tas tos tas tos)
 
 # -------------------------------
 
+if [ ${model} == 'GISS-E2-R_pmip3' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+GISS-E2-R_piControl_ltm.nc \
+GISS-E2-R_piControl_ltm.nc \
+GISS-E2-R_lgm_ltm.nc \
+GISS-E2-R_lgm_ltm.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mol=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tiv=(1 1 1 1)
+tivname=(month month month month)
+fi
 
+if [ ${model} == 'IPSL-CM5A-LR_pmip3' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+IPSL-CM5A-LR_piControl_ltm.nc \
+IPSL-CM5A-LR_piControl_ltm.nc \
+IPSL-CM5A-LR_lgm_ltm.nc \
+IPSL-CM5A-LR_lgm_ltm.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mol=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tiv=(1 1 1 1)
+tivname=(month month month month)
+fi
+
+if [ ${model} == 'MIROC-ESM_pmip3' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+MIROC-ESM_piControl_ltm.nc \
+MIROC-ESM_piControl_ltm.nc \
+MIROC-ESM_lgm_ltm.nc \
+MIROC-ESM_lgm_ltm.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mol=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tiv=(1 1 1 1)
+tivname=(month month month month)
+fi
+
+if [ ${model} == 'MPI-ESM-P_pmip3' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+MPI-ESM-P_piControl_ltm.nc \
+MPI-ESM-P_piControl_ltm.nc \
+MPI-ESM-P_lgm_ltm.nc \
+MPI-ESM-P_lgm_ltm.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mol=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tiv=(1 1 1 1)
+tivname=(month month month month)
+fi
+
+if [ ${model} == 'MRI-CGCM3_pmip3' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+MRI-CGCM3_piControl_ltm.nc \
+MRI-CGCM3_piControl_ltm.nc \
+MRI-CGCM3_lgm_ltm.nc \
+MRI-CGCM3_lgm_ltm.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mol=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tiv=(1 1 1 1)
+tivname=(month month month month)
+fi
+
+if [ ${model} == 'CCSM4_pmip3' ] ; then
+remaptype=(remapbil remapbil remapbil remapbil)
+filein=(\
+CCSM4_piControl_ltm.nc \
+CCSM4_piControl_ltm.nc \
+CCSM4_lgm_ltm.nc \
+CCSM4_lgm_ltm.nc \
+)
+do_var=(1 1 1 1)
+old_name=(tas tos tas tos)
+do_lev=(0 0 0 0)
+do_mon=(0 0 0 0)
+do_mol=(0 0 0 0)
+do_mov=(0 0 0 0)
+do_exv=(0 0 0 0)
+do_exl=(0 0 0 0)
+do_ser=(0 0 0 0)
+do_att=(0 0 0 0)
+do_off=(0 0 0 0)
+do_tiv=(1 1 1 1)
+tivname=(month month month month)
+fi
 
 if [ ${model} == 'MIROC-ES2L' ] ; then
 remaptype=(remapbil remapbil remapbil remapbil)
@@ -48,6 +186,7 @@ do_exl=(0 0 0 0)
 do_ser=(0 0 0 0)
 do_att=(0 0 0 0)
 do_off=(0 0 0 0)
+do_tiv=(0 0 0 0)
 fi
 
 # N.B. 40 years
@@ -70,6 +209,7 @@ do_exl=(0 0 0 0)
 do_ser=(1 1 1 1)
 do_att=(0 0 0 0)
 do_off=(0 0 0 0)
+do_tiv=(0 0 0 0)
 fi
 
 
@@ -92,6 +232,7 @@ do_exl=(0 0 0 0)
 do_ser=(1 1 1 1)
 do_att=(0 0 0 0)
 do_off=(0 0 0 0)
+do_tiv=(0 0 0 0)
 fi
 
 
@@ -116,6 +257,7 @@ do_exl=(0 0 0 0)
 do_ser=(0 0 0 0)
 do_att=(0 0 0 0)
 do_off=(0 0 0 0)
+do_tiv=(0 0 0 0)
 fi
 
 
@@ -140,6 +282,7 @@ do_exl=(0 0 0 0)
 do_ser=(0 0 0 0)
 do_att=(0 0 0 0)
 do_off=(0 0 0 0)
+do_tiv=(0 0 0 0)
 fi
 
 
@@ -163,6 +306,7 @@ do_exl=(0 0 0 0)
 do_ser=(0 0 0 0)
 do_att=(0 0 0 0)
 do_off=(0 0 0 0)
+do_tiv=(0 0 0 0)
 fi
 
 
@@ -186,6 +330,7 @@ do_exl=(0 0 0 0)
 do_ser=(0 0 0 0)
 do_att=(0 0 0 0)
 do_off=(0 -273.15 0 -273.15)
+do_tiv=(0 0 0 0)
 fi
 
 
@@ -209,6 +354,7 @@ do_exl=(0 0 0 0)
 do_ser=(0 0 0 0)
 do_att=(0 0 0 0)
 do_off=(0 0 0 0)
+do_tiv=(0 0 0 0)
 fi
 
 
@@ -232,6 +378,7 @@ do_exl=(0 0 0 0)
 do_ser=(0 0 0 0)
 do_att=(0 0 0 0)
 do_off=(0 0 0 0)
+do_tiv=(0 0 0 0)
 fi
 
 
@@ -255,12 +402,15 @@ do_exl=(0 0 0 0)
 do_ser=(0 0 0 0)
 do_att=(0 0 0 0)
 do_off=(0 0 0 0)
+do_tiv=(0 0 0 0)
 fi
 
 # -------------------------------
 
 
-
+echo "starting"
+echo ${model}
+echo ${filein}
 
 fileout=( \
 "${model}.PI.NearSurfaceTemperature.allmean.nc" \
@@ -322,6 +472,11 @@ if [ ${do_att[${i}]} -eq 1 ] ; then
 cdo timmean rawdata/${filein[${i}]} rawdata/tmp0.${i}.nc
 ncatted -O -a units,latitude,a,c,'degrees_north' rawdata/tmp0.${i}.nc rawdata/tmp1.${i}.nc
 ncatted -O -a units,longitude,a,c,'degrees_east' rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
+fi
+
+if [ ${do_tiv[${i}]} -eq 1 ] ; then
+ncks -O -v ${old_name[${i}]} rawdata/${filein[${i}]} rawdata/tmp1.${i}.nc
+ncwa -O -a ${tivname[${i}]} rawdata/tmp1.${i}.nc rawdata/tmp2.${i}.nc
 fi
 
 cdo -${remaptype[${i}]},${gridfile} rawdata/tmp2.${i}.nc ${model}/${fileout[${i}]}

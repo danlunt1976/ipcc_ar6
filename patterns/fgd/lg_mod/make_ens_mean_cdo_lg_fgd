@@ -1,11 +1,18 @@
 #!/bin/bash
 
-nmod=9
-mod_array=(MPI-ESM1-2-LR AWIESM1 AWIESM2 CESM1_2 CESM2_1 INM-CM4-8 IPSLCM5A2 MIROC-ES2L UofT-CCSM4)
-ens_array=(1 1 1 1 1 1 1 1 1)
-do_SST=(1 1 1 1 1 1 1 1 1)
-do_NearSurfaceTemperature=(1 1 1 1 1 1 1 1 1)
+#nmod=9
+#mod_array=(MPI-ESM1-2-LR AWIESM1 AWIESM2 CESM1_2 CESM2_1 INM-CM4-8 IPSLCM5A2 MIROC-ES2L UofT-CCSM4)
+#do_ens=1
+#ens_array=(1 1 1 1 1 1 1 1 1)
+#do_SST=(1 1 1 1 1 1 1 1 1)
+#do_NearSurfaceTemperature=(1 1 1 1 1 1 1 1 1)
 
+nmod=6
+mod_array=(CCSM4_pmip3 GISS-E2-R_pmip3 IPSL-CM5A-LR_pmip3 MIROC-ESM_pmip3 MPI-ESM-P_pmip3 MRI-CGCM3_pmip3)
+do_ens=0
+ens_array=(0 0 0 0 0 0)
+do_SST=(1 1 1 1 1 1)
+do_NearSurfaceTemperature=(1 1 1 1 1 1)
 
 for var in SST NearSurfaceTemperature ; do
 
@@ -43,6 +50,8 @@ fi
 
 done
 
+if [ ${do_ens} -eq 1 ] ; then
+
 # create an ensemble mean PI, ensemble mean lgm, and ensemble mean lgm-PI. using ensmean.
 
 echo ${filelist_pi}
@@ -69,6 +78,11 @@ cdo -O zonavg ensmean_lg-pi_${var}.nc ensmean_lg-pi_${var}_zonavg.nc
 # zonal mean of the ensemble mean.  using zonmean and zonavg.  from ensavg.
 cdo -O zonmean ensavg_lg-pi_${var}.nc ensavg_lg-pi_${var}_zonmean.nc 
 cdo -O zonavg ensavg_lg-pi_${var}.nc ensavg_lg-pi_${var}_zonavg.nc 
+
+fi
+
+
+
 
 done
 
