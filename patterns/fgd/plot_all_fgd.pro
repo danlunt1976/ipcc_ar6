@@ -3,14 +3,16 @@ pro pa
 ;;;;;;;;;;
 read_mod=1
 read_proxy=1
-make_zon_plots=0 ; plot zonal mean ensemble mean [default=0 or 1]
+make_zon_plots=1 ; plot zonal mean ensemble mean [default=0 or 1]
 make_map_plots=1 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
 make_gmt_plots=0 ; plot gmst [default=0 or 1]
-rev_lgm=1 ; re-reverse LGM [default=0;=1 for TS]
-all_proxies=1 ; plot all proxies [default=0;=1 for TS]
+rev_lgm=0 ; re-reverse LGM [default=0;=1 for TS]
+all_proxies=0 ; plot all proxies [default=0;=1 for TS]
 make_nodata=0 ; plot maps without data [default=0;=1 for TS version B]
 latlonlabels=0 ; label lats/lons [default=0;=1 for TS]
+make_csv_map=1
+make_csv_gmt=0
 ;;;;;;;;;;
 
 ;;;;;;;;;;
@@ -606,15 +608,15 @@ lons_d_ing(0:ndataing(1)-1,1)=all_lons(where(this_index_sst))
 lats_d_ing(0:ndataing(0)-1,0)=all_lats(where(this_index_sat))
 lats_d_ing(0:ndataing(1)-1,1)=all_lats(where(this_index_sst))
 
-temps_d_ing(0:ndataing(0)-1,0)=all_temps(where(this_index_sat))+273.15
+temps_d_ing(0:ndataing(0)-1,0)=all_temps(where(this_index_sat))+273.15 ; degrees K
 temps_d_ing(0:ndataing(1)-1,1)=all_temps(where(this_index_sst))
 
-this_upper=all_upper(where(this_index_sat))
-this_upper=this_upper*(this_upper ne -999.9) + (this_upper eq -999.9)*(temps_d_ing(0:ndataing(0)-1,0)+my_deepmip_err)
-this_lower=all_lower(where(this_index_sat))
-this_lower=this_lower*(this_lower ne -999.9) + (this_lower eq -999.9)*(temps_d_ing(0:ndataing(0)-1,0)-my_deepmip_err)
-errs_d_ing(0,0:ndataing(0)-1,0)=this_upper-temps_d_ing(0:ndataing(0)-1,0)+273.15 ; delta plus
-errs_d_ing(1,0:ndataing(0)-1,0)=temps_d_ing(0:ndataing(0)-1,0)-this_lower-273.15  ; delta minus
+this_upper=all_upper(where(this_index_sat)) ; degrees C
+this_upper=(this_upper+273.15)*(this_upper ne -999.9) + (this_upper eq -999.9)*(temps_d_ing(0:ndataing(0)-1,0)+my_deepmip_err) ; degrees K
+this_lower=all_lower(where(this_index_sat)) ; degrees C
+this_lower=(this_lower+273.15)*(this_lower ne -999.9) + (this_lower eq -999.9)*(temps_d_ing(0:ndataing(0)-1,0)-my_deepmip_err) ; degrees K
+errs_d_ing(0,0:ndataing(0)-1,0)=this_upper-temps_d_ing(0:ndataing(0)-1,0);+273.15 ; delta plus
+errs_d_ing(1,0:ndataing(0)-1,0)=temps_d_ing(0:ndataing(0)-1,0)-this_lower;-273.15  ; delta minus
 
 this_upper=all_upper(where(this_index_sst))
 this_upper=this_upper*(this_upper ne -999.9) + (this_upper eq -999.9)*(temps_d_ing(0:ndataing(1)-1,1)+my_deepmip_err)
@@ -678,7 +680,6 @@ stop
 endif
 
 endfor
-
 
 
 
@@ -2086,6 +2087,47 @@ endfor ; end t
 endfor ; end p
 
 
+if (make_csv_map eq 1) then begin
+
+ipcc_max=10000
+ipcc_p=strarr(ipcc_max) ; period
+ipcc_s=strarr(ipcc_max) ; SAT or SST
+ipcc_lo=fltarr(ipcc_max) ; low error bar
+ipcc_me=fltarr(ipcc_max) ; mean temp
+ipcc_up=fltarr(ipcc_max) ; up error bar
+ipcc_lon=fltarr(ipcc_max)
+ipcc_lat=fltarr(ipcc_max)
+
+x=0
+
+for t=0,ntime-1 do begin
+for v=0,nvar-1 do begin
+for d=0,ndata(t,v)-1 do begin
+
+ipcc_p(x)=timnameslong(t)
+ipcc_s(x)=varnametitle(v)
+ipcc_lo(x)=errs_d(0,d,t,v)
+ipcc_me(x)=temps_d(d,t,v)
+ipcc_up(x)=errs_d(1,d,t,v)
+ipcc_lon(x)=lons_d(d,t,v)
+ipcc_lat(x)=lats_d(d,t,v)
+x=x+1
+
+endfor
+endfor
+endfor
+
+
+ipcc_nx=x
+
+ipcc_allheader=['This data file provides the observational data behind Figure 7.13','It was produced by Dan Lunt, using script plot_all_fgd.pro']
+ipcc_colheader=['Time Period','SST or SAT','longitude [degrees]','latitude [degrees]','lower error bar [degreesC]','mean temperature [degreesC]','upper error bar [degreesC]']
+
+write_csv,'Figure7_13_obs.csv',ipcc_p(0:ipcc_nx-1),ipcc_s(0:ipcc_nx-1),ipcc_lon(0:ipcc_nx-1),ipcc_lat(0:ipcc_nx-1),ipcc_lo(0:ipcc_nx-1),ipcc_me(0:ipcc_nx-1),ipcc_up(0:ipcc_nx-1),header=ipcc_colheader,table_header=ipcc_allheader
+
+endif ; end make csv
+
+
 endif ; end make map plots
 
 
@@ -2392,7 +2434,7 @@ USERSYM, COS(Aaa), SIN(Aaa), /FILL
 if (do_dots eq 1) then begin
 plots,my_xposp(xx),ass_c(t),psym=8,symsize=my_siz(g)
 if (do_tcheck eq 1) then begin
-plots,my_xposp(xx),ass_ct(t),psym=8,symsize=my_siz(g)/2.0,color=50 ; plot check to see original Thorste data
+plots,my_xposp(xx),ass_ct(t),psym=8,symsize=my_siz(g)/2.0,color=50 ; plot check to see original Thorsten data
 endif
 endif
 
@@ -2468,6 +2510,80 @@ endfor ; end for g
 
 endif ; end if make_gmt
 
+
+if (make_csv_gmt eq 1) then begin
+
+;;;;;;;;;;;;
+
+ipcc_max=1000
+ipcc_t=fltarr(ipcc_max) ; temperature
+ipcc_e=fltarr(ipcc_max) ; ecs (High[1], Low[-1], or Middle[0])
+ipcc_n=strarr(ipcc_max) ; model name
+ipcc_p=strarr(ipcc_max) ; period
+
+x=0
+for xx=0,nplot(4)-1 do begin
+
+t=where(ord_gmt(4,*) eq xx)
+t=t(0)
+
+for m=0,nmodh(t)-1 do begin
+if (existh(t,m) eq 1) then begin
+
+ipcc_e(x)=high_ecs(t,m)
+ipcc_t(x)=modh_gmt_flex(m,t,0)
+ipcc_n(x)=modnamesh(t,m)
+ipcc_p(x)=timnameslongh(t)
+
+x=x+1
+
+endif
+endfor
+
+endfor
+ipcc_nx=x
+
+ipcc_allheader=['This data file provides the modelling data behind Figure 7.19','It was produced by Dan Lunt, using script plot_all_fgd.pro']
+ipcc_colheader=['Time Period','Model Name','Temperature Anomaly [degrees C]','Model ECS (High[1], Low[-1], or Middle[0]']
+
+write_csv,'Figure7_19_mod.csv',ipcc_p(0:ipcc_nx-1),ipcc_n(0:ipcc_nx-1),ipcc_t(0:ipcc_nx-1),ipcc_e(0:ipcc_nx-1),header=ipcc_colheader,table_header=ipcc_allheader
+
+
+;;;;;;;;;;;;
+
+ipcc_max=ntimeh
+ipcc_p=strarr(ipcc_max) ; period
+ipcc_mi=fltarr(ipcc_max) ; min temp
+ipcc_me=fltarr(ipcc_max) ; mean temp
+ipcc_ma=fltarr(ipcc_max) ; max temp
+
+x=0
+for xx=0,nplot(4)-1 do begin
+
+t=where(ord_gmt(4,*) eq xx)
+t=t(0)
+
+ipcc_p(x)=timnameslongh(t)
+ipcc_mi(x)=ass_vlik(t,0)
+ipcc_me(x)=ass_c(t)
+ipcc_ma(x)=ass_vlik(t,1)
+
+x=x+1
+
+endfor
+
+ipcc_nx=x
+
+ipcc_allheader=['This data file provides the observational data behind Figure 7.19','It was produced by Dan Lunt, using script plot_all_fgd.pro']
+ipcc_colheader=['Time Period','min temperature [degreesC]','mean temperature [degreesC]','max temperature [degreesC]']
+
+write_csv,'Figure7_19_obs.csv',ipcc_p(0:ipcc_nx-1),ipcc_mi(0:ipcc_nx-1),ipcc_me(0:ipcc_nx-1),ipcc_ma(0:ipcc_nx-1),header=ipcc_colheader,table_header=ipcc_allheader
+
+
+;;;;;;;;;;;;
+
+
+endif
 
 
 
