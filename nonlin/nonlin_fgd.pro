@@ -1,8 +1,8 @@
 pro nl
 
-make_pdf=1
-make_png=1
-make_eps=1
+make_pdf=0
+make_png=0
+make_eps=0
 
 npp=3
 pname=strarr(npp)
@@ -804,9 +804,56 @@ if (make_eps) then spawn,'ps2epsi '+my_filename+'.ps '+my_filename+'.eps ; \rm '
 if (make_pdf) then spawn,'ps2pdf '+my_filename+'.eps '+my_filename+'.pdf',dum
 if (make_png) then spawn,'convert -flatten -density 500 '+my_filename+'.eps '+my_filename+'.png' 
 
-
-
 endfor
+
+
+
+; make excel table for ipcc
+
+ipcc_max=1000
+ipcc_t=fltarr(ipcc_max) ; temperature
+ipcc_a=fltarr(ipcc_max) ; lambda
+ipcc_n=strarr(ipcc_max) ; study name
+ipcc_p=intarr(ipcc_max) ; is paleo
+ipcc_t_s_h=fltarr(ipcc_max) ; temp high bound
+ipcc_t_s_l=fltarr(ipcc_max) ; temp low bound 
+ipcc_a_s_h=fltarr(ipcc_max) ; alpha high bound
+ipcc_a_s_l=fltarr(ipcc_max) ; alpha low bound
+
+x=0
+for s=0,nstudies-1 do begin
+if (do_plot(s) eq 1) then begin
+for d=0,data_n(s)-1 do begin
+ipcc_p(x)=is_paleo(s)
+ipcc_n(x)=refname(s)
+if (is_paleo(s) eq 0) then begin
+ipcc_t(x)=data_t_r(2,d,s)
+ipcc_a(x)=data_l_r(d,s)
+ipcc_t_s_h(x)=0
+ipcc_t_s_l(x)=0
+ipcc_a_s_h(x)=0
+ipcc_a_s_l(x)=0
+endif else begin
+ipcc_t(x)=data_t(d,s)
+ipcc_a(x)=data_l(d,s)
+ipcc_t_s_h(x)=data_t_s(d,s)
+ipcc_t_s_l(x)=data_t_s(d,s)
+ipcc_a_s_h(x)=data_l_u(0,d,s)-data_l(d,s)
+ipcc_a_s_l(x)=data_l(d,s)-data_l_u(1,d,s)
+endelse
+x=x+1
+endfor
+endif
+endfor
+ipcc_nx=x
+
+
+ipcc_allheader=['This data file provides the data behind Figure 7.11','It was produced by Dan Lunt, using script nonlin_fgd.pro']
+ipcc_colheader=['study name','temperature anomaly relative to preindustrial [degreesC]','Feedback parameter, alpha [W/m2/degreesC]','paleo (1) or ESM (0)','upper uncertainty on temp anom [degreesC]','lower uncertainty on temp anom [degreesC]','upper uncertainty on alpha [W/m2/degreesC]','lower uncertainty on alpha [W/m2/degreesC]']
+
+write_csv,'Figure7_11.csv',ipcc_n(0:ipcc_nx-1),ipcc_t(0:ipcc_nx-1),ipcc_a(0:ipcc_nx-1),ipcc_p(0:ipcc_nx-1),ipcc_t_s_h(0:ipcc_nx-1),ipcc_t_s_l(0:ipcc_nx-1),ipcc_a_s_h(0:ipcc_nx-1),ipcc_a_s_l(0:ipcc_nx-1),header=ipcc_colheader,table_header=ipcc_allheader
+
+
 
 stop
 
