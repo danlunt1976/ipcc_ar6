@@ -1528,6 +1528,13 @@ temps_m_aver(dd,t,v)=ensaver_map(xindex,yindex,t,v)
 lons_m_aver(dd,t,v)=lons(xindex)
 lats_m_aver(dd,t,v)=lats(yindex)
 
+print,'CHECK:    **'
+print
+print,lons_d(dd,t,v),lats_d(dd,t,v)
+print,lons_m_mean(dd,t,v),lats_m_mean(dd,t,v)
+print,lons_m_aver(dd,t,v),lats_m_aver(dd,t,v)
+
+
 endfor
 endfor
 endfor
@@ -1631,7 +1638,6 @@ endfor
 
 endfor
 endfor
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2087,6 +2093,8 @@ endfor ; end t
 endfor ; end p
 
 
+
+
 if (make_csv_map eq 1) then begin
 
 ipcc_max=10000
@@ -2097,6 +2105,8 @@ ipcc_me=fltarr(ipcc_max) ; mean temp
 ipcc_up=fltarr(ipcc_max) ; up error bar
 ipcc_lon=fltarr(ipcc_max)
 ipcc_lat=fltarr(ipcc_max)
+ipcc_mm=fltarr(ipcc_max) ; model mean
+ipcc_ma=fltarr(ipcc_max) ; model aver
 
 x=0
 
@@ -2111,6 +2121,9 @@ ipcc_me(x)=temps_d(d,t,v)
 ipcc_up(x)=errs_d(1,d,t,v)
 ipcc_lon(x)=lons_d(d,t,v)
 ipcc_lat(x)=lats_d(d,t,v)
+ipcc_mm(x)=temps_m_mean(d,t,v)
+ipcc_ma(x)=temps_m_aver(d,t,v)
+
 x=x+1
 
 endfor
@@ -2124,6 +2137,12 @@ ipcc_allheader=['This data file provides the observational data behind Figure 7.
 ipcc_colheader=['Time Period','SST or SAT','longitude [degrees]','latitude [degrees]','lower error bar [degreesC]','mean temperature [degreesC]','upper error bar [degreesC]']
 
 write_csv,'Figure7_13_obs.csv',ipcc_p(0:ipcc_nx-1),ipcc_s(0:ipcc_nx-1),ipcc_lon(0:ipcc_nx-1),ipcc_lat(0:ipcc_nx-1),ipcc_lo(0:ipcc_nx-1),ipcc_me(0:ipcc_nx-1),ipcc_up(0:ipcc_nx-1),header=ipcc_colheader,table_header=ipcc_allheader
+
+; for model sites:
+ipcc_allheader=['This data file provides the observational data behind Figure 7.13','It was produced by Dan Lunt, using script plot_all_fgd.pro']
+ipcc_colheader=['Time Period','SST or SAT','longitude [degrees]','latitude [degrees]','mean temperature [degreesC]','model mean','model aver']
+
+write_csv,'Figure7_13_obs_mod.csv',ipcc_p(0:ipcc_nx-1),ipcc_s(0:ipcc_nx-1),ipcc_lon(0:ipcc_nx-1),ipcc_lat(0:ipcc_nx-1),ipcc_me(0:ipcc_nx-1),ipcc_mm(0:ipcc_nx-1),ipcc_ma(0:ipcc_nx-1),header=ipcc_colheader,table_header=ipcc_allheader
 
 endif ; end make csv
 
@@ -2640,16 +2659,16 @@ distx(i)=min([distx1(i),distx2(i),distx3(i)])
 endfor
 
 mindistx=min(distx)
+
 xindex=!c
 
 disty=abs(lati-lats_m(0:ny-1))
 mindisty=min(disty)
 yindex=!c
 
-
 ; now expand out if necessary
 
-if (finite(modvar(xindex,yindex) ne 1)) then begin
+if (finite(modvar(xindex,yindex)) ne 1) then begin
 
 sorted=0
 sorted2=0
@@ -2799,6 +2818,7 @@ endif
 
 
 endif ; end if missing
+
 
 
 end
