@@ -2,8 +2,6 @@ pro pa
 
 ; KNOWN ISSUES/ADDITIONS
 
-; add Seb's bug-fixes
-
 ; check sign of LGM (see band_tmodel fact_mod_sign)
 
 ; True model Land-sea contrast over land is global, not just land
@@ -25,8 +23,8 @@ read_proxy=1
 make_zon_plots=1 ; plot zonal mean ensemble mean [default=0 or 1]
 make_map_plots=0 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
-make_gmt_plots=1                ; plot gmst [default=0 or 1]
-make_polamp_plots=1                ; plot polamp [default=0 or 1
+make_gmt_plots=0                ; plot gmst [default=0 or 1]
+make_polamp_plots=0                ; plot polamp [default=0 or 1]
 make_cleat_plots=0
 make_text=0
 rev_lgm=0 ; re-reverse LGM [default=0;=1 for TS]
@@ -40,6 +38,7 @@ latlonlabels=0 ; label lats/lons [default=0;=1 for TS]
 ; routines, and I can't figure out how to re-set them. 
 if (make_gmt_plots eq 1) then begin
 make_map_plots=0
+make_zon_plots=0
 endif
 ;;;;;;;;;;
 
@@ -187,6 +186,8 @@ plot_zon=intarr(ntime,nmodmax)
 plot_zon(0,0:nmod(0)-1)=1 ; plot all plio zon
 plot_zon(1,0:nmod(1)-1)=1 ; plot all LGM zon
 plot_zon(2,0:nmod(2)-1)=[1,1,1,1,1,0,0,1,1,1,1,1,1,1] ; don't plot eocene CESM2 or NorESM zon
+
+
 
 nx=360
 ny=180
@@ -1741,6 +1742,7 @@ endfor
 endfor
 
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Now the plots...
 
@@ -1852,13 +1854,13 @@ if (total([t,m,v] ne problem_missing) ne 0) then begin
 
 if (do_mod_leg eq 0) then begin 
 ; model lines:
-if (plot_zon(t,m) eq 1) then begin
+if (plot_zon(t,m) eq 1 and pmip4(t,m) eq 1) then begin
 oplot,lats(*),mod_zon(*,m,t,v),color=indmodcol,thick=my_thick1,linestyle=linestyle_mod
 endif
 ; legend:
 if (xx eq 0) then begin 
 oplot,legendline,[my_yrange5(t,v,1)*nstarty1-dxx*xx,my_yrange5(t,v,1)*nstarty1-dxx*xx],color=indmodcol,thick=my_thick1,linestyle=linestyle_mod
-xyouts,legendtext,my_yrange5(t,v,1)*nstarty1-dxx*xx,mipnames(t)+' models zonal mean (N='+strtrim(fix(total(plot_zon(t,0:nmod(t)-1) eq 1)),2)+')',color=indmodcol,charsize=my_charsize1
+xyouts,legendtext,my_yrange5(t,v,1)*nstarty1-dxx*xx,mipnames(t)+' models zonal mean (N='+strtrim(fix(total(plot_zon(t,0:nmod(t)-1)*pmip4(t,0:nmod(t)-1) eq 1)),2)+')',color=indmodcol,charsize=my_charsize1
 endif
 endif
 
@@ -1925,11 +1927,13 @@ endfor
 if (bandtype eq '3-bnd') then begin
 if (finite(band_model_mean(0,t,v)) and finite(band_model_mean(1,t,v))) then begin
 xyouts,my_shampx,my_yrange5(t,v,0)+my_proxampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'SH proxy amp: '+strtrim(string(band_data(0,t,v)-band_data(1,t,v),format='(F4.1)'),2)+' !Eo!NC',color=0,charsize=my_charsize2
-xyouts,my_shampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'SH model amp: '+strtrim(string(band_model_aver(0,t,v)-band_model_aver(1,t,v),format='(F4.1)'),2)+' !Eo!NC',color=ensmeancol,charsize=my_charsize2
+; this was aver....
+xyouts,my_shampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'SH model amp: '+strtrim(string(band_model_mean(0,t,v)-band_model_mean(1,t,v),format='(F4.1)'),2)+' !Eo!NC',color=ensmeancol,charsize=my_charsize2
 endif
 if (finite(band_model_mean(2,t,v)) and finite(band_model_mean(1,t,v))) then begin
 xyouts,my_nhampx,my_yrange5(t,v,0)+my_proxampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'NH proxy amp: '+strtrim(string(band_data(2,t,v)-band_data(1,t,v),format='(F4.1)'),2)+' !Eo!NC',alignment=1,color=0,charsize=my_charsize2
-xyouts,my_nhampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'NH model amp: '+strtrim(string(band_model_aver(2,t,v)-band_model_aver(1,t,v),format='(F4.1)'),2)+' !Eo!NC',alignment=1,color=ensmeancol,charsize=my_charsize2
+; this was aver....
+xyouts,my_nhampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'NH model amp: '+strtrim(string(band_model_mean(2,t,v)-band_model_mean(1,t,v),format='(F4.1)'),2)+' !Eo!NC',alignment=1,color=ensmeancol,charsize=my_charsize2
 endif
 endif
 
