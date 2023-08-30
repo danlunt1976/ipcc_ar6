@@ -2,25 +2,27 @@ pro pa
 
 ; KNOWN ISSUES/ADDITIONS
 
-; add lines between models
+; add Seb's bug-fixes
+
+; check sign of LGM (see band_tmodel fact_mod_sign)
 
 ; True model Land-sea contrast over land is global, not just land
+
 ; True model polamp over land is global, not just land
+
 ; No area weighting in true model means
-; check sign of LGM (see band_tmodel fact_mod_sign)
 
 ; Need to check all metrics with e.g. ferret for sanity check
 
-; add PMIP3 LGM / PlioMIP / EoMIP
+; add error bars in proxy estimates.
 
-; y axis not lines up for historical Obs.
 
 
 
 ;;;;;;;;;;
 read_mod=1
 read_proxy=1
-make_zon_plots=0 ; plot zonal mean ensemble mean [default=0 or 1]
+make_zon_plots=1 ; plot zonal mean ensemble mean [default=0 or 1]
 make_map_plots=0 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
 make_gmt_plots=1                ; plot gmst [default=0 or 1]
@@ -636,15 +638,15 @@ lons_d_ing(0:ndataing(1)-1,1)=all_lons(where(this_index_sst))
 lats_d_ing(0:ndataing(0)-1,0)=all_lats(where(this_index_sat))
 lats_d_ing(0:ndataing(1)-1,1)=all_lats(where(this_index_sst))
 
-temps_d_ing(0:ndataing(0)-1,0)=all_temps(where(this_index_sat))+273.15
+temps_d_ing(0:ndataing(0)-1,0)=all_temps(where(this_index_sat))+273.15 ; degrees K
 temps_d_ing(0:ndataing(1)-1,1)=all_temps(where(this_index_sst))
 
-this_upper=all_upper(where(this_index_sat))
-this_upper=this_upper*(this_upper ne -999.9) + (this_upper eq -999.9)*(temps_d_ing(0:ndataing(0)-1,0)+my_deepmip_err)
-this_lower=all_lower(where(this_index_sat))
-this_lower=this_lower*(this_lower ne -999.9) + (this_lower eq -999.9)*(temps_d_ing(0:ndataing(0)-1,0)-my_deepmip_err)
-errs_d_ing(0,0:ndataing(0)-1,0)=this_upper-temps_d_ing(0:ndataing(0)-1,0)+273.15 ; delta plus
-errs_d_ing(1,0:ndataing(0)-1,0)=temps_d_ing(0:ndataing(0)-1,0)-this_lower-273.15  ; delta minus
+this_upper=all_upper(where(this_index_sat)) ; degrees C
+this_upper=(this_upper+273.15)*(this_upper ne -999.9) + (this_upper eq -999.9)*(temps_d_ing(0:ndataing(0)-1,0)+my_deepmip_err) ; degrees K
+this_lower=all_lower(where(this_index_sat)) ; degrees C
+this_lower=(this_lower+273.15)*(this_lower ne -999.9) + (this_lower eq -999.9)*(temps_d_ing(0:ndataing(0)-1,0)-my_deepmip_err) ; degrees K
+errs_d_ing(0,0:ndataing(0)-1,0)=this_upper-temps_d_ing(0:ndataing(0)-1,0);+273.15 ; delta plus
+errs_d_ing(1,0:ndataing(0)-1,0)=temps_d_ing(0:ndataing(0)-1,0)-this_lower;-273.15  ; delta minus
 
 this_upper=all_upper(where(this_index_sst))
 this_upper=this_upper*(this_upper ne -999.9) + (this_upper eq -999.9)*(temps_d_ing(0:ndataing(1)-1,1)+my_deepmip_err)
@@ -1655,18 +1657,19 @@ band_tmodel=fltarr(nmodmax,nbands,ntime,nvar)
 band_tmodel(*,*,*,*)=!Values.F_NAN
 
 npolamp=2
+npmip=2
 
 polamp_data=fltarr(ntime,nvar,npolamp)
 polamp_data(*,*,*)=!Values.F_NAN
 polamp_model=fltarr(nmodmax,ntime,nvar,npolamp)
 polamp_model(*,*,*,*)=!Values.F_NAN
-polamp_model_mean=fltarr(ntime,nvar,npolamp)
-polamp_model_mean(*,*,*)=!Values.F_NAN
+polamp_model_mean=fltarr(ntime,nvar,npolamp,npmip)
+polamp_model_mean(*,*,*,*)=!Values.F_NAN
 
 polamp_tmodel=fltarr(nmodmax,ntime,nvar,npolamp)
 polamp_tmodel(*,*,*,*)=!Values.F_NAN
-polamp_tmodel_mean=fltarr(ntime,nvar,npolamp)
-polamp_tmodel_mean(*,*,*)=!Values.F_NAN
+polamp_tmodel_mean=fltarr(ntime,nvar,npolamp,npmip)
+polamp_tmodel_mean(*,*,*,*)=!Values.F_NAN
 
 
 for t=0,ntime-1 do begin
@@ -1701,13 +1704,19 @@ print,'Models Aver: ',band_model_aver(b,t,v)
 
 endfor
 
+;; polar amplification
 polamp_data(t,v,0)=0.5*((band_data(0,t,v)-band_data(1,t,v))+(band_data(2,t,v)-band_data(1,t,v)))
 for m=0,nmod(t)-1 do begin
 polamp_model(m,t,v,0)=0.5*((band_model(m,0,t,v)-band_model(m,1,t,v))+(band_model(m,2,t,v)-band_model(m,1,t,v)))
 polamp_tmodel(m,t,v,0)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
 endfor
-polamp_model_mean(t,v,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1),t,v,0))
-polamp_tmodel_mean(t,v,0)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1),t,v,0))
+; pmip4 runs
+polamp_model_mean(t,v,0,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1),t,v,0))
+polamp_tmodel_mean(t,v,0,0)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1),t,v,0))
+; pmip3 runs
+polamp_model_mean(t,v,0,1)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 0),t,v,0))
+polamp_tmodel_mean(t,v,0,1)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 0),t,v,0))
+
 
 endfor
 endfor
@@ -1722,9 +1731,12 @@ for m=0,nmod(t)-1 do begin
 polamp_model(m,t,v,1)=mean(temps_m(m,0:ndata(t,v),t,v)) - mean(temps_m(m,0:ndata(t,(1-v)),t,(1-v)))
 polamp_tmodel(m,t,v,1)=mean(mod_map(*,*,m,t,v),/NAN) - mean(mod_map(*,*,m,t,(1-v)),/NAN)
 endfor
-polamp_model_mean(t,v,1)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1),t,v,1))
-polamp_tmodel_mean(t,v,1)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1),t,v,1))
-
+; pmip4 runs
+polamp_model_mean(t,v,1,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1),t,v,1))
+polamp_tmodel_mean(t,v,1,0)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1),t,v,1))
+; pmip3 runs
+polamp_model_mean(t,v,1,1)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 0),t,v,1))
+polamp_tmodel_mean(t,v,1,1)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 0),t,v,1))
 endfor
 endfor
 
@@ -2386,11 +2398,11 @@ ylim_gmt_3(4,*)=[0,1.5]
 
 scal_4=2.1
 ylim_gmt_4=fltarr(ntimeh,2)
-ylim_gmt_4(0,*)=[0,ass_ct(0)*scal_4]
-ylim_gmt_4(1,*)=[0,ass_ct(1)*scal_4]
-ylim_gmt_4(2,*)=[0,ass_ct(2)*scal_4]
-ylim_gmt_4(3,*)=[0,ass_ct(3)*scal_4]
-ylim_gmt_4(4,*)=[0,ass_ct(4)*scal_4]
+ylim_gmt_4(0,*)=[0,ass_c(0)*scal_4]
+ylim_gmt_4(1,*)=[0,ass_c(1)*scal_4]
+ylim_gmt_4(2,*)=[0,ass_c(2)*scal_4]
+ylim_gmt_4(3,*)=[0,ass_c(3)*scal_4]
+ylim_gmt_4(4,*)=[0,ass_c(4)*scal_4]
 
 
 obs_thick=5
@@ -2449,13 +2461,17 @@ endif
 
 for xx=0,nplot(g)-1 do begin
 
-t=where(ord_gmt(g,*) eq xx)
-t=t(0)
+ttt=where(ord_gmt(g,*) eq xx)
+t=ttt(0)
+
+shiftright=1
+ttt=where(ord_gmt(g,*) eq shiftright)
+tp=ttt(0)
 
 ; axes and legend etc:
 if (g gt 0) then begin
 
-if (xx eq 0) then this_title='temperature anomaly [!Eo!NC]'
+if (xx eq 0) then this_title='global mean temperature anomaly [!Eo!NC]'
 
 if (xx gt 0) then this_title=''
 if (g lt 5) then begin
@@ -2466,41 +2482,58 @@ plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_gmt_4(t,*),color=0,ytitle=th
 endif
 
 ; plot legend:
-if (xx eq 0) then begin
+
+if (xx eq shiftright) then begin
 tvlct,r_39,g_39,b_39
 tvlct,250,0,0,250 ; red
 tvlct,0,0,250,254 ; blue
-;box:
-oplot,[0.53,1.45,1.45,0.53,0.53],[0.02,0.02,0.41,0.41,0.02],color=0,thick=0.5
 
-startx=0.7
+startx=0.65+shiftright
+starty=1 ; number of added things to legend
 delx=0.1
 ; circles:
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
-oy=0.3
+
+; these scale:
+scalefacty=(ylim_gmt_4(tp,1)-ylim_gmt_4(tp,0))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0))
+
+delyl=0.04*scalefacty ; shift up for observation legend
+obsl=0.04*scalefacty ; length of obs legend in y 
+delys=0.05*scalefacty ; shift down for each part of legend
+delyc=0.01*scalefacty ; shift up for caption
+oy=(0.3+starty*delys/scalefacty)*scalefacty ; start point for y
+
+;box:
+oplot,[0.53,1.45,1.45,0.53,0.53]+shiftright,[0.02,0.02,0.41+starty*delys/scalefacty,0.41+starty*delys/scalefacty,0.02]*scalefacty+ylim_gmt_4(tp,0),color=0,thick=0.5,/noclip
 
 if (do_dots eq 1) then begin
-plots,startx,oy+0.04,psym=8,symsize=my_siz(g),color=0
+plots,startx,oy+delyl,psym=8,symsize=my_siz(g),color=0
 endif
-oplot,[startx,startx],[oy+0.04+0.04,oy+0.04-0.04],thick=obs_thick
-oplot,[startx-my_del2,startx+my_del2],[oy+0.04-0.04,oy+0.04-0.04],thick=obs_thick
-oplot,[startx-my_del2,startx+my_del2],[oy+0.04+0.04,oy+0.04+0.04],thick=obs_thick
+oplot,[startx,startx],[oy+delyl+obsl,oy+delyl-obsl],thick=obs_thick
+oplot,[startx-my_del2,startx+my_del2],[oy+delyl-obsl,oy+delyl-obsl],thick=obs_thick
+oplot,[startx-my_del2,startx+my_del2],[oy+delyl+obsl,oy+delyl+obsl],thick=obs_thick
 
-plots,startx,oy-0.05*4,psym=8,symsize=my_siz(g),color=250
-plots,startx,oy-0.05*5,psym=8,symsize=my_siz(g),color=254
+plots,startx,oy-delys*5,psym=8,symsize=my_siz(g),color=250
+plots,startx,oy-delys*6,psym=8,symsize=my_siz(g),color=254
 
-xyouts,startx+delx,oy-0.01+0.04,'observations',size=0.9
-xyouts,startx,oy-0.01-0.05*1,'models:',size=0.9
-xyouts,startx+delx,oy-0.01-0.05*4,'ECS>5.0',size=0.9
-xyouts,startx+delx,oy-0.01-0.05*5,'ECS<2.0',size=0.9
+xyouts,startx+delx,oy-delyc+delyl,'observations',size=0.9
+xyouts,startx,oy-delyc-delys*1,'models:',size=0.9
+xyouts,startx+delx,oy-delyc-delys*5,'ECS>5.0',size=0.9
+xyouts,startx+delx,oy-delyc-delys*6,'ECS<2.0',size=0.9
 
 tvlct,r_0,g_0,b_0
-plots,startx,oy-0.05*2,psym=8,symsize=my_siz(g),color=130
-xyouts,startx+delx,oy-0.01-0.05*2,'ens. mean',size=0.9
-plots,startx,oy-0.05*3,psym=8,symsize=my_siz(g),color=200
-xyouts,startx+delx,oy-0.01-0.05*3,'2.0<ECS<5.0',size=0.9
+
+plots,startx,oy-delys*2,psym=8,symsize=my_siz(g),color=130
+xyouts,startx+delx,oy-delyc-delys*2,'CMIP6 mean',size=0.9
+
+plots,startx,oy-delys*3,psym=8,symsize=my_siz(g)/2.0,color=130
+xyouts,startx+delx,oy-delyc-delys*3,'CMIP5 mean',size=0.9
+
+plots,startx,oy-delys*4,psym=8,symsize=my_siz(g),color=200
+xyouts,startx+delx,oy-delyc-delys*4,'2.0<ECS<5.0',size=0.9
 USERSYM, COS(Aaa), SIN(Aaa)
-plots,startx,oy-0.05*2,psym=8,symsize=my_siz(g),color=0
+plots,startx,oy-delys*2,psym=8,symsize=my_siz(g),color=0
+plots,startx,oy-delys*3,psym=8,symsize=my_siz(g)/2.0,color=0
 
 endif ; xx eq 0
 
@@ -2533,8 +2566,10 @@ plots,my_xposp(xx)+0.2,mean(modh_gmt_flex(where(pmip4h(t,0:nmodh(t)-1) eq 1 and 
 
 ; pmip3:
 if (t le 2) then begin
+; draw the solid circle
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
 plots,my_xposp(xx)+0.2,mean(modh_gmt_flex(where(pmip4h(t,0:nmodh(t)-1) eq 0 and existh(t,0:nmodh(t)-1) eq 1),t,0)),psym=8,symsize=my_siz(g)/2.0,color=130
+; draw the outline
 USERSYM, COS(Aaa), SIN(Aaa)
 plots,my_xposp(xx)+0.2,mean(modh_gmt_flex(where(pmip4h(t,0:nmodh(t)-1) eq 0 and existh(t,0:nmodh(t)-1) eq 1),t,0)),psym=8,symsize=my_siz(g)/2.0,color=0
 endif
@@ -2583,8 +2618,7 @@ endif
 
 if (p eq 1) then begin
 USERSYM, COS(Aaa), SIN(Aaa)
-;plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g),color=0,thick=my_thick,NOCLIP=
-;0 ; for extra blak circle around model points
+;plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g),color=0,thick=my_thick,NOCLIP=0 ; for extra blak circle around model points
 if (do_tcheck eq 1) then begin
 if (pmip4h(t,m) eq 1) then begin
 plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g)/2.0,color=0,NOCLIP = 0 ; plot thorsten's original model output
@@ -2627,26 +2661,26 @@ my_deltt=0.18
 mms=4
 mmf=6
 xyouts,my_xposm(4)+my_deltt+0.1,modh_gmt_flex(mmf,2,0),'CESM2.0',size=1.0,color=0
-oplot,[my_xposm(4)+my_deltt-1*(1+delmarg),my_xposm(4)+my_deltt-0*(1+delmarg)],[modh_gmt_flex(mms,0,0)*ass_ct(2)/ass_ct(0),modh_gmt_flex(mmf,2,0)],/noclip,linestyle=mylin
+oplot,[my_xposm(4)+my_deltt-1*(1+delmarg),my_xposm(4)+my_deltt-0*(1+delmarg)],[modh_gmt_flex(mms,0,0)*ass_c(2)/ass_c(0),modh_gmt_flex(mmf,2,0)],/noclip,linestyle=mylin
 mms=4
 mmf=4
-oplot,[my_xposm(4)+my_deltt-2*(1+delmarg),my_xposm(4)+my_deltt-1*(1+delmarg)],[modh_gmt_flex(mms,1,0)*ass_ct(2)/ass_ct(1),modh_gmt_flex(mmf,0,0)*ass_ct(2)/ass_ct(0)],/noclip,linestyle=mylin
+oplot,[my_xposm(4)+my_deltt-2*(1+delmarg),my_xposm(4)+my_deltt-1*(1+delmarg)],[modh_gmt_flex(mms,1,0)*ass_c(2)/ass_c(1),modh_gmt_flex(mmf,0,0)*ass_c(2)/ass_c(0)],/noclip,linestyle=mylin
 mms=7
 mmf=4
-oplot,[my_xposm(4)+my_deltt-3*(1+delmarg),my_xposm(4)+my_deltt-2*(1+delmarg)],[modh_gmt_flex(mms,4,0)*ass_ct(2)/ass_ct(4),modh_gmt_flex(mmf,1,0)*ass_ct(2)/ass_ct(1)],/noclip,linestyle=mylin
+oplot,[my_xposm(4)+my_deltt-3*(1+delmarg),my_xposm(4)+my_deltt-2*(1+delmarg)],[modh_gmt_flex(mms,4,0)*ass_c(2)/ass_c(4),modh_gmt_flex(mmf,1,0)*ass_c(2)/ass_c(1)],/noclip,linestyle=mylin
 mms=7
 mmf=7
-oplot,[my_xposm(4)+my_deltt-4*(1+delmarg),my_xposm(4)+my_deltt-3*(1+delmarg)],[modh_gmt_flex(mms,3,0)*ass_ct(2)/ass_ct(3),modh_gmt_flex(mmf,4,0)*ass_ct(2)/ass_ct(4)],/noclip,linestyle=mylin
+oplot,[my_xposm(4)+my_deltt-4*(1+delmarg),my_xposm(4)+my_deltt-3*(1+delmarg)],[modh_gmt_flex(mms,3,0)*ass_c(2)/ass_c(3),modh_gmt_flex(mmf,4,0)*ass_c(2)/ass_c(4)],/noclip,linestyle=mylin
 
 ; CESM1.2 lines
 my_deltt=0
 mms=3
 mmf=0
 xyouts,my_xposm(4)+my_deltt+0.1,modh_gmt_flex(mmf,2,0),'CESM1.2',size=1.0,color=0
-oplot,[my_xposm(4)+my_deltt-1*(1+delmarg),my_xposm(4)+my_deltt-0*(1+delmarg)],[modh_gmt_flex(mms,0,0)*ass_ct(2)/ass_ct(0),modh_gmt_flex(mmf,2,0)],/noclip,linestyle=mylin
+oplot,[my_xposm(4)+my_deltt-1*(1+delmarg),my_xposm(4)+my_deltt-0*(1+delmarg)],[modh_gmt_flex(mms,0,0)*ass_c(2)/ass_c(0),modh_gmt_flex(mmf,2,0)],/noclip,linestyle=mylin
 mms=3
 mmf=3
-oplot,[my_xposm(4)+my_deltt-2*(1+delmarg),my_xposm(4)+my_deltt-1*(1+delmarg)],[modh_gmt_flex(mms,1,0)*ass_ct(2)/ass_ct(1),modh_gmt_flex(mmf,0,0)*ass_ct(2)/ass_ct(0)],/noclip,linestyle=mylin
+oplot,[my_xposm(4)+my_deltt-2*(1+delmarg),my_xposm(4)+my_deltt-1*(1+delmarg)],[modh_gmt_flex(mms,1,0)*ass_c(2)/ass_c(1),modh_gmt_flex(mmf,0,0)*ass_c(2)/ass_c(0)],/noclip,linestyle=mylin
 
 
 
@@ -2696,7 +2730,7 @@ my_siz(*)=[2,2]
 my_xsize=fltarr(npolamp)
 my_xsize(*)=[18,18]
 my_ytit=strarr(npolamp)
-my_ytit(*)=['meridional temp. gradient [!Eo!NC]','land-sea contrast [!Eo!NC]']
+my_ytit(*)=['meridional temp. gradient anomaly [!Eo!NC]','land-sea contrast anomaly [!Eo!NC]']
 
 nplot=intarr(npolamp)
 nplot(*)=[3,3]
@@ -2719,60 +2753,87 @@ print,my_filename
 device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica',xsize=my_xsize(g),ysize=20
 
 
-
 for xx=0,nplot(g)-1 do begin
 
-t=where(ord_gmt(g,*) eq xx)
-t=t(0)
 
 ; axes and legend etc:
+
+ttt=where(ord_gmt(g,*) eq xx)
+t=ttt(0)
+
+shiftright=1
+ttt=where(ord_gmt(g,*) eq shiftright)
+tp=ttt(0)
 
 if (xx eq 0) then this_title=my_ytit(g)
 if (xx gt 0) then this_title=''
 
 plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_polamp_6(t,*,g),color=0,ytitle=this_title,/nodata,xcharsize=1,ycharsize=1,charsize=2.5,xstyle=1,ystyle=1,xticks=1,xtickname=['',''],XTickformat='(A1)',title=timnameslongh(t)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;
 
-if (g gt 1) then begin
 ; plot legend:
-if (xx eq 0) then begin
+
+if (xx eq shiftright) then begin
 tvlct,r_39,g_39,b_39
 tvlct,250,0,0,250 ; red
 tvlct,0,0,250,254 ; blue
-;box:
-oplot,[0.53,1.45,1.45,0.53,0.53],[0.02,0.02,0.41,0.41,0.02],color=0,thick=0.5
 
-startx=0.7
+startx=0.65+shiftright
+starty=2 ; number of added things to legend
 delx=0.1
 ; circles:
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
-oy=0.3
+
+; these scale:
+scalefacty=(ylim_polamp_6(tp,1,g)-ylim_polamp_6(tp,0,g))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0))
+
+delyl=0.04*scalefacty ; shift up for observation legend
+obsl=0.04*scalefacty ; length of obs legend in y 
+delys=0.05*scalefacty ; shift down for each part of legend
+delyc=0.01*scalefacty ; shift up for caption
+;oy=(ylim_polamp_6(tp,0,g)+0.3+starty*delys/scalefacty)*scalefacty ;
+;start point for y
+oy=ylim_polamp_6(tp,0,g)+(0.3+starty*delys/scalefacty)*scalefacty ; start point for y
+
+;box:
+oplot,[0.53,1.45,1.45,0.53,0.53]+shiftright,[0.02,0.02,0.41+starty*delys/scalefacty,0.41+starty*delys/scalefacty,0.02]*scalefacty+ylim_polamp_6(tp,0,g),color=0,thick=0.5,/noclip
 
 if (do_dots eq 1) then begin
-plots,startx,oy+0.04,psym=8,symsize=my_siz(g),color=0
+plots,startx,oy+delyl,psym=8,symsize=my_siz(g),color=0
 endif
-oplot,[startx,startx],[oy+0.04+0.04,oy+0.04-0.04],thick=obs_thick
-oplot,[startx-my_del2,startx+my_del2],[oy+0.04-0.04,oy+0.04-0.04],thick=obs_thick
-oplot,[startx-my_del2,startx+my_del2],[oy+0.04+0.04,oy+0.04+0.04],thick=obs_thick
+oplot,[startx,startx],[oy+delyl+obsl,oy+delyl-obsl],thick=obs_thick
+oplot,[startx-my_del2,startx+my_del2],[oy+delyl-obsl,oy+delyl-obsl],thick=obs_thick
+oplot,[startx-my_del2,startx+my_del2],[oy+delyl+obsl,oy+delyl+obsl],thick=obs_thick
 
-plots,startx,oy-0.05*4,psym=8,symsize=my_siz(g),color=250
-plots,startx,oy-0.05*5,psym=8,symsize=my_siz(g),color=254
+plots,startx,oy-delys*5,psym=8,symsize=my_siz(g),color=250
+plots,startx,oy-delys*6,psym=8,symsize=my_siz(g),color=254
 
-xyouts,startx+delx,oy-0.01+0.04,'observations',size=0.9
-xyouts,startx,oy-0.01-0.05*1,'models:',size=0.9
-xyouts,startx+delx,oy-0.01-0.05*4,'ECS>5.0',size=0.9
-xyouts,startx+delx,oy-0.01-0.05*5,'ECS<2.0',size=0.9
+xyouts,startx+delx,oy-delyc+delyl,'observations',size=0.9
+xyouts,startx,oy-delyc-delys*1,'models:',size=0.9
+xyouts,startx+delx,oy-delyc-delys*5,'ECS>5.0',size=0.9
+xyouts,startx+delx,oy-delyc-delys*6,'ECS<2.0',size=0.9
+xyouts,startx+delx,oy-delyc-delys*7,'true mean',size=0.9
 
 tvlct,r_0,g_0,b_0
-plots,startx,oy-0.05*2,psym=8,symsize=my_siz(g),color=130
-xyouts,startx+delx,oy-0.01-0.05*2,'ens. mean',size=0.9
-plots,startx,oy-0.05*3,psym=8,symsize=my_siz(g),color=200
-xyouts,startx+delx,oy-0.01-0.05*3,'2.0<ECS<5.0',size=0.9
+
+plots,startx,oy-delys*2,psym=8,symsize=my_siz(g),color=130
+xyouts,startx+delx,oy-delyc-delys*2,'CMIP6 mean',size=0.9
+
+plots,startx,oy-delys*3,psym=8,symsize=my_siz(g)/2.0,color=130
+xyouts,startx+delx,oy-delyc-delys*3,'CMIP5 mean',size=0.9
+
+plots,startx,oy-delys*4,psym=8,symsize=my_siz(g),color=200
+xyouts,startx+delx,oy-delyc-delys*4,'2.0<ECS<5.0',size=0.9
 USERSYM, COS(Aaa), SIN(Aaa)
-plots,startx,oy-0.05*2,psym=8,symsize=my_siz(g),color=0
+plots,startx,oy-delys*2,psym=8,symsize=my_siz(g),color=0
+plots,startx,oy-delys*3,psym=8,symsize=my_siz(g)/2.0,color=0
+plots,startx,oy-delys*7,psym=2,symsize=my_siz(g),color=200
 
 endif ; xx eq 0
-endif; g ne 0
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -2787,12 +2848,24 @@ plots,my_xposp(xx),polamp_data(t,v,g),psym=8,symsize=my_siz(g)
 endif
 
 ; plot multi-model mean
-USERSYM, COS(Aaa), SIN(Aaa), /FILL
-plots,my_xposp(xx)+0.2,polamp_model_mean(t,v,g),psym=8,symsize=my_siz(g),color=130
-USERSYM, COS(Aaa), SIN(Aaa)
-plots,my_xposp(xx)+0.2,polamp_model_mean(t,v,g),psym=8,symsize=my_siz(g),color=0
 
-plots,my_xposm(xx),polamp_tmodel_mean(t,v,g),psym=2,symsize=my_siz(g),color=130,thick=3
+; pmip3
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+plots,my_xposp(xx)+0.2,polamp_model_mean(t,v,g,0),psym=8,symsize=my_siz(g),color=130
+USERSYM, COS(Aaa), SIN(Aaa)
+plots,my_xposp(xx)+0.2,polamp_model_mean(t,v,g,0),psym=8,symsize=my_siz(g),color=0
+;pmip4
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+plots,my_xposp(xx)+0.2,polamp_model_mean(t,v,g,1),psym=8,symsize=my_siz(g)/2.0,color=130
+USERSYM, COS(Aaa), SIN(Aaa)
+plots,my_xposp(xx)+0.2,polamp_model_mean(t,v,g,1),psym=8,symsize=my_siz(g)/2.0,color=0
+
+; true model (just for pmip4)
+plots,my_xposm(xx),polamp_tmodel_mean(t,v,g,0),psym=2,symsize=my_siz(g),color=130,thick=3
+
+
+
+
 
 
 for p=0,1 do begin
@@ -2861,42 +2934,6 @@ endfor ; end for p
 
 endfor ; end for xx
 
-; lines between models
-delmarg=0.58
-mylin=1
-if (g gt 1) then begin
-
-; mms is start model name number
-; mmf is finish model name number
-
-; CESM2 lines
-my_deltt=0.18
-mms=4
-mmf=6
-xyouts,my_xposm(4)+my_deltt+0.1,modh_gmt_flex(mmf,2,0),'CESM2.0',size=1.0,color=0
-oplot,[my_xposm(4)+my_deltt-1*(1+delmarg),my_xposm(4)+my_deltt-0*(1+delmarg)],[modh_gmt_flex(mms,0,0)*ass_ct(2)/ass_ct(0),modh_gmt_flex(mmf,2,0)],/noclip,linestyle=mylin
-mms=4
-mmf=4
-oplot,[my_xposm(4)+my_deltt-2*(1+delmarg),my_xposm(4)+my_deltt-1*(1+delmarg)],[modh_gmt_flex(mms,1,0)*ass_ct(2)/ass_ct(1),modh_gmt_flex(mmf,0,0)*ass_ct(2)/ass_ct(0)],/noclip,linestyle=mylin
-mms=7
-mmf=4
-oplot,[my_xposm(4)+my_deltt-3*(1+delmarg),my_xposm(4)+my_deltt-2*(1+delmarg)],[modh_gmt_flex(mms,4,0)*ass_ct(2)/ass_ct(4),modh_gmt_flex(mmf,1,0)*ass_ct(2)/ass_ct(1)],/noclip,linestyle=mylin
-mms=7
-mmf=7
-oplot,[my_xposm(4)+my_deltt-4*(1+delmarg),my_xposm(4)+my_deltt-3*(1+delmarg)],[modh_gmt_flex(mms,3,0)*ass_ct(2)/ass_ct(3),modh_gmt_flex(mmf,4,0)*ass_ct(2)/ass_ct(4)],/noclip,linestyle=mylin
-
-; CESM1.2 lines
-my_deltt=0
-mms=3
-mmf=0
-xyouts,my_xposm(4)+my_deltt+0.1,modh_gmt_flex(mmf,2,0),'CESM1.2',size=1.0,color=0
-oplot,[my_xposm(4)+my_deltt-1*(1+delmarg),my_xposm(4)+my_deltt-0*(1+delmarg)],[modh_gmt_flex(mms,0,0)*ass_ct(2)/ass_ct(0),modh_gmt_flex(mmf,2,0)],/noclip,linestyle=mylin
-mms=3
-mmf=3
-oplot,[my_xposm(4)+my_deltt-2*(1+delmarg),my_xposm(4)+my_deltt-1*(1+delmarg)],[modh_gmt_flex(mms,1,0)*ass_ct(2)/ass_ct(1),modh_gmt_flex(mmf,0,0)*ass_ct(2)/ass_ct(0)],/noclip,linestyle=mylin
-
-
-endif ; g ne 0
 
 
 device,/close
@@ -2984,7 +3021,10 @@ yindex=!c
 
 ; now expand out if necessary
 
-if (finite(modvar(xindex,yindex) ne 1)) then begin
+; this was the original buggy version:
+;if (finite(modvar(xindex,yindex) ne 1)) then begin
+; this is the corrected version, found by me and Seb:
+if (finite(modvar(xindex,yindex)) ne 1) then begin
 
 sorted=0
 sorted2=0
