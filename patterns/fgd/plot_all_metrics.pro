@@ -2,12 +2,6 @@ pro pa
 
 ; KNOWN ISSUES/ADDITIONS
 
-; check sign of LGM (see band_tmodel fact_mod_sign)
-
-; True model Land-sea contrast over land is global, not just land
-
-; True model polamp over land is global, not just land
-
 ; No area weighting in true model means
 
 ; Need to check all metrics with e.g. ferret for sanity check
@@ -20,11 +14,11 @@ pro pa
 ;;;;;;;;;;
 read_mod=1
 read_proxy=1
-make_zon_plots=1 ; plot zonal mean ensemble mean [default=0 or 1]
+make_zon_plots=0 ; plot zonal mean ensemble mean [default=0 or 1]
 make_map_plots=0 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
-make_gmt_plots=0                ; plot gmst [default=0 or 1]
-make_polamp_plots=0                ; plot polamp [default=0 or 1]
+make_gmt_plots=1                ; plot gmst [default=0 or 1]
+make_polamp_plots=1                ; plot polamp [default=0 or 1]
 make_cleat_plots=0
 make_text=0
 rev_lgm=0 ; re-reverse LGM [default=0;=1 for TS]
@@ -41,6 +35,10 @@ make_map_plots=0
 make_zon_plots=0
 endif
 ;;;;;;;;;;
+if (make_polamp_plots eq 1) then begin
+make_gmt_plots=1
+endif
+
 
 
 make_pdf=1
@@ -200,10 +198,14 @@ latsedge=fltarr(ny+1)
 latsedge=-90+findgen(ny+1)
 
 weight_lat=fltarr(ny)
+weight_glo=fltarr(nx,ny)
 for j=0,ny-1 do begin
 weight_lat(j)=(sin(latsedge(j+1)*2*!pi/360.0)-sin(latsedge(j)*2*!pi/360.0))
+weight_glo(*,j)=weight_lat(j)
 endfor
 weight_lat(0:ny-1)=weight_lat(0:ny-1)/total(weight_lat(0:ny-1),/NAN)
+weight_glo(0:nx-1,0:ny-1)=weight_glo(0:nx-1,0:ny-1)/total(weight_glo(0:nx-1,0:ny-1),/NAN)
+
 
 ; ** change ntime
 ; y-scale for zonal mean plot
@@ -1681,7 +1683,7 @@ for b=0,nbands-1 do begin
 ; models
 yy=where(lats gt bandlim(b,0) and lats le bandlim(b,1))
 for m=0,nmod(t)-1 do begin
-band_tmodel(m,b,t,v)=mean(mod_map(*,yy,m,t,v),/NAN)*fact_mod_sign(t)
+band_tmodel(m,b,t,v)=mean(mod_map(*,yy,m,t,v),/NAN);*fact_mod_sign(t) mod_map is already sign-changed
 endfor
 band_tmodel_mean(b,t,v)=mean(modmean_map(*,yy,t,v),/NAN)
 band_tmodel_aver(b,t,v)=mean(modaver_map(*,yy,t,v))
@@ -1730,7 +1732,12 @@ polamp_data(t,v,1)=mean(temps_d(0:ndata(t,v),t,v)) - mean(temps_d(0:ndata(t,(1-v
 
 for m=0,nmod(t)-1 do begin
 polamp_model(m,t,v,1)=mean(temps_m(m,0:ndata(t,v),t,v)) - mean(temps_m(m,0:ndata(t,(1-v)),t,(1-v)))
-polamp_tmodel(m,t,v,1)=mean(mod_map(*,*,m,t,v),/NAN) - mean(mod_map(*,*,m,t,(1-v)),/NAN)
+; used to do it this way which had a global SAT
+;polamp_tmodel(m,t,v,1)=mean(mod_map(*,*,m,t,v),/NAN) -
+;mean(mod_map(*,*,m,t,(1-v)),/NAN)
+; now do it like this:
+polamp_tmodel(m,t,v,1)=mean( mod_map(*,*,m,t,v)-mod_map(*,*,m,t,(1-v)) , /NAN)
+
 endfor
 ; pmip4 runs
 polamp_model_mean(t,v,1,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1),t,v,1))
@@ -2712,20 +2719,33 @@ endif ; end if make_gmt
 
 if (make_polamp_plots eq 1) then begin
 
-ylim_polamp_6=fltarr(ntime,2,npolamp)
+ylim_polamp_6=fltarr(ntime,2,npolamp,nvar)
 ;scal_6=1.5
 ;off_6=-0.05
 ;ylim_polamp_6(0,*)=[0,polamp_data(0,1)]*scal_6+off_6*polamp_data(0,1)
 ;ylim_polamp_6(1,*)=[0,polamp_data(1,1)]*scal_6+off_6*polamp_data(1,1)
 ;ylim_polamp_6(2,*)=[0,polamp_data(2,1)]*scal_6+off_6*polamp_data(2,1)
-ylim_polamp_6(0,*,0)=[-3,2]
-ylim_polamp_6(1,*,0)=[-0.5,2]
-ylim_polamp_6(2,*,0)=[-1,14]
 
-ylim_polamp_6(0,*,1)=[-2,5]
-ylim_polamp_6(1,*,1)=[2,9]
-ylim_polamp_6(2,*,1)=[-12,10]
+; meridional temp gradient:
+; sat:
+ylim_polamp_6(0,*,0,0)=[0,6]
+ylim_polamp_6(1,*,0,0)=[0,10]
+ylim_polamp_6(2,*,0,0)=[0,15]
+; sst:
+ylim_polamp_6(0,*,0,1)=[-3,2]
+ylim_polamp_6(1,*,0,1)=[-2,2]
+ylim_polamp_6(2,*,0,1)=[-1,14]
 
+
+; land-sea contrast:
+; sat:
+ylim_polamp_6(0,*,1,0)=[-1,4]
+ylim_polamp_6(1,*,1,0)=[0,8]
+ylim_polamp_6(2,*,1,0)=[-12,10]
+; sst:
+ylim_polamp_6(0,*,1,1)=[-4,1]
+ylim_polamp_6(1,*,1,1)=[-8,0]
+ylim_polamp_6(2,*,1,1)=[-10,12]
 
 polampname=strarr(npolamp)
 polampname(*)=['a','b']
@@ -2769,10 +2789,10 @@ shiftright=1
 ttt=where(ord_gmt(g,*) eq shiftright)
 tp=ttt(0)
 
-if (xx eq 0) then this_title=my_ytit(g)
+if (xx eq 0) then this_title=varnametitle(v)+' '+my_ytit(g)
 if (xx gt 0) then this_title=''
 
-plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_polamp_6(t,*,g),color=0,ytitle=this_title,/nodata,xcharsize=1,ycharsize=1,charsize=2.5,xstyle=1,ystyle=1,xticks=1,xtickname=['',''],XTickformat='(A1)',title=timnameslongh(t)
+plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_polamp_6(t,*,g,v),color=0,ytitle=this_title,/nodata,xcharsize=1,ycharsize=1,charsize=2.5,xstyle=1,ystyle=1,xticks=1,xtickname=['',''],XTickformat='(A1)',title=timnameslongh(t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2790,18 +2810,18 @@ delx=0.1
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
 
 ; these scale:
-scalefacty=(ylim_polamp_6(tp,1,g)-ylim_polamp_6(tp,0,g))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0))
+scalefacty=(ylim_polamp_6(tp,1,g,v)-ylim_polamp_6(tp,0,g,v))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0))
 
 delyl=0.04*scalefacty ; shift up for observation legend
 obsl=0.04*scalefacty ; length of obs legend in y 
 delys=0.05*scalefacty ; shift down for each part of legend
 delyc=0.01*scalefacty ; shift up for caption
-;oy=(ylim_polamp_6(tp,0,g)+0.3+starty*delys/scalefacty)*scalefacty ;
+;oy=(ylim_polamp_6(tp,0,g,v)+0.3+starty*delys/scalefacty)*scalefacty ;
 ;start point for y
-oy=ylim_polamp_6(tp,0,g)+(0.3+starty*delys/scalefacty)*scalefacty ; start point for y
+oy=ylim_polamp_6(tp,0,g,v)+(0.3+starty*delys/scalefacty)*scalefacty ; start point for y
 
 ;box:
-oplot,[0.53,1.45,1.45,0.53,0.53]+shiftright,[0.02,0.02,0.41+starty*delys/scalefacty,0.41+starty*delys/scalefacty,0.02]*scalefacty+ylim_polamp_6(tp,0,g),color=0,thick=0.5,/noclip
+oplot,[0.53,1.45,1.45,0.53,0.53]+shiftright,[0.02,0.02,0.41+starty*delys/scalefacty,0.41+starty*delys/scalefacty,0.02]*scalefacty+ylim_polamp_6(tp,0,g,v),color=0,thick=0.5,/noclip
 
 if (do_dots eq 1) then begin
 plots,startx,oy+delyl,psym=8,symsize=my_siz(g),color=0
