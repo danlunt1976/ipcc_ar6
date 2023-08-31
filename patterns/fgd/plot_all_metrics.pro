@@ -2,10 +2,6 @@ pro pa
 
 ; KNOWN ISSUES/ADDITIONS
 
-; Need to check all metrics with e.g. ferret for sanity check.
-
-; add LGM polamp to polamp plot.
-
 ; add error bars in proxy estimates.
 
 
@@ -21,11 +17,10 @@ pro pa
   ; OK: check produce old ipcc plot when put back in ensmean/aver.
   ; OK: band calculations = polamp calculations (models and ens mean, more differene for the Eocene)
   ; OK: Seb's checks for model temp at proxy locations global scale.
-
-
-; To check: bonkers Eocene land-sea contrast.
-
-
+  ; OK: bonkers Eocene land-sea contrast.
+; CHECK: Figure7_13_qa.xls :
+  ; OK: model and proxy polamps
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -204,7 +199,11 @@ exist_data(2,0:nmod(2)-1,*)=1 ; all eocene exist
 plot_zon=intarr(ntime,nmodmax)
 plot_zon(0,0:nmod(0)-1)=1 ; plot all plio zon
 plot_zon(1,0:nmod(1)-1)=1 ; plot all LGM zon
+if (rep_ipcc eq 0) then begin
+plot_zon(2,0:nmod(2)-1)=[1,1,1,1,1,0,1,1,1,1,1,1,1,1] ; don't plot eocene NorESM zon
+endif else begin
 plot_zon(2,0:nmod(2)-1)=[1,1,1,1,1,0,0,1,1,1,1,1,1,1] ; don't plot eocene CESM2 or NorESM zon
+endelse
 
 
 
@@ -1737,11 +1736,32 @@ print,'Models Aver: ',band_model_aver(b,t,v)
 endfor
 
 ;; polar amplification
+
+if (finite(band_data(0,t,v)) and finite(band_data(1,t,v)) and finite(band_data(2,t,v))) then begin
 polamp_data(t,v,0)=0.5*((band_data(0,t,v)-band_data(1,t,v))+(band_data(2,t,v)-band_data(1,t,v)))
 for m=0,nmod(t)-1 do begin
 polamp_model(m,t,v,0)=0.5*((band_model(m,0,t,v)-band_model(m,1,t,v))+(band_model(m,2,t,v)-band_model(m,1,t,v)))
 polamp_tmodel(m,t,v,0)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
 endfor
+endif
+
+if (finite(band_data(0,t,v)) and finite(band_data(1,t,v)) and ~finite(band_data(2,t,v))) then begin
+polamp_data(t,v,0)=band_data(0,t,v)-band_data(1,t,v)
+for m=0,nmod(t)-1 do begin
+polamp_model(m,t,v,0)=band_model(m,0,t,v)-band_model(m,1,t,v)
+polamp_tmodel(m,t,v,0)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
+endfor
+endif
+
+if (~finite(band_data(0,t,v)) and finite(band_data(1,t,v)) and finite(band_data(2,t,v))) then begin
+polamp_data(t,v,0)=band_data(2,t,v)-band_data(1,t,v)
+for m=0,nmod(t)-1 do begin
+polamp_model(m,t,v,0)=band_model(m,2,t,v)-band_model(m,1,t,v)
+polamp_tmodel(m,t,v,0)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
+endfor
+endif
+
+
 ; pmip4 runs
 polamp_model_mean(t,v,0,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,0))
 polamp_tmodel_mean(t,v,0,0)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,0))

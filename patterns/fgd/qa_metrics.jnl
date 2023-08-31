@@ -40,18 +40,21 @@ cancel data/all
 use "lg_mod/mod_CESM2_1_SST_lg-pi.nc"
 use "lg_mod/mod_CESM2_1_NearSurfaceTemperature_lg-pi.nc"
 def var newsat=(tos[d=1,l=1]-tos[d=1,l=1])+(tas[d=2,l=1])*-1
+list tas[d=2,x=@ave,y=@ave]
 list newsat[x=@ave,y=@ave,l=1]-(tos[d=1,x=@ave,y=@ave,l=1])*-1
 
 cancel data/all
 use "pl_mod/mod_CESM2.0_SST_pl-pi.nc"
 use "pl_mod/mod_CESM2.0_NearSurfaceTemperature_pl-pi.nc"
 def var newsat=(tos[d=1,l=1]-tos[d=1,l=1])+tas[d=2,l=1]
+list tas[d=2,x=@ave,y=@ave]
 list newsat[x=@ave,y=@ave,l=1]-tos[d=1,x=@ave,y=@ave,l=1]
 
 cancel data/all
 use "eo_mod/mod_CESM2.1slab_3x_SST_eo-pi.nc"
 use "eo_mod/mod_CESM2.1slab_3x_NearSurfaceTemperature_eo-pi.nc"
 def var newsat=(tos[d=1,l=1]-tos[d=1,l=1])+tas[d=2,l=1]
+list tas[d=2,x=@ave,y=@ave]
 list newsat[x=@ave,y=@ave,l=1]-tos[d=1,x=@ave,y=@ave,l=1]
 
 
@@ -61,11 +64,13 @@ cancel data/all
 use "lg_mod/mod_INM-CM4-8_SST_lg-pi.nc"
 use "lg_mod/mod_INM-CM4-8_NearSurfaceTemperature_lg-pi.nc"
 def var newsat=(tos[d=1,l=1]-tos[d=1,l=1])+(tas[d=2,l=1])*-1
+list tas[d=2,x=@ave,y=@ave]
 list newsat[x=@ave,y=@ave,l=1]-(tos[d=1,x=@ave,y=@ave,l=1])*-1
 
 cancel data/all
 use "eo_mod/mod_INM-CM4-8-deepmip_stand_6xCO2_SST_eo-pi.nc"
 use "eo_mod/mod_INM-CM4-8-deepmip_stand_6xCO2_NearSurfaceTemperature_eo-pi.nc"
 def var newsat=(tos[d=1,l=1]-tos[d=1,l=1])+tas[d=2,l=1]
+list tas[d=2,x=@ave,y=@ave]
 list newsat[x=@ave,y=@ave,l=1]-tos[d=1,x=@ave,y=@ave,l=1]
 
