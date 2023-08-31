@@ -16,14 +16,14 @@ pro pa
   ; OK: CESM2 LGM,Pliocene,Eocene merid SST temp gradients.
   ; OK: INMN LGM,Eocene merid SAT temp gradients.
   ; OK: INMN and CESM2 land-sea contrasts
+  ; OK: INMN and CESM global mean SAT temps
 ; CHECK: in IDL code :
   ; OK: check produce old ipcc plot when put back in ensmean/aver.
   ; OK: band calculations = polamp calculations (models and ens mean, more differene for the Eocene)
+  ; OK: Seb's checks for model temp at proxy locations global scale.
 
 
-; some global mean model temps
-; some models at proxy locations temps (from CSVs)
-
+; To check: bonkers Eocene land-sea contrast.
 
 
 
@@ -1757,10 +1757,10 @@ endfor
 for t=0,ntime-1 do begin
 for v=0,nvar-1 do begin
 
-polamp_data(t,v,1)=mean(temps_d(0:ndata(t,v),t,v)) - mean(temps_d(0:ndata(t,(1-v)),t,(1-v)))
+polamp_data(t,v,1)=mean(temps_d(0:ndata(t,v)-1,t,v)) - mean(temps_d(0:ndata(t,(1-v))-1,t,(1-v)))
 
 for m=0,nmod(t)-1 do begin
-polamp_model(m,t,v,1)=mean(temps_m(m,0:ndata(t,v),t,v)) - mean(temps_m(m,0:ndata(t,(1-v)),t,(1-v)))
+polamp_model(m,t,v,1)=mean(temps_m(m,0:ndata(t,v)-1,t,v)) - mean(temps_m(m,0:ndata(t,(1-v))-1,t,(1-v)))
 ; used to do it this way which had a global SAT
 ;polamp_tmodel(m,t,v,1)=mean(mod_map(*,*,m,t,v),/NAN) -
 ;mean(mod_map(*,*,m,t,(1-v)),/NAN)
@@ -3082,6 +3082,25 @@ endfor
 endfor
 endfor
 
+
+for t=0,ntime-1 do begin
+for v=0,nvar-1 do begin
+for m=0,nmod(t)-1 do begin
+
+if (varnametitle(v) eq 'SAT') then begin
+
+if (modnames(t,m) eq 'CESM2.0' or modnames(t,m) eq 'CESM2_1' or modnames(t,m) eq 'CESM2.1slab_3x') then begin
+print,'GMST: '+timnames(t)+' '+modnames(t,m)+' '+varnametitle(v)+' '+' '+strtrim(modh_gmt_flex(m,t,0),2)
+endif
+
+if (modnames(t,m) eq 'INM-CM4-8' or modnames(t,m) eq 'INM-CM4-8-deepmip_stand_6xCO2') then begin
+print,'GMST: '+timnames(t)+' '+modnames(t,m)+' '+varnametitle(v)+' '+' '+strtrim(modh_gmt_flex(m,t,0),2)
+endif
+endif
+
+endfor
+endfor
+endfor
 
 
 endif
