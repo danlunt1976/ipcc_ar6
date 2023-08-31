@@ -1,7 +1,7 @@
 
 
 
-!!! CESM true-model temp gradients
+!!! CESM true-model temp gradients (SST)
 
 cancel data/all
 use "lg_mod/mod_CESM2_1_SST_lg-pi.nc"
@@ -20,7 +20,7 @@ list 0.5*(tos[x=@ave,y=-90:-30@ave]+tos[x=@ave,y=30:90@ave])-tos[x=@ave,y=-30:30
 
 
 
-!!! INMN true-model temp gradients
+!!! INMN true-model temp gradients (SAT)
 
 cancel data/all
 use "lg_mod/mod_INM-CM4-8_NearSurfaceTemperature_lg-pi.nc"

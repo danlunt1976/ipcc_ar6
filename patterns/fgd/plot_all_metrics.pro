@@ -2,11 +2,29 @@ pro pa
 
 ; KNOWN ISSUES/ADDITIONS
 
-; No area weighting in true model means
+; Need to check all metrics with e.g. ferret for sanity check.
 
-; Need to check all metrics with e.g. ferret for sanity check
+; add LGM polamp to polamp plot.
 
 ; add error bars in proxy estimates.
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; QA: 
+; CHECK: qa_metrics.jnl : 
+  ; OK: CESM2 LGM,Pliocene,Eocene merid SST temp gradients.
+  ; OK: INMN LGM,Eocene merid SAT temp gradients.
+  ; OK: INMN and CESM2 land-sea contrasts
+; CHECK: in IDL code :
+  ; OK: check produce old ipcc plot when put back in ensmean/aver.
+  ; OK: band calculations = polamp calculations (models and ens mean, more differene for the Eocene)
+
+
+; some global mean model temps
+; some models at proxy locations temps (from CSVs)
+
+
 
 
 
@@ -21,6 +39,7 @@ make_gmt_plots=1                ; plot gmst [default=0 or 1]
 make_polamp_plots=1                ; plot polamp [default=0 or 1]
 make_cleat_plots=0
 make_text=0
+make_qa=1
 rev_lgm=0 ; re-reverse LGM [default=0;=1 for TS]
 all_proxies=0 ; plot all proxies [default=0;=1 for TS]
 make_nodata=0 ; plot maps without data [default=0;=1 for TS version B]
@@ -38,7 +57,9 @@ endif
 if (make_polamp_plots eq 1) then begin
 make_gmt_plots=1
 endif
-
+if (make_polamp_plots eq 0) then begin
+make_qa=0
+endif
 
 
 make_pdf=1
@@ -49,7 +70,7 @@ do_tcheck=0 ; plot old and new values of historical obs [default=0]
 do_mod_leg=0 ; plot model names on model zonal mean lines [default=0]
 plot_names_gmt=0 ; plot model names on gmst plot [default=0]
 do_dots=1 ; plot circles at centre of assessed obs of GMST [default=1]
-
+rep_ipcc=0 ; reproduce original IPCC plot (regarding ensmean/aver)
 
 
 
@@ -1683,10 +1704,18 @@ for b=0,nbands-1 do begin
 ; models
 yy=where(lats gt bandlim(b,0) and lats le bandlim(b,1))
 for m=0,nmod(t)-1 do begin
-band_tmodel(m,b,t,v)=mean(mod_map(*,yy,m,t,v),/NAN);*fact_mod_sign(t) mod_map is already sign-changed
+;old way of doing it:
+;band_tmodel(m,b,t,v)=mean(mod_map(*,yy,m,t,v),/NAN);*fact_mod_sign(t) mod_map is already sign-changed
+; new way, area weighted:
+band_tmodel(m,b,t,v)=total(mod_map(*,yy,m,t,v)*weight_glo(*,yy),/NAN)/total(finite(mod_map(*,yy,m,t,v))*weight_glo(*,yy))
 endfor
-band_tmodel_mean(b,t,v)=mean(modmean_map(*,yy,t,v),/NAN)
-band_tmodel_aver(b,t,v)=mean(modaver_map(*,yy,t,v))
+;old way of doing it:
+;band_tmodel_mean(b,t,v)=mean(modmean_map(*,yy,t,v),/NAN)
+;band_tmodel_aver(b,t,v)=mean(modaver_map(*,yy,t,v))
+; new way, area weighted
+band_tmodel_mean(b,t,v)=total(modmean_map(*,yy,t,v)*weight_glo(*,yy),/NAN)/total(finite(modmean_map(*,yy,t,v))*weight_glo(*,yy))
+band_tmodel_aver(b,t,v)=total(modmean_map(*,yy,t,v)*weight_glo(*,yy))/total(weight_glo(*,yy))
+
 
 
 ; proxies
@@ -1714,11 +1743,11 @@ polamp_model(m,t,v,0)=0.5*((band_model(m,0,t,v)-band_model(m,1,t,v))+(band_model
 polamp_tmodel(m,t,v,0)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
 endfor
 ; pmip4 runs
-polamp_model_mean(t,v,0,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1),t,v,0))
-polamp_tmodel_mean(t,v,0,0)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1),t,v,0))
+polamp_model_mean(t,v,0,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,0))
+polamp_tmodel_mean(t,v,0,0)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,0))
 ; pmip3 runs
-polamp_model_mean(t,v,0,1)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 0),t,v,0))
-polamp_tmodel_mean(t,v,0,1)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 0),t,v,0))
+polamp_model_mean(t,v,0,1)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,0))
+polamp_tmodel_mean(t,v,0,1)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,0))
 
 
 endfor
@@ -1736,15 +1765,20 @@ polamp_model(m,t,v,1)=mean(temps_m(m,0:ndata(t,v),t,v)) - mean(temps_m(m,0:ndata
 ;polamp_tmodel(m,t,v,1)=mean(mod_map(*,*,m,t,v),/NAN) -
 ;mean(mod_map(*,*,m,t,(1-v)),/NAN)
 ; now do it like this:
+;polamp_tmodel(m,t,v,1)=mean( mod_map(*,*,m,t,v)-mod_map(*,*,m,t,(1-v)) , /NAN)
+; and now area weighted:
 polamp_tmodel(m,t,v,1)=mean( mod_map(*,*,m,t,v)-mod_map(*,*,m,t,(1-v)) , /NAN)
+
+polamp_tmodel(m,t,v,1)=total((mod_map(*,*,m,t,v)-mod_map(*,*,m,t,(1-v)))*weight_glo(*,*),/NAN)/total(finite(mod_map(*,*,m,t,v)-mod_map(*,*,m,t,(1-v)))*weight_glo(*,*))
+
 
 endfor
 ; pmip4 runs
-polamp_model_mean(t,v,1,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1),t,v,1))
-polamp_tmodel_mean(t,v,1,0)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1),t,v,1))
+polamp_model_mean(t,v,1,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,1))
+polamp_tmodel_mean(t,v,1,0)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,1))
 ; pmip3 runs
-polamp_model_mean(t,v,1,1)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 0),t,v,1))
-polamp_tmodel_mean(t,v,1,1)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 0),t,v,1))
+polamp_model_mean(t,v,1,1)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,1))
+polamp_tmodel_mean(t,v,1,1)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,1))
 endfor
 endfor
 
@@ -1935,12 +1969,20 @@ if (bandtype eq '3-bnd') then begin
 if (finite(band_model_mean(0,t,v)) and finite(band_model_mean(1,t,v))) then begin
 xyouts,my_shampx,my_yrange5(t,v,0)+my_proxampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'SH proxy amp: '+strtrim(string(band_data(0,t,v)-band_data(1,t,v),format='(F4.1)'),2)+' !Eo!NC',color=0,charsize=my_charsize2
 ; this was aver....
+if (rep_ipcc eq 0) then begin
 xyouts,my_shampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'SH model amp: '+strtrim(string(band_model_mean(0,t,v)-band_model_mean(1,t,v),format='(F4.1)'),2)+' !Eo!NC',color=ensmeancol,charsize=my_charsize2
+endif else begin
+xyouts,my_shampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'SH model amp: '+strtrim(string(band_model_aver(0,t,v)-band_model_aver(1,t,v),format='(F4.1)'),2)+' !Eo!NC',color=ensmeancol,charsize=my_charsize2
+endelse
 endif
 if (finite(band_model_mean(2,t,v)) and finite(band_model_mean(1,t,v))) then begin
 xyouts,my_nhampx,my_yrange5(t,v,0)+my_proxampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'NH proxy amp: '+strtrim(string(band_data(2,t,v)-band_data(1,t,v),format='(F4.1)'),2)+' !Eo!NC',alignment=1,color=0,charsize=my_charsize2
 ; this was aver....
+if (rep_ipcc eq 0) then begin
 xyouts,my_nhampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'NH model amp: '+strtrim(string(band_model_mean(2,t,v)-band_model_mean(1,t,v),format='(F4.1)'),2)+' !Eo!NC',alignment=1,color=ensmeancol,charsize=my_charsize2
+endif else begin
+xyouts,my_nhampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'NH model amp: '+strtrim(string(band_model_aver(2,t,v)-band_model_aver(1,t,v),format='(F4.1)'),2)+' !Eo!NC',alignment=1,color=ensmeancol,charsize=my_charsize2
+endelse
 endif
 endif
 
@@ -2728,12 +2770,12 @@ ylim_polamp_6=fltarr(ntime,2,npolamp,nvar)
 
 ; meridional temp gradient:
 ; sat:
-ylim_polamp_6(0,*,0,0)=[0,6]
+ylim_polamp_6(0,*,0,0)=[0,5]
 ylim_polamp_6(1,*,0,0)=[0,10]
-ylim_polamp_6(2,*,0,0)=[0,15]
+ylim_polamp_6(2,*,0,0)=[0,10]
 ; sst:
-ylim_polamp_6(0,*,0,1)=[-3,2]
-ylim_polamp_6(1,*,0,1)=[-2,2]
+ylim_polamp_6(0,*,0,1)=[-0.5,2]
+ylim_polamp_6(1,*,0,1)=[-0.5,2]
 ylim_polamp_6(2,*,0,1)=[-1,14]
 
 
@@ -2749,6 +2791,8 @@ ylim_polamp_6(2,*,1,1)=[-10,12]
 
 polampname=strarr(npolamp)
 polampname(*)=['a','b']
+polampshortname=strarr(npolamp)
+polampshortname(*)=['mtg','lsc']
 my_siz=fltarr(npolamp)
 my_siz(*)=[2,2]
 my_xsize=fltarr(npolamp)
@@ -2922,21 +2966,24 @@ endif
 
 
 if (p eq 0) then begin
+; plot model at proxy locatons
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
-if (pmip4(t,m) eq 1) then begin
+if (pmip4(t,m) eq 1 and plot_zon(t,m)) then begin
 plots,my_xposm(xx)+my_delt,polamp_model(m,t,v,g),psym=my_sym,symsize=my_siz(g),color=my_col,NOCLIP = 0
 endif
 endif
 
 if (p eq 0) then begin
-if (pmip4(t,m) eq 1) then begin
+; plot true model
+if (pmip4(t,m) eq 1 and plot_zon(t,m)) then begin
 plots,my_xposm(xx)+0.18,polamp_tmodel(m,t,v,g),psym=2,symsize=my_siz(g),color=my_col,NOCLIP = 0
 oplot,[my_xposm(xx)+my_delt,my_xposm(xx)+0.18],[polamp_model(m,t,v,g),polamp_tmodel(m,t,v,g)],color=my_col,linestyle=1
 endif
 endif
 
 if (p eq 1) then begin
-if (pmip4(t,m) eq 1) then begin
+; plot line around model at proxy locations
+if (pmip4(t,m) eq 1 and plot_zon(t,m)) then begin
 USERSYM, COS(Aaa), SIN(Aaa)
 plots,my_xposm(xx)+my_delt,polamp_model(m,t,v,g),psym=my_sym,symsize=my_siz(g),color=0,thick=my_thick,NOCLIP=0 ; for extra black circle around model points
 ; plot model names
@@ -2978,6 +3025,66 @@ endfor ; end for g
 
 endif ; end if make_polamp
 
+
+if (make_qa eq 1) then begin
+
+print,'ferret says: true-model, MTG, SST, CESM2: LGM=-0.2681 ; Plio = 1.074 ; EECO = 5.559'
+print,'ferret says: true-model, MTG, SAT, INMCM: LGM=3.051 ; EECO = 3.605'
+print,'ferret says: true-model, LSC, SAT, CESM2: LGM=3.310 ; Plio = 0.7025 ; EECO = 2.064'
+print,'ferret says: true-model, LSC, SAT, INMCM: LGM=0.2416 ; EECO = 1.423'
+
+for t=0,ntime-1 do begin
+for g=0,npolamp-1 do begin
+for v=0,nvar-1 do begin
+for m=0,nmod(t)-1 do begin
+
+if (polampshortname(g) eq 'mtg' and varnametitle(v) eq 'SST') then begin
+if (modnames(t,m) eq 'CESM2.0' or modnames(t,m) eq 'CESM2_1' or modnames(t,m) eq 'CESM2.1slab_3x') then begin
+;print,'model-at-data'+' '+timnames(t)+' '+modnames(t,m)+' '+varnametitle(v)+' '+polampshortname(g)+' '+strtrim(polamp_model(m,t,v,g),2)
+print,'true-model'+' '+timnames(t)+' '+modnames(t,m)+' '+varnametitle(v)+' '+polampshortname(g)+' '+strtrim(polamp_tmodel(m,t,v,g),2)
+endif
+endif
+
+if (polampshortname(g) eq 'mtg' and varnametitle(v) eq 'SAT') then begin
+if (modnames(t,m) eq 'INM-CM4-8' or modnames(t,m) eq 'INM-CM4-8-deepmip_stand_6xCO2') then begin
+;print,'model-at-data'+' '+timnames(t)+' '+modnames(t,m)+' '+varnametitle(v)+' '+polampshortname(g)+' '+strtrim(polamp_model(m,t,v,g),2)
+print,'true-model'+' '+timnames(t)+' '+modnames(t,m)+' '+varnametitle(v)+' '+polampshortname(g)+' '+strtrim(polamp_tmodel(m,t,v,g),2)
+endif
+endif
+
+if (polampshortname(g) eq 'lsc' and varnametitle(v) eq 'SAT') then begin
+if (modnames(t,m) eq 'CESM2.0' or modnames(t,m) eq 'CESM2_1' or modnames(t,m) eq 'CESM2.1slab_3x') then begin
+;print,'model-at-data'+' '+timnames(t)+' '+modnames(t,m)+' '+varnametitle(v)+' '+polampshortname(g)+' '+strtrim(polamp_model(m,t,v,g),2)
+print,'true-model'+' '+timnames(t)+' '+modnames(t,m)+' '+varnametitle(v)+' '+polampshortname(g)+' '+strtrim(polamp_tmodel(m,t,v,g),2)
+endif
+endif
+
+if (polampshortname(g) eq 'lsc' and varnametitle(v) eq 'SAT') then begin
+if (modnames(t,m) eq 'INM-CM4-8' or modnames(t,m) eq 'INM-CM4-8-deepmip_stand_6xCO2') then begin
+;print,'model-at-data'+' '+timnames(t)+' '+modnames(t,m)+' '+varnametitle(v)+' '+polampshortname(g)+' '+strtrim(polamp_model(m,t,v,g),2)
+print,'true-model'+' '+timnames(t)+' '+modnames(t,m)+' '+varnametitle(v)+' '+polampshortname(g)+' '+strtrim(polamp_tmodel(m,t,v,g),2)
+endif
+endif
+
+
+endfor
+
+
+if (polampshortname(g) eq 'mtg' and varnametitle(v) eq 'SST') then begin
+print,'bands SST: '+timnames(t)+' '+strtrim(band_model_mean(0,t,v)-band_model_mean(1,t,v),2)+' '+strtrim(band_model_mean(2,t,v)-band_model_mean(1,t,v),2)
+print,'band_model_mean SST: '+timnames(t)+' '+strtrim(0.5*(band_model_mean(0,t,v)-band_model_mean(1,t,v)+band_model_mean(2,t,v)-band_model_mean(1,t,v)),2)
+print,'polamp SST: '+timnames(t)+' '+strtrim(polamp_model_mean(t,v,0,0),2)
+endif
+
+
+
+endfor
+endfor
+endfor
+
+
+
+endif
 
 
 if (make_text eq 1) then begin
