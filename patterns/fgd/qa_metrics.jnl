@@ -1,0 +1,71 @@
+
+
+
+!!! CESM true-model temp gradients
+
+cancel data/all
+use "lg_mod/mod_CESM2_1_SST_lg-pi.nc"
+list (tos[x=@ave,y=@ave])*-1
+list (0.5*(tos[x=@ave,y=-90:-30@ave]+tos[x=@ave,y=30:90@ave])-tos[x=@ave,y=-30:30@ave])*-1
+
+cancel data/all
+use "pl_mod/mod_CESM2.0_SST_pl-pi.nc"
+list tos[x=@ave,y=@ave]
+list 0.5*(tos[x=@ave,y=-90:-30@ave]+tos[x=@ave,y=30:90@ave])-tos[x=@ave,y=-30:30@ave]
+
+cancel data/all
+use "eo_mod/mod_CESM2.1slab_3x_SST_eo-pi.nc"
+list tos[x=@ave,y=@ave]
+list 0.5*(tos[x=@ave,y=-90:-30@ave]+tos[x=@ave,y=30:90@ave])-tos[x=@ave,y=-30:30@ave]
+
+
+
+!!! INMN true-model temp gradients
+
+cancel data/all
+use "lg_mod/mod_INM-CM4-8_NearSurfaceTemperature_lg-pi.nc"
+list (tas[x=@ave,y=@ave])*-1
+list (0.5*(tas[x=@ave,y=-90:-30@ave]+tas[x=@ave,y=30:90@ave])-tas[x=@ave,y=-30:30@ave])*-1
+
+cancel data/all
+use "eo_mod/mod_INM-CM4-8-deepmip_stand_6xCO2_NearSurfaceTemperature_eo-pi.nc"
+list tas[x=@ave,y=@ave]
+list 0.5*(tas[x=@ave,y=-90:-30@ave]+tas[x=@ave,y=30:90@ave])-tas[x=@ave,y=-30:30@ave]
+
+
+
+!!! CESM true-model temp land-sea contrast
+
+cancel data/all
+use "lg_mod/mod_CESM2_1_SST_lg-pi.nc"
+use "lg_mod/mod_CESM2_1_NearSurfaceTemperature_lg-pi.nc"
+def var newsat=(tos[d=1,l=1]-tos[d=1,l=1])+(tas[d=2,l=1])*-1
+list newsat[x=@ave,y=@ave,l=1]-(tos[d=1,x=@ave,y=@ave,l=1])*-1
+
+cancel data/all
+use "pl_mod/mod_CESM2.0_SST_pl-pi.nc"
+use "pl_mod/mod_CESM2.0_NearSurfaceTemperature_pl-pi.nc"
+def var newsat=(tos[d=1,l=1]-tos[d=1,l=1])+tas[d=2,l=1]
+list newsat[x=@ave,y=@ave,l=1]-tos[d=1,x=@ave,y=@ave,l=1]
+
+cancel data/all
+use "eo_mod/mod_CESM2.1slab_3x_SST_eo-pi.nc"
+use "eo_mod/mod_CESM2.1slab_3x_NearSurfaceTemperature_eo-pi.nc"
+def var newsat=(tos[d=1,l=1]-tos[d=1,l=1])+tas[d=2,l=1]
+list newsat[x=@ave,y=@ave,l=1]-tos[d=1,x=@ave,y=@ave,l=1]
+
+
+!!! INMCM true-model temp land-sea contrast
+
+cancel data/all
+use "lg_mod/mod_INM-CM4-8_SST_lg-pi.nc"
+use "lg_mod/mod_INM-CM4-8_NearSurfaceTemperature_lg-pi.nc"
+def var newsat=(tos[d=1,l=1]-tos[d=1,l=1])+(tas[d=2,l=1])*-1
+list newsat[x=@ave,y=@ave,l=1]-(tos[d=1,x=@ave,y=@ave,l=1])*-1
+
+cancel data/all
+use "eo_mod/mod_INM-CM4-8-deepmip_stand_6xCO2_SST_eo-pi.nc"
+use "eo_mod/mod_INM-CM4-8-deepmip_stand_6xCO2_NearSurfaceTemperature_eo-pi.nc"
+def var newsat=(tos[d=1,l=1]-tos[d=1,l=1])+tas[d=2,l=1]
+list newsat[x=@ave,y=@ave,l=1]-tos[d=1,x=@ave,y=@ave,l=1]
+
