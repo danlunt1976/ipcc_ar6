@@ -31,10 +31,10 @@ make_zon_plots=0 ; plot zonal mean ensemble mean [default=0 or 1]
 make_map_plots=0 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
 make_gmt_plots=1                ; plot gmst [default=0 or 1]
-make_polamp_plots=1                ; plot polamp [default=0 or 1]
+make_polamp_plots=0                ; plot polamp [default=0 or 1]
 make_cleat_plots=0
 make_text=0
-make_qa=1
+make_qa=0
 rev_lgm=0 ; re-reverse LGM [default=0;=1 for TS]
 all_proxies=0 ; plot all proxies [default=0;=1 for TS]
 make_nodata=0 ; plot maps without data [default=0;=1 for TS version B]
@@ -2773,6 +2773,27 @@ endif
 !P.Multi = 0
 
 endfor ; end for g
+
+;;;;  FOR PAPER:
+
+print,'GMSTs:'
+for t=0,ntime-1 do begin
+print,timnameslong(t)
+mymods=modh_gmt_flex(where(pmip4(t,0:nmod(t)-1) eq 1),t,0)
+print,mymods
+
+print,'ASSESSMENT RANGE:'
+print,ass_vlik(t,0),ass_vlik(t,1)
+
+print,'% in range:'
+print,100.0-100.0*total( (mymods ge ass_vlik(t,0))*(mymods le ass_vlik(t,1)) )/(1.0*n_elements(mymods))
+
+
+endfor
+
+stop
+
+
 
 endif ; end if make_gmt
 
