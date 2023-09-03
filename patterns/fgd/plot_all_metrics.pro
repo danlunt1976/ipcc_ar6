@@ -15,7 +15,12 @@ pro pa
   ; OK: INMN and CESM global mean SAT temps
 ; CHECK: in IDL code :
   ; OK: check produce old ipcc plot when put back in ensmean/aver.
-  ; OK: band calculations = polamp calculations (models and ens mean, more differene for the Eocene)
+                                ; OK: band calculations = polamp
+                                ; calculations (models and ens mean,
+                                ; more differene for the Eocene,
+                                ; especially with rem_swpac.  SOlved
+                                ; if use ensaver instead of ensmean in
+                                ; band calculations.)
   ; OK: Seb's checks for model temp at proxy locations global scale.
   ; OK: bonkers Eocene land-sea contrast.
 ; CHECK: Figure7_13_qa.xls :
@@ -31,10 +36,10 @@ make_zon_plots=0 ; plot zonal mean ensemble mean [default=0 or 1]
 make_map_plots=0 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
 make_gmt_plots=1                ; plot gmst [default=0 or 1]
-make_polamp_plots=0                ; plot polamp [default=0 or 1]
+make_polamp_plots=1                ; plot polamp [default=0 or 1]
 make_cleat_plots=0
 make_text=0
-make_qa=0
+make_qa=1
 rev_lgm=0 ; re-reverse LGM [default=0;=1 for TS]
 all_proxies=0 ; plot all proxies [default=0;=1 for TS]
 make_nodata=0 ; plot maps without data [default=0;=1 for TS version B]
@@ -66,8 +71,9 @@ do_mod_leg=0 ; plot model names on model zonal mean lines [default=0]
 plot_names_gmt=0 ; plot model names on gmst plot [default=0]
 do_dots=1 ; plot circles at centre of assessed obs of GMST [default=1]
 rep_ipcc=0 ; reproduce original IPCC plot (regarding ensmean/aver)
-
-
+rem_swpac=0 ; remove SW Pacific
+inc_cesm=1 ; include CESM2 (0 if reproducing IPCC; if =1 then maps and zonal mean plots are inconsistent with bar plots)
+ave_aver=1 ; use aver for bands in zonal images
 
 ;;;;;;;;;;
 ;;;;;;;;;;
@@ -93,6 +99,8 @@ lg_data_sst='tierney-2020-grid'
 ;lg_data_sst='tierney-2020'
 
 eo_data_all='inglis'
+lab_swpac=strarr(2)
+lab_swpac(*)=['','_noswpac']
 
 do_opp=0 ; =1 to overplot SAT on SST and vice-versa
 
@@ -199,7 +207,7 @@ exist_data(2,0:nmod(2)-1,*)=1 ; all eocene exist
 plot_zon=intarr(ntime,nmodmax)
 plot_zon(0,0:nmod(0)-1)=1 ; plot all plio zon
 plot_zon(1,0:nmod(1)-1)=1 ; plot all LGM zon
-if (rep_ipcc eq 0) then begin
+if (inc_cesm eq 1) then begin
 plot_zon(2,0:nmod(2)-1)=[1,1,1,1,1,0,1,1,1,1,1,1,1,1] ; don't plot eocene NorESM zon
 endif else begin
 plot_zon(2,0:nmod(2)-1)=[1,1,1,1,1,0,0,1,1,1,1,1,1,1] ; don't plot eocene CESM2 or NorESM zon
@@ -540,10 +548,18 @@ missing_err=2.0
 
 if (eo_data_all eq 'inglis') then begin
 ndata(2,0)=47
+if (rem_swpac eq 0) then begin
 ndata(2,1)=19
+endif else begin
+ndata(2,1)=12
+endelse
 ndataing=intarr(nvar)
 ndataing(0)=80
+if (rem_swpac eq 0) then begin
 ndataing(1)=27
+endif else begin
+ndataing(1)=16
+endelse
 endif
 
 if (pl_data_sat eq 'salzmann') then begin
@@ -623,7 +639,7 @@ all_lats(i)=data_row(6) ; mantle
 all_temps(i)=data_row(11)
 all_times(i)=data_row(1)
 all_vars_tmp(i)=data_row(2)
-all_v2(i)=data_row(20) ; needed for for most recent Hollis file
+all_v2(i)=data_row(20) ; needed for for most recent Hollis file (note this is actually v1 in the spreadsheet)
 all_upper(i)=data_row(17)
 all_lower(i)=data_row(16)
 endfor
@@ -634,18 +650,24 @@ this_index=(all_times eq 'eeco')
 ; no-frosty:
 this_index=this_index*(all_v2 eq 1)
 
+if (rem_swpac eq 0) then begin
 this_index_sst=this_index*(all_vars eq 1)
+endif else begin
+this_index_sst=this_index*(all_vars eq 1)*(all_lats gt -50)
+endelse
+
+
 this_index_sat=this_index*(all_vars eq 0)
 
 ncolumns_sst=total(this_index_sst)
 ncolumns_sat=total(this_index_sat)
 
 if (ncolumns_sat ne ndataing(0)) then begin
-print,'unepxected N',ncolumns_sat,ndataing(0)
+print,'unexpected N',ncolumns_sat,ndataing(0)
 stop
 endif
 if (ncolumns_sst ne ndataing(1)) then begin
-print,'unepxected N',ncolumns_sst,ndataing(1)
+print,'unexpected N',ncolumns_sst,ndataing(1)
 stop
 endif
 
@@ -1848,7 +1870,7 @@ for t=0,ntime-1 do begin
 for v=0,nvar-1 do begin
 
 ; filename
-my_filename=timnames(t)+'_temp_lat_corr_tuned_data_ipcc_'+varnameshort(v)+name_sign(t)
+my_filename=timnames(t)+'_temp_lat_corr_tuned_data_ipcc_'+varnameshort(v)+name_sign(t)+lab_swpac(rem_swpac)
 print,my_filename
 device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica'
 
@@ -1974,7 +1996,15 @@ endif
 for b=0,nbands-1 do begin
 
 if (finite(band_model_mean(b,t,v))) then begin
+
+if (ave_aver eq 0 or rep_ipcc eq 1) then begin
 plots,[bandlim(b,0),bandlim(b,1)],[band_model_mean(b,t,v),band_model_mean(b,t,v)],thick=my_thick3,color=ensmeancol,NOCLIP = 0,linestyle=linestyle_band
+endif
+
+if (ave_aver eq 1) then begin
+plots,[bandlim(b,0),bandlim(b,1)],[band_model_aver(b,t,v),band_model_aver(b,t,v)],thick=my_thick3,color=ensmeancol,NOCLIP = 0,linestyle=linestyle_band
+endif
+
 endif
 
 if (do_checks eq 1) then begin
@@ -1988,23 +2018,24 @@ endfor
 if (bandtype eq '3-bnd') then begin
 if (finite(band_model_mean(0,t,v)) and finite(band_model_mean(1,t,v))) then begin
 xyouts,my_shampx,my_yrange5(t,v,0)+my_proxampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'SH proxy amp: '+strtrim(string(band_data(0,t,v)-band_data(1,t,v),format='(F4.1)'),2)+' !Eo!NC',color=0,charsize=my_charsize2
-; this was aver....
-if (rep_ipcc eq 0) then begin
+if (ave_aver eq 0) then begin
 xyouts,my_shampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'SH model amp: '+strtrim(string(band_model_mean(0,t,v)-band_model_mean(1,t,v),format='(F4.1)'),2)+' !Eo!NC',color=ensmeancol,charsize=my_charsize2
-endif else begin
+endif
+if (ave_aver eq 1 or rep_ipcc eq 1) then begin
 xyouts,my_shampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'SH model amp: '+strtrim(string(band_model_aver(0,t,v)-band_model_aver(1,t,v),format='(F4.1)'),2)+' !Eo!NC',color=ensmeancol,charsize=my_charsize2
-endelse
+endif
 endif
 if (finite(band_model_mean(2,t,v)) and finite(band_model_mean(1,t,v))) then begin
 xyouts,my_nhampx,my_yrange5(t,v,0)+my_proxampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'NH proxy amp: '+strtrim(string(band_data(2,t,v)-band_data(1,t,v),format='(F4.1)'),2)+' !Eo!NC',alignment=1,color=0,charsize=my_charsize2
 ; this was aver....
-if (rep_ipcc eq 0) then begin
+if (ave_aver eq 0) then begin
 xyouts,my_nhampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'NH model amp: '+strtrim(string(band_model_mean(2,t,v)-band_model_mean(1,t,v),format='(F4.1)'),2)+' !Eo!NC',alignment=1,color=ensmeancol,charsize=my_charsize2
-endif else begin
+endif
+if (ave_aver eq 1 or rep_ipcc eq 1) then begin
 xyouts,my_nhampx,my_yrange5(t,v,0)+my_modampy*(my_yrange5(t,v,1)-my_yrange5(t,v,0)),'NH model amp: '+strtrim(string(band_model_aver(2,t,v)-band_model_aver(1,t,v),format='(F4.1)'),2)+' !Eo!NC',alignment=1,color=ensmeancol,charsize=my_charsize2
-endelse
 endif
-endif
+endif 
+endif 
 
 ; DATA:
 
@@ -2105,7 +2136,7 @@ endelse
 map_charsize=230
 
 ; filename
-my_filename=timnames(t)+'_modeldata_cont_'+varnameshort(v)+'_ipcc_czt_'+pname(p)+'_'+mapname(map)+name_sign(t)+name_all
+my_filename=timnames(t)+'_modeldata_cont_'+varnameshort(v)+'_ipcc_czt_'+pname(p)+'_'+mapname(map)+name_sign(t)+name_all+lab_swpac(rem_swpac)
 print,my_filename
 psopen,file=my_filename+'.ps',tcharsize=my_tcharsize,charsize=map_charsize
 nncols=2.0+(temp_max_e(t,v)-temp_min_e(t,v))/nnstep(t,v)
@@ -2791,8 +2822,6 @@ print,100.0-100.0*total( (mymods ge ass_vlik(t,0))*(mymods le ass_vlik(t,1)) )/(
 
 endfor
 
-stop
-
 
 
 endif ; end if make_gmt
@@ -2857,7 +2886,7 @@ if (g eq 0 or g eq 1) then begin
 !P.MULTI = [0, 3, 1]
 endif
 
-my_filename='polamp_ecs_all_new_metrics_'+gmtname(g)+'_'+varnameshort(v)
+my_filename='polamp_ecs_all_new_metrics_'+gmtname(g)+'_'+varnameshort(v)+lab_swpac(rem_swpac)
 print,my_filename
 device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica',xsize=my_xsize(g),ysize=20
 
@@ -2958,12 +2987,12 @@ endif
 
 ; plot multi-model mean
 
-; pmip3
+; pmip4
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
 plots,my_xposp(xx)+0.2,polamp_model_mean(t,v,g,0),psym=8,symsize=my_siz(g),color=130
 USERSYM, COS(Aaa), SIN(Aaa)
 plots,my_xposp(xx)+0.2,polamp_model_mean(t,v,g,0),psym=8,symsize=my_siz(g),color=0
-;pmip4
+;pmip3
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
 plots,my_xposp(xx)+0.2,polamp_model_mean(t,v,g,1),psym=8,symsize=my_siz(g)/2.0,color=130
 USERSYM, COS(Aaa), SIN(Aaa)
@@ -3112,8 +3141,10 @@ endfor
 
 
 if (polampshortname(g) eq 'mtg' and varnametitle(v) eq 'SST') then begin
-print,'bands SST: '+timnames(t)+' '+strtrim(band_model_mean(0,t,v)-band_model_mean(1,t,v),2)+' '+strtrim(band_model_mean(2,t,v)-band_model_mean(1,t,v),2)
+print,'bands SST mean: '+timnames(t)+' '+strtrim(band_model_mean(0,t,v)-band_model_mean(1,t,v),2)+' '+strtrim(band_model_mean(2,t,v)-band_model_mean(1,t,v),2)
+print,'bands SST aver: '+timnames(t)+' '+strtrim(band_model_aver(0,t,v)-band_model_aver(1,t,v),2)+' '+strtrim(band_model_aver(2,t,v)-band_model_aver(1,t,v),2)
 print,'band_model_mean SST: '+timnames(t)+' '+strtrim(0.5*(band_model_mean(0,t,v)-band_model_mean(1,t,v)+band_model_mean(2,t,v)-band_model_mean(1,t,v)),2)
+print,'band_model_aver SST: '+timnames(t)+' '+strtrim(0.5*(band_model_aver(0,t,v)-band_model_aver(1,t,v)+band_model_aver(2,t,v)-band_model_aver(1,t,v)),2)
 print,'polamp SST: '+timnames(t)+' '+strtrim(polamp_model_mean(t,v,0,0),2)
 endif
 
