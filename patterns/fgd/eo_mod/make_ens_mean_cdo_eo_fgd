@@ -1,5 +1,6 @@
 #!/bin/ksh
 
+# This was for IPCC
 #nmod=8
 #mod_array=(CESM1.2_CAM5-deepmip_sens_9xCO2 GFDL_CM2.1-deepmip_stand_6xCO2 GFDL_CM2.1-deepmip_sens_4xCO2 CESM1.2_CAM5-deepmip_stand_6xCO2 INM-CM4-8-deepmip_stand_6xCO2 COSMOS-landveg_r2413-deepmip_sens_4xCO2 NorESM1_F-deepmip_sens_4xCO2 CESM2.1slab_3x)
 #do_ens=1
@@ -7,12 +8,21 @@
 #zon_array=(0 1 1 1 1 1 0 0)
 #all_array=(0 1 1 1 1 1 1 1)
 
-nmod=7
-mod_array=(cch4x cch8x ccw4x ccw8x gis4x had4x had6x)
-do_ens=0
-map_array=(0 0 0 0 0 0 0)
-zon_array=(0 0 0 0 0 0 0)
-all_array=(0 0 0 0 0 0 0)
+# This is for the paper
+nmod=8
+mod_array=(CESM1.2_CAM5-deepmip_sens_9xCO2 GFDL_CM2.1-deepmip_stand_6xCO2 GFDL_CM2.1-deepmip_sens_4xCO2 CESM1.2_CAM5-deepmip_stand_6xCO2 INM-CM4-8-deepmip_stand_6xCO2 COSMOS-landveg_r2413-deepmip_sens_4xCO2 NorESM1_F-deepmip_sens_4xCO2 CESM2.1slab_3x)
+do_ens=1
+map_array=(0 1 1 1 1 1 0 1)
+zon_array=(0 1 1 1 1 1 0 1)
+all_array=(0 1 1 1 1 1 1 1)
+
+# This is for EoMIP
+#nmod=7
+#mod_array=(cch4x cch8x ccw4x ccw8x gis4x had4x had6x)
+#do_ens=0
+#map_array=(0 0 0 0 0 0 0)
+#zon_array=(0 0 0 0 0 0 0)
+#all_array=(0 0 0 0 0 0 0)
 
 for var in SST NearSurfaceTemperature ; do
 
