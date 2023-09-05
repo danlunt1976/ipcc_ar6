@@ -3163,6 +3163,13 @@ print,'polamp SST idealised diff: '+timnames(t)+' '+strtrim(polamp_tmodel_mean(t
 endif
 
 
+if (polampshortname(g) eq 'lsc' and varnametitle(v) eq 'SAT') then begin
+print,'FOR PAPER:'
+print,'LSC SAT: '+timnames(t)+' '+strtrim(polamp_model_mean(t,v,1,0),2)
+print,'LSC SAT idealised: '+timnames(t)+' '+strtrim(polamp_tmodel_mean(t,v,1,0),2)
+print,'LSC SAT idealised diff %: '+timnames(t)+' '+strtrim( 100*(polamp_tmodel_mean(t,v,1,0)-polamp_model_mean(t,v,1,0))/polamp_model_mean(t,v,1,0) ,2)
+endif
+
 
 endfor
 endfor
