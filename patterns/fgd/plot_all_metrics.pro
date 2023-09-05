@@ -70,10 +70,10 @@ do_tcheck=0 ; plot old and new values of historical obs [default=0]
 do_mod_leg=0 ; plot model names on model zonal mean lines [default=0]
 plot_names_gmt=0 ; plot model names on gmst plot [default=0]
 do_dots=1 ; plot circles at centre of assessed obs of GMST [default=1]
-rep_ipcc=0 ; reproduce original IPCC plot (regarding ensmean/aver)
+rep_ipcc=0 ; reproduce original IPCC plot (regarding ensmean/aver mix)
 rem_swpac=0 ; remove SW Pacific
 inc_cesm=1 ; include CESM2 (0 if reproducing IPCC; if =1 then maps and zonal mean plots are inconsistent with bar plots)
-ave_aver=1 ; use aver for bands in zonal images
+ave_aver=1 ; use aver for bands and text in zonal images
 
 ;;;;;;;;;;
 ;;;;;;;;;;
@@ -147,6 +147,10 @@ pmip4=intarr(ntime,nmodmax)
 pmip4(0,0:nmod(0)-1)=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0]
 pmip4(1,0:nmod(1)-1)=[1,1,1,1,1,1,1,1,1,0,0,0,0,0,0]
 pmip4(2,0:nmod(2)-1)=[1,1,1,1,1,1,1,0,0,0,0,0,0,0]
+
+plot_modmap=intarr(ntime,nmodmax+2)
+; just plot LGM CESM2 and CESM1.2
+plot_modmap(1,[3,4])=1
 
 
 ; ** change ntime
@@ -2133,6 +2137,11 @@ my_arr=ensmean_map(*,*,t,v)
 
 endelse
 
+;print,'TEST',t,map,make_map_mod_plots,plot_modmap(t,m)
+
+if ( (make_map_mod_plots eq 0) or ((make_map_mod_plots eq 1) and (plot_modmap(t,map) eq 1)) ) then begin
+
+
 map_charsize=230
 
 ; filename
@@ -2291,6 +2300,8 @@ if (make_pdf eq 1) then begin
 spawn,'ps2pdf -dEPSCrop -dAutoRotatePages=/None '+my_filename+'.eps '+my_filename+'.pdf',dum
 endif
 
+
+endif ; end mapmod
 
 endfor ; end map
 endfor ; end v
@@ -2805,7 +2816,7 @@ endif
 
 endfor ; end for g
 
-;;;;  FOR PAPER:
+print,'FOR PAPER:'
 
 print,'GMSTs:'
 for t=0,ntime-1 do begin
@@ -3145,7 +3156,10 @@ print,'bands SST mean: '+timnames(t)+' '+strtrim(band_model_mean(0,t,v)-band_mod
 print,'bands SST aver: '+timnames(t)+' '+strtrim(band_model_aver(0,t,v)-band_model_aver(1,t,v),2)+' '+strtrim(band_model_aver(2,t,v)-band_model_aver(1,t,v),2)
 print,'band_model_mean SST: '+timnames(t)+' '+strtrim(0.5*(band_model_mean(0,t,v)-band_model_mean(1,t,v)+band_model_mean(2,t,v)-band_model_mean(1,t,v)),2)
 print,'band_model_aver SST: '+timnames(t)+' '+strtrim(0.5*(band_model_aver(0,t,v)-band_model_aver(1,t,v)+band_model_aver(2,t,v)-band_model_aver(1,t,v)),2)
+print,'FOR PAPER:'
 print,'polamp SST: '+timnames(t)+' '+strtrim(polamp_model_mean(t,v,0,0),2)
+print,'polamp SST idealised: '+timnames(t)+' '+strtrim(polamp_tmodel_mean(t,v,0,0),2)
+print,'polamp SST idealised diff: '+timnames(t)+' '+strtrim(polamp_tmodel_mean(t,v,0,0)-polamp_model_mean(t,v,0,0),2)
 endif
 
 
@@ -3154,6 +3168,7 @@ endfor
 endfor
 endfor
 
+stop
 
 for t=0,ntime-1 do begin
 for v=0,nvar-1 do begin
