@@ -37,6 +37,7 @@ make_map_plots=0 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
 make_gmt_plots=1                ; plot gmst [default=0 or 1]
 make_polamp_plots=1                ; plot polamp [default=0 or 1]
+make_cross_plots=1
 make_cleat_plots=0
 make_text=0
 make_qa=1
@@ -3105,6 +3106,126 @@ endfor ; end for v
 endfor ; end for g
 
 endif ; end if make_polamp
+
+
+
+if (make_cross_plots eq 1) then begin
+
+
+ncross=2
+crossnames=strarr(ncross)
+crossnames(*)=['gmst-pol','gmst-lsc']
+
+crossxrange=fltarr(2,ncross)
+crossyrange=fltarr(2,ncross)
+crossxrange(*,0)=[-15,25]
+crossyrange(*,0)=[-5,15]
+crossxrange(*,1)=[-15,25]
+crossyrange(*,1)=[-8,8]
+crosstitle=strarr(ncross)
+crosstitle(0:ncross-1)=['Delta-GMST versus polar amplification','Delta-GMST versus land-sea contrast amplification']
+crossxtitle=strarr(ncross)
+crossxtitle(0:ncross-1)=['Delta-GMST [!Eo!NC]','Delta-GMST [!Eo!NC]']
+crossytitle=strarr(ncross)
+crossytitle(0:ncross-1)=['Polar amplification [!Eo!NC]','Land-sea contrast amplification [!Eo!NC]']
+swpol=fltarr(ncross)
+
+print,'HARD_WIRED VALUES FOR SWPAC (run with rem_swpac=1):'
+print,polamp_data(2,1,0),polamp_data(2,0,1)
+swpol(*)=[4.54296,1.19817]
+
+for c=0,ncross-1 do begin
+
+; filename
+my_filename='cross_'+crossnames(c)+lab_swpac(rem_swpac)
+print,my_filename
+device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica',xsize=22,ysize=20
+
+; axes etc:
+plot,[0,0],[0,0],color=0,psym=8,xrange=crossxrange(*,c),yrange=crossyrange(*,c),ystyle=1,xstyle=1,title=crosstitle(c),xtitle=crossxtitle(c),ytitle=crossytitle(c),/nodata,xcharsize=1,ycharsize=1,charsize=1.25,xticks=6
+
+
+tvlct,r_0,g_0,b_0
+Aaa = FINDGEN(17) * (!PI*2/16.)  
+USERSYM, COS(Aaa), SIN(Aaa), /FILL 
+
+; plot proxies
+for t=0,ntime-1 do begin
+
+plots,ass_c(t),polamp_data(t,(1-c),c)*fact_mod_sign(t),color=0,psym=8,symsize=2
+oplot,[ass_vlik(t,0),ass_vlik(t,1)],[polamp_data(t,(1-c),c),polamp_data(t,(1-c),c)]*fact_mod_sign(t)
+
+endfor
+
+
+; plot models
+for t=0,ntime-1 do begin
+
+thesem=where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1)
+
+plots,mod_gmt(thesem,t,0),polamp_model(thesem,t,(1-c),c)*fact_mod_sign(t),color=100,psym=8,symsize=1
+plots,mod_gmt(thesem,t,0),polamp_tmodel(thesem,t,(1-c),c)*fact_mod_sign(t),color=200,psym=8,symsize=1
+
+endfor
+
+
+; plot no-swpac
+; ,polamp_data(2,1,0)
+Aaa = FINDGEN(17) * (!PI*2/16.)  
+USERSYM, COS(Aaa), SIN(Aaa)
+t=2
+plots,ass_c(t),swpol(c)*fact_mod_sign(t),color=0,psym=8,symsize=2
+oplot,[ass_vlik(t,0),ass_vlik(t,1)],[swpol(c),swpol(c)]*fact_mod_sign(t)
+
+
+; plot legend
+boxvxs=0.025 ; starting x for box
+boxvxf=0.500 ; ending x for box 
+boxvys=0.780 ; starting y for box
+boxvyf=0.975 ; ending y for box
+boxvxp=0.025 ; delta along from box start for point
+boxvyp=0.040 ; delta down from box end for point
+boxvxt=0.030 ; delta along from point for text
+boxvyt=0.003 ; delta down from point for text
+
+bxs=crossxrange(0,c)+(crossxrange(1,c)-crossxrange(0,c))*boxvxs
+bxf=crossxrange(0,c)+(crossxrange(1,c)-crossxrange(0,c))*boxvxf
+bys=crossyrange(0,c)+(crossyrange(1,c)-crossyrange(0,c))*boxvys
+byf=crossyrange(0,c)+(crossyrange(1,c)-crossyrange(0,c))*boxvyf
+bxp=(crossxrange(1,c)-crossxrange(0,c))*boxvxp
+byp=(crossyrange(1,c)-crossyrange(0,c))*boxvyp
+bxt=(crossxrange(1,c)-crossxrange(0,c))*boxvxt
+byt=(crossxrange(1,c)-crossxrange(0,c))*boxvyt
+
+
+oplot,[bxs,bxf,bxf,bxs,bxs],[byf,byf,bys,bys,byf],linestyle=0,thick=3,color=0
+
+Aaa = FINDGEN(17) * (!PI*2/16.)  
+
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+plots,bxs+bxp,byf-1*byp,color=0,psym=8,symsize=2
+xyouts,bxs+bxp+bxt,byf-byt-1*byp,'proxy-based metric from proxies',color=0,charsize=0.8
+
+USERSYM, COS(Aaa), SIN(Aaa)
+plots,bxs+bxp,byf-2*byp,color=0,psym=8,symsize=2
+xyouts,bxs+bxp+bxt,byf-byt-2*byp,'proxy-based metric from proxies (No SW Pacific)',color=0,charsize=0.8
+
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+plots,bxs+bxp,byf-3*byp,color=100,psym=8,symsize=1
+xyouts,bxs+bxp+bxt,byf-byt-3*byp,'proxy-based metric from models',color=0,charsize=0.8
+
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+plots,bxs+bxp,byf-4*byp,color=200,psym=8,symsize=1
+xyouts,bxs+bxp+bxt,byf-byt-4*byp,'idealised metric from models',color=0,charsize=0.8
+
+device,/close
+spawn,'ps2epsi '+my_filename+'.ps '+my_filename+'.eps ; \rm '+my_filename+'.ps',dum
+
+endfor
+
+
+endif
+
 
 
 if (make_qa eq 1) then begin
