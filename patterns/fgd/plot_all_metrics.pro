@@ -2,10 +2,6 @@ pro pa
 
 ; KNOWN ISSUES/ADDITIONS
 
-; add error bars in proxy estimates.
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; QA: 
 ; CHECK: qa_metrics.jnl : 
@@ -40,6 +36,7 @@ make_polamp_plots=1                ; plot polamp [default=0 or 1]
 make_cross_plots=1
 make_cleat_plots=0
 make_text=0
+make_latex=1
 make_qa=1
 rev_lgm=0 ; re-reverse LGM [default=0;=1 for TS]
 all_proxies=0 ; plot all proxies [default=0;=1 for TS]
@@ -149,6 +146,9 @@ pmip4(0,0:nmod(0)-1)=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0]
 pmip4(1,0:nmod(1)-1)=[1,1,1,1,1,1,1,1,1,0,0,0,0,0,0]
 pmip4(2,0:nmod(2)-1)=[1,1,1,1,1,1,1,0,0,0,0,0,0,0]
 
+pmip4name=strarr(2)
+pmip4name(0:1)=['PMIP3/CMIP5','PMIP4/CMIP6']
+
 plot_modmap=intarr(ntime,nmodmax+2)
 ; just plot LGM CESM2 and CESM1.2
 plot_modmap(1,[3,4])=1
@@ -160,6 +160,11 @@ modnames=strarr(ntime,nmodmax)
 modnames(0,0:nmod(0)-1)=['CCSM4','CCSM4-UoT','CCSM4-Utrecht','CESM1.2','CESM2.0','COSMOS','EC-Earth3.3','GISS-E2-1-G','HadCM3','HadGEM3','IPSL-CM6A-LR','IPSLCM5A','IPSLCM5A2','MIROC4m','MRI-CGCM2.3','NorESM-L','NorESM1-F','CCSM4_plio1','COSMOS_plio1','GISS-E2-R_plio1','HadCM3_plio1','IPSLCM5A_plio1','MIROC4m_plio1','MRI2.3_plio1','NORESM-L_plio1']
 modnames(1,0:nmod(1)-1)=['MPI-ESM1-2-LR','AWIESM1','AWIESM2','CESM1_2','CESM2_1','INM-CM4-8','IPSLCM5A2','MIROC-ES2L','UofT-CCSM4','CCSM4_pmip3','GISS-E2-R_pmip3','IPSL-CM5A-LR_pmip3','MIROC-ESM_pmip3','MPI-ESM-P_pmip3','MRI-CGCM3_pmip3']
 modnames(2,0:nmod(2)-1)=['CESM1.2_CAM5-deepmip_stand_6xCO2','COSMOS-landveg_r2413-deepmip_sens_4xCO2','GFDL_CM2.1-deepmip_stand_6xCO2','GFDL_CM2.1-deepmip_sens_4xCO2','INM-CM4-8-deepmip_stand_6xCO2','NorESM1_F-deepmip_sens_4xCO2','CESM2.1slab_3x','cch4x','cch8x','ccw4x','ccw8x','gis4x','had4x','had6x']
+
+modnameslatex=strarr(ntime,nmodmax)
+modnameslatex(0,0:nmod(0)-1)=['CCSM4','CCSM4-UoT','CCSM4-Utrecht','CESM1.2','CESM2.0','COSMOS','EC-Earth3.3','GISS-E2-1-G','HadCM3','HadGEM3','IPSL-CM6A-LR','IPSLCM5A','IPSLCM5A2','MIROC4m','MRI-CGCM2.3','NorESM-L','NorESM1-F','CCSM4\_plio1','COSMOS\_plio1','GISS-E2-R\_plio1','HadCM3\_plio1','IPSLCM5A\_plio1','MIROC4m\_plio1','MRI2.3\_plio1','NORESM-L\_plio1']
+modnameslatex(1,0:nmod(1)-1)=['MPI-ESM1-2-LR','AWIESM1','AWIESM2','CESM1\_2','CESM2\_1','INM-CM4-8','IPSLCM5A2','MIROC-ES2L','UofT-CCSM4','CCSM4\_pmip3','GISS-E2-R\_pmip3','IPSL-CM5A-LR\_pmip3','MIROC-ESM\_pmip3','MPI-ESM-P\_pmip3','MRI-CGCM3\_pmip3']
+modnameslatex(2,0:nmod(2)-1)=['CESM1.2\_CAM5\_6xCO2','COSMOS-landveg\_r2413\_4xCO2','GFDL\_CM2.1\_6xCO2','GFDL\_CM2.1\_4xCO2','INM-CM4-8\_6xCO2','NorESM1\_F\_4xCO2','CESM2.1slab\_3x','CCSM3h4x','CCSM3h8x','CCSM3w4x','CCSM3w8x','GISS4x','HadCM34x','HadCM36x']
 
 ; ** change ntime
 extenszon=strarr(ntime)
@@ -601,6 +606,9 @@ lons_d=fltarr(ndatamax,ntime,nvar)
 lats_d=fltarr(ndatamax,ntime,nvar)
 temps_d=fltarr(ndatamax,ntime,nvar)
 errs_d=fltarr(2,ndatamax,ntime,nvar)
+
+nmc=100
+temps_d_mc=fltarr(ndatamax,ntime,nvar,nmc)
 
 temps_m_aver=fltarr(ndatamax,ntime,nvar)
 temps_m_mean=fltarr(ndatamax,ntime,nvar)
@@ -1644,6 +1652,24 @@ endfor
 endfor
 endfor
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; generate a monte-carlo ensemble
+
+seed=-2
+
+
+for t=0,ntime-1 do begin
+for v=0,nvar-1 do begin
+for dd=0,ndata(t,v)-1 do begin
+
+rr=randomu(seed,nmc)
+
+temps_d_mc(dd,t,v,0:nmc-1)=temps_d(dd,t,v)-errs_d(0,dd,t,v)+(errs_d(1,dd,t,v)+errs_d(0,dd,t,v))*rr
+
+endfor
+endfor
+endfor
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1692,6 +1718,10 @@ endif
 
 band_data=fltarr(nbands,ntime,nvar)
 band_data(*,*,*)=!Values.F_NAN
+
+band_data_mc=fltarr(nbands,ntime,nvar,nmc)
+band_data_mc(*,*,*,*)=!Values.F_NAN
+
 band_model_mean=fltarr(nbands,ntime,nvar)
 band_model_mean(*,*,*)=!Values.F_NAN
 band_model_aver=fltarr(nbands,ntime,nvar)
@@ -1711,6 +1741,15 @@ npmip=2
 
 polamp_data=fltarr(ntime,nvar,npolamp)
 polamp_data(*,*,*)=!Values.F_NAN
+
+polamp_data_mc=fltarr(ntime,nvar,npolamp,nmc)
+polamp_data(*,*,*,*)=!Values.F_NAN
+
+polamp_data_min=fltarr(ntime,nvar,npolamp)
+polamp_data_min(*,*,*)=!Values.F_NAN
+polamp_data_max=fltarr(ntime,nvar,npolamp)
+polamp_data_max(*,*,*)=!Values.F_NAN
+
 polamp_model=fltarr(nmodmax,ntime,nvar,npolamp)
 polamp_model(*,*,*,*)=!Values.F_NAN
 polamp_model_mean=fltarr(ntime,nvar,npolamp,npmip)
@@ -1750,7 +1789,13 @@ if (count ge nlim_count) then begin
 for m=0,nmod(t)-1 do begin
 band_model(m,b,t,v)=mean(temps_m(m,ii,t,v))
 endfor
+
 band_data(b,t,v)=mean(temps_d(ii,t,v))
+
+for mc=0,nmc-1 do begin
+band_data_mc(b,t,v,mc)=mean(temps_d_mc(ii,t,v,mc))
+endfor
+
 band_model_mean(b,t,v)=mean(temps_m_mean(ii,t,v))
 band_model_aver(b,t,v)=mean(temps_m_aver(ii,t,v))
 endif
@@ -1766,6 +1811,15 @@ endfor
 
 if (finite(band_data(0,t,v)) and finite(band_data(1,t,v)) and finite(band_data(2,t,v))) then begin
 polamp_data(t,v,0)=0.5*((band_data(0,t,v)-band_data(1,t,v))+(band_data(2,t,v)-band_data(1,t,v)))
+
+; MONTE CARLO
+for mc=0,nmc-1 do begin
+polamp_data_mc(t,v,0,mc)=0.5*((band_data_mc(0,t,v,mc)-band_data_mc(1,t,v,mc))+(band_data_mc(2,t,v,mc)-band_data_mc(1,t,v,mc)))
+endfor
+mcs=sort(polamp_data_mc(t,v,0,0:nmc-1))
+polamp_data_min(t,v,0)=polamp_data_mc(t,v,0,mcs(fix(nmc*0.05)))
+polamp_data_max(t,v,0)=polamp_data_mc(t,v,0,mcs(fix(nmc*0.95)))
+
 for m=0,nmod(t)-1 do begin
 polamp_model(m,t,v,0)=0.5*((band_model(m,0,t,v)-band_model(m,1,t,v))+(band_model(m,2,t,v)-band_model(m,1,t,v)))
 polamp_tmodel(m,t,v,0)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
@@ -1774,6 +1828,15 @@ endif
 
 if (finite(band_data(0,t,v)) and finite(band_data(1,t,v)) and ~finite(band_data(2,t,v))) then begin
 polamp_data(t,v,0)=band_data(0,t,v)-band_data(1,t,v)
+
+; MONTE CARLO
+for mc=0,nmc-1 do begin
+polamp_data_mc(t,v,0,mc)=band_data_mc(0,t,v,mc)-band_data_mc(1,t,v,mc)
+endfor
+mcs=sort(polamp_data_mc(t,v,0,0:nmc-1))
+polamp_data_min(t,v,0)=polamp_data_mc(t,v,0,mcs(fix(nmc*0.05)))
+polamp_data_max(t,v,0)=polamp_data_mc(t,v,0,mcs(fix(nmc*0.95)))
+
 for m=0,nmod(t)-1 do begin
 polamp_model(m,t,v,0)=band_model(m,0,t,v)-band_model(m,1,t,v)
 polamp_tmodel(m,t,v,0)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
@@ -1782,6 +1845,15 @@ endif
 
 if (~finite(band_data(0,t,v)) and finite(band_data(1,t,v)) and finite(band_data(2,t,v))) then begin
 polamp_data(t,v,0)=band_data(2,t,v)-band_data(1,t,v)
+
+; MONTE CARLO
+for mc=0,nmc-1 do begin
+polamp_data_mc(t,v,0,mc)=band_data_mc(2,t,v,mc)-band_data_mc(1,t,v,mc)
+endfor
+mcs=sort(polamp_data_mc(t,v,0,0:nmc-1))
+polamp_data_min(t,v,0)=polamp_data_mc(t,v,0,mcs(fix(nmc*0.05)))
+polamp_data_max(t,v,0)=polamp_data_mc(t,v,0,mcs(fix(nmc*0.95)))
+
 for m=0,nmod(t)-1 do begin
 polamp_model(m,t,v,0)=band_model(m,2,t,v)-band_model(m,1,t,v)
 polamp_tmodel(m,t,v,0)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
@@ -1805,6 +1877,14 @@ for t=0,ntime-1 do begin
 for v=0,nvar-1 do begin
 
 polamp_data(t,v,1)=mean(temps_d(0:ndata(t,v)-1,t,v)) - mean(temps_d(0:ndata(t,(1-v))-1,t,(1-v)))
+
+for mc=0,nmc-1 do begin
+polamp_data_mc(t,v,1,mc)=mean(temps_d_mc(0:ndata(t,v)-1,t,v,mc)) - mean(temps_d_mc(0:ndata(t,(1-v))-1,t,(1-v),mc))
+endfor
+; MONTE CARLO
+mcs=sort(polamp_data_mc(t,v,1,0:nmc-1))
+polamp_data_min(t,v,1)=polamp_data_mc(t,v,1,mcs(fix(nmc*0.05)))
+polamp_data_max(t,v,1)=polamp_data_mc(t,v,1,mcs(fix(nmc*0.95)))
 
 for m=0,nmod(t)-1 do begin
 polamp_model(m,t,v,1)=mean(temps_m(m,0:ndata(t,v)-1,t,v)) - mean(temps_m(m,0:ndata(t,(1-v))-1,t,(1-v)))
@@ -2473,6 +2553,7 @@ high_ecs(3,0:nmodh(3)-1)=ecsh(3,0:nmodh(3)-1) ge 5.0
 high_ecs(3,0:nmodh(3)-1)=high_ecs(3,0:nmodh(3)-1)-(ecsh(3,0:nmodh(3)-1) le 2.0)
 high_ecs(4,0:nmodh(4)-1)=high_ecs(3,0:nmodh(3)-1)
 
+high_ecs_name=['ECS$<$2.0','2.0$<$ECS$<$5.0','ECS$>$5.0']
 
 ;timnameslongh: ['Pliocene','LGM','Eocene','Historical','post 1975']
 ass_vlik=fltarr(ntimeh,2)
@@ -2856,16 +2937,16 @@ ylim_polamp_6(0,*,0,0)=[0,5]
 ylim_polamp_6(1,*,0,0)=[0,10]
 ylim_polamp_6(2,*,0,0)=[0,10]
 ; sst:
-ylim_polamp_6(0,*,0,1)=[-0.5,2]
-ylim_polamp_6(1,*,0,1)=[-0.5,2]
-ylim_polamp_6(2,*,0,1)=[-1,14]
+ylim_polamp_6(0,*,0,1)=[-0.5,2.5]
+ylim_polamp_6(1,*,0,1)=[-0.5,1.5]
+ylim_polamp_6(2,*,0,1)=[-1,16]
 
 
 ; land-sea contrast:
 ; sat:
-ylim_polamp_6(0,*,1,0)=[-1,4]
-ylim_polamp_6(1,*,1,0)=[0,8]
-ylim_polamp_6(2,*,1,0)=[-12,10]
+ylim_polamp_6(0,*,1,0)=[-1,6]
+ylim_polamp_6(1,*,1,0)=[0,6]
+ylim_polamp_6(2,*,1,0)=[-7,5]
 ; sst:
 ylim_polamp_6(0,*,1,1)=[-4,1]
 ylim_polamp_6(1,*,1,1)=[-8,0]
@@ -2881,6 +2962,9 @@ my_xsize=fltarr(npolamp)
 my_xsize(*)=[18,18]
 my_ytit=strarr(npolamp)
 my_ytit(*)=['meridional temp. gradient anomaly [!Eo!NC]','land-sea contrast anomaly [!Eo!NC]']
+
+do_leg=intarr(npolamp)
+do_leg(0:npolamp-1)=[1,0]
 
 nplot=intarr(npolamp)
 nplot(*)=[3,3]
@@ -2946,6 +3030,8 @@ delyc=0.01*scalefacty ; shift up for caption
 ;start point for y
 oy=ylim_polamp_6(tp,0,g,v)+(0.3+starty*delys/scalefacty)*scalefacty ; start point for y
 
+if (do_leg(g) eq 1) then begin
+
 ;box:
 oplot,[0.53,1.45,1.45,0.53,0.53]+shiftright,[0.02,0.02,0.41+starty*delys/scalefacty,0.41+starty*delys/scalefacty,0.02]*scalefacty+ylim_polamp_6(tp,0,g,v),color=0,thick=0.5,/noclip
 
@@ -2980,6 +3066,8 @@ plots,startx,oy-delys*2,psym=8,symsize=my_siz(g),color=0
 plots,startx,oy-delys*3,psym=8,symsize=my_siz(g)/2.0,color=0
 plots,startx,oy-delys*7,psym=2,symsize=my_siz(g),color=200
 
+endif ; end do_leg
+
 endif ; xx eq 0
 
 
@@ -2996,6 +3084,12 @@ USERSYM, COS(Aaa), SIN(Aaa), /FILL
 if (do_dots eq 1) then begin
 plots,my_xposp(xx),polamp_data(t,v,g),psym=8,symsize=my_siz(g)
 endif
+;for mc=0,nmc-1 do begin
+;plots,my_xposp(xx),polamp_data_mc(t,v,g,mc),psym=8,symsize=my_siz(g)/3.0
+;endfor
+oplot,[my_xposp(xx),my_xposp(xx)],[polamp_data_min(t,v,g),polamp_data_max(t,v,g)],thick=obs_thick
+oplot,[my_xposp(xx)-obsl,my_xposp(xx)+obsl],[polamp_data_min(t,v,g),polamp_data_min(t,v,g)],thick=obs_thick
+oplot,[my_xposp(xx)-obsl,my_xposp(xx)+obsl],[polamp_data_max(t,v,g),polamp_data_max(t,v,g)],thick=obs_thick
 
 ; plot multi-model mean
 
@@ -3111,10 +3205,12 @@ endif ; end if make_polamp
 
 if (make_cross_plots eq 1) then begin
 
-
 ncross=2
 crossnames=strarr(ncross)
 crossnames(*)=['gmst-pol','gmst-lsc']
+
+do_legc=intarr(ncross)
+do_legc(0:ncross-1)=[1,0]
 
 crossxrange=fltarr(2,ncross)
 crossyrange=fltarr(2,ncross)
@@ -3129,10 +3225,17 @@ crossxtitle(0:ncross-1)=['Delta-GMST [!Eo!NC]','Delta-GMST [!Eo!NC]']
 crossytitle=strarr(ncross)
 crossytitle(0:ncross-1)=['Polar amplification [!Eo!NC]','Land-sea contrast amplification [!Eo!NC]']
 swpol=fltarr(ncross)
+swpolmin=fltarr(ncross)
+swpolmax=fltarr(ncross)
 
 print,'HARD_WIRED VALUES FOR SWPAC (run with rem_swpac=1):'
 print,polamp_data(2,1,0),polamp_data(2,0,1)
+print,polamp_data_min(2,1,0),polamp_data_min(2,0,1)
+print,polamp_data_max(2,1,0),polamp_data_max(2,0,1)
+
 swpol(*)=[4.54296,1.19817]
+swpolmin(*)=[1.75341,-0.0313826]
+swpolmax(*)=[7.13771,2.75465]
 
 for c=0,ncross-1 do begin
 
@@ -3153,9 +3256,15 @@ USERSYM, COS(Aaa), SIN(Aaa), /FILL
 for t=0,ntime-1 do begin
 
 plots,ass_c(t),polamp_data(t,(1-c),c)*fact_mod_sign(t),color=0,psym=8,symsize=2
+
 oplot,[ass_vlik(t,0),ass_vlik(t,1)],[polamp_data(t,(1-c),c),polamp_data(t,(1-c),c)]*fact_mod_sign(t)
 
+oplot,[ass_c(t),ass_c(t)],[polamp_data_min(t,(1-c),c),polamp_data_max(t,(1-c),c)]*fact_mod_sign(t)
+
 endfor
+
+; plot the PI
+plots,0,0,color=0,psym=2,symsize=2
 
 
 ; plot models
@@ -3176,17 +3285,21 @@ USERSYM, COS(Aaa), SIN(Aaa)
 t=2
 plots,ass_c(t),swpol(c)*fact_mod_sign(t),color=0,psym=8,symsize=2
 oplot,[ass_vlik(t,0),ass_vlik(t,1)],[swpol(c),swpol(c)]*fact_mod_sign(t)
+oplot,[ass_c(t),ass_c(t)],[swpolmin(c),swpolmax(c)]*fact_mod_sign(t)
 
+nleg=5
 
 ; plot legend
 boxvxs=0.025 ; starting x for box
 boxvxf=0.500 ; ending x for box 
-boxvys=0.780 ; starting y for box
 boxvyf=0.975 ; ending y for box
 boxvxp=0.025 ; delta along from box start for point
 boxvyp=0.040 ; delta down from box end for point
 boxvxt=0.030 ; delta along from point for text
 boxvyt=0.003 ; delta down from point for text
+boxvye=0.035 ; delta at bottom of box beyond final point
+
+boxvys=boxvyf-nleg*boxvyp-boxvye ; starting y for box
 
 bxs=crossxrange(0,c)+(crossxrange(1,c)-crossxrange(0,c))*boxvxs
 bxf=crossxrange(0,c)+(crossxrange(1,c)-crossxrange(0,c))*boxvxf
@@ -3197,6 +3310,7 @@ byp=(crossyrange(1,c)-crossyrange(0,c))*boxvyp
 bxt=(crossxrange(1,c)-crossxrange(0,c))*boxvxt
 byt=(crossxrange(1,c)-crossxrange(0,c))*boxvyt
 
+if (do_legc(c) eq 1) then begin
 
 oplot,[bxs,bxf,bxf,bxs,bxs],[byf,byf,bys,bys,byf],linestyle=0,thick=3,color=0
 
@@ -3217,6 +3331,12 @@ xyouts,bxs+bxp+bxt,byf-byt-3*byp,'proxy-based metric from models',color=0,charsi
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
 plots,bxs+bxp,byf-4*byp,color=200,psym=8,symsize=1
 xyouts,bxs+bxp+bxt,byf-byt-4*byp,'idealised metric from models',color=0,charsize=0.8
+
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+plots,bxs+bxp,byf-5*byp,color=0,psym=2,symsize=2
+xyouts,bxs+bxp+bxt,byf-byt-5*byp,'preindustrial',color=0,charsize=0.8
+
+endif
 
 device,/close
 spawn,'ps2epsi '+my_filename+'.ps '+my_filename+'.eps ; \rm '+my_filename+'.ps',dum
@@ -3296,7 +3416,6 @@ endfor
 endfor
 endfor
 
-stop
 
 for t=0,ntime-1 do begin
 for v=0,nvar-1 do begin
@@ -3319,6 +3438,26 @@ endfor
 
 
 endif
+
+
+if (make_latex eq 1) then begin
+
+print,''
+print,'LATEX TABLE:'
+print,''
+print,'Model name & Time Period & Model generation & ECS \\'
+print,'\hline'
+for t=0,ntime-1 do begin
+for m=0,nmod(t)-1 do begin
+print,modnameslatex(t,m),timnameslong(t),pmip4name(pmip4(t,m)),high_ecs_name(high_ecs(t,m)+1),' \\',FORMAT = '(A, " & ",2(A, " & "),A,A)'
+endfor
+if (t ne ntime-1) then print,'\hline'
+endfor
+print,'\hline'
+
+endif
+
+stop
 
 
 if (make_text eq 1) then begin
