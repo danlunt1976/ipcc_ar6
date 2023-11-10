@@ -29,16 +29,16 @@ pro pa
 read_mod=1
 read_proxy=1
 make_zon_plots=0 ; plot zonal mean ensemble mean [default=0 or 1]
-make_map_plots=0 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
-make_map_mod_plots=0 ; plot maps of each individual model [default=0]
-make_gmt_plots=1                ; plot gmst [default=0 or 1]
-make_polamp_plots=1                ; plot polamp [default=0 or 1]
-make_cross_plots=1
+make_map_plots=1 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
+make_map_mod_plots=1 ; plot maps of each individual model [default=0]
+make_gmt_plots=0                ; plot gmst [default=0 or 1]
+make_polamp_plots=0                ; plot polamp [default=0 or 1]
+make_cross_plots=0
 make_cleat_plots=0
 make_text=0
-make_latex=1
-make_qa=1
-rev_lgm=0 ; re-reverse LGM [default=0;=1 for TS]
+make_latex=0
+make_qa=0
+rev_lgm=1 ; re-reverse LGM [default=0;=1 for TS]
 all_proxies=0 ; plot all proxies [default=0;=1 for TS]
 make_nodata=0 ; plot maps without data [default=0;=1 for TS version B]
 latlonlabels=0 ; label lats/lons [default=0;=1 for TS]
@@ -116,6 +116,9 @@ timnameslong(0:ntime-1)=['MPWP','LGM','EECO']
 mipnames=strarr(ntime)
 mipnames(0:ntime-1)=['PlioMIP','PMIP4','DeepMIP']
 
+timcol=intarr(ntime)
+timcol=[200,70,250]
+
 ; ** change ntime
 fact_mod_sign=fltarr(ntime)
 fact_mod_sign(*)=[1,-1,1]
@@ -124,8 +127,8 @@ name_sign(*)=''
 if (rev_lgm eq 1) then begin
 fact_mod_sign(1)=fact_mod_sign(1)*(-1)
 name_sign(1)='_-1'
-make_zon_plots=0
-make_gmt_plots=0
+;make_zon_plots=0
+;make_gmt_plots=0
 endif
 
 
@@ -248,12 +251,12 @@ weight_glo(0:nx-1,0:ny-1)=weight_glo(0:nx-1,0:ny-1)/total(weight_glo(0:nx-1,0:ny
 ; ** change ntime
 ; y-scale for zonal mean plot
 my_yrange5=intarr(ntime,nvar,2)
-my_yrange5(0,0,*)=[-5,20]
-my_yrange5(1,0,*)=[-5,20]
-my_yrange5(2,0,*)=[-10,55]
-my_yrange5(0,1,*)=[-3,13]
-my_yrange5(1,1,*)=[-3,13]
-my_yrange5(2,1,*)=[-10,40]
+my_yrange5(0,0,*)=[-5,20]*fact_mod_sign(0)
+my_yrange5(1,0,*)=[5,-20]*fact_mod_sign(1)
+my_yrange5(2,0,*)=[-10,55]*fact_mod_sign(2)
+my_yrange5(0,1,*)=[-3,13]*fact_mod_sign(0)
+my_yrange5(1,1,*)=[3,-13]*fact_mod_sign(1)
+my_yrange5(2,1,*)=[-10,40]*fact_mod_sign(2)
 
 
 ; ** change ntime
@@ -525,7 +528,9 @@ endfor
 ensmean_mean=fltarr(ntime,nvar)
 for v=0,nvar-1 do begin
 for t=0,ntime-1 do begin
-ensmean_mean(t,v)=total(ensmean_zon(*,t,v)*weight_lat(*),/nan)*fact_mod_sign(t)
+; should this really have the "fact_mod_sign" as already applied above....?
+;ensmean_mean(t,v)=total(ensmean_zon(*,t,v)*weight_lat(*),/nan)*fact_mod_sign(t)
+ensmean_mean(t,v)=total(ensmean_zon(*,t,v)*weight_lat(*),/nan)
 endfor
 endfor
 
@@ -2222,8 +2227,10 @@ endelse
 
 if ( (make_map_mod_plots eq 0) or ((make_map_mod_plots eq 1) and (plot_modmap(t,map) eq 1)) ) then begin
 
-
-map_charsize=230
+; idl guide/4
+map_charsize=100
+; idl guide/5
+;map_charsize=230
 
 ; filename
 my_filename=timnames(t)+'_modeldata_cont_'+varnameshort(v)+'_ipcc_czt_'+pname(p)+'_'+mapname(map)+name_sign(t)+name_all+lab_swpac(rem_swpac)
@@ -2301,7 +2308,10 @@ if (all_proxies eq 1) then begin
 thistitle=thistitle+': '+string(ensmean_mean(t,v),format='(F4.1)')+' !Eo!NC'
 endif
 
-CON, F=my_arr,x=lons(*),y=lats(*),TITLE=thistitle, CB_TITLE='temperature anomaly [!Eo!NC]',/nomap,/NOLINES,/block,CB_NTH=2
+; IDL_GUIDE/5
+;CON, F=my_arr,x=lons(*),y=lats(*),TITLE=thistitle, CB_TITLE='temperature anomaly [!Eo!NC]',/nomap,/NOLINES,/block,CB_NTH=2
+; IDL_GUIDE/4
+CON, F=my_arr,x=lons(*),y=lats(*),TITLE=thistitle, CB_TITLE='temperature anomaly [!Eo!NC]',/nomap,/NOLINES,/block
 CON, F=my_arr,x=lons(*),y=lats(*),/nomap,/NOLINES,/nocolbar
 
 nglon=5
@@ -2400,7 +2410,7 @@ ntimeh=ntime+2
 
 timnameslongh=strarr(ntimeh)
 timnameslongh(0:2)=timnameslong(*)
-timnameslongh(3:4)=['Historical','post 1975']
+timnameslongh(3:4)=['Historical','post-1975']
 
 nmodh=intarr(ntimeh)
 nmodh(0:2)=nmod(*)
@@ -2626,7 +2636,8 @@ ord_gmt(1,*)=[0,1,2,3,-1]
 ord_gmt(2,*)=[0,1,2,-1,3]
 ord_gmt(3,*)=[0,1,2,3,4]
 ord_gmt(4,*)=[3,2,4,0,1]
-ord_gmt(5,*)=[3,2,4,0,1]
+;ord_gmt(5,*)=[3,2,4,0,1] ; historical first
+ord_gmt(5,*)=[3,2,4,1,0] ; post-1975 first
 
 
 
@@ -2661,7 +2672,8 @@ for xx=0,nplot(g)-1 do begin
 ttt=where(ord_gmt(g,*) eq xx)
 t=ttt(0)
 
-shiftright=1
+shiftright=0 ; legend in first box
+;shiftright=1 ; legend in second box
 ttt=where(ord_gmt(g,*) eq shiftright)
 tp=ttt(0)
 
@@ -2858,16 +2870,16 @@ my_deltt=0.18
 mms=4
 mmf=6
 xyouts,my_xposm(4)+my_deltt+0.1,modh_gmt_flex(mmf,2,0),'CESM2.0',size=1.0,color=0
-oplot,[my_xposm(4)+my_deltt-1*(1+delmarg),my_xposm(4)+my_deltt-0*(1+delmarg)],[modh_gmt_flex(mms,0,0)*ass_c(2)/ass_c(0),modh_gmt_flex(mmf,2,0)],/noclip,linestyle=mylin
+oplot,[my_xposm(4)+my_deltt-1*(1+delmarg),my_xposm(4)+my_deltt-0*(1+delmarg)],[modh_gmt_flex(mms,where(ord_gmt(g,*) eq 3),0)*ass_c(2)/ass_c(where(ord_gmt(g,*) eq 3)),modh_gmt_flex(mmf,where(ord_gmt(g,*) eq 4),0)],/noclip,linestyle=mylin
 mms=4
 mmf=4
-oplot,[my_xposm(4)+my_deltt-2*(1+delmarg),my_xposm(4)+my_deltt-1*(1+delmarg)],[modh_gmt_flex(mms,1,0)*ass_c(2)/ass_c(1),modh_gmt_flex(mmf,0,0)*ass_c(2)/ass_c(0)],/noclip,linestyle=mylin
+oplot,[my_xposm(4)+my_deltt-2*(1+delmarg),my_xposm(4)+my_deltt-1*(1+delmarg)],[modh_gmt_flex(mms,where(ord_gmt(g,*) eq 2),0)*ass_c(2)/ass_c(where(ord_gmt(g,*) eq 2)),modh_gmt_flex(mmf,where(ord_gmt(g,*) eq 3),0)*ass_c(2)/ass_c(where(ord_gmt(g,*) eq 3))],/noclip,linestyle=mylin
 mms=7
 mmf=4
-oplot,[my_xposm(4)+my_deltt-3*(1+delmarg),my_xposm(4)+my_deltt-2*(1+delmarg)],[modh_gmt_flex(mms,4,0)*ass_c(2)/ass_c(4),modh_gmt_flex(mmf,1,0)*ass_c(2)/ass_c(1)],/noclip,linestyle=mylin
+oplot,[my_xposm(4)+my_deltt-3*(1+delmarg),my_xposm(4)+my_deltt-2*(1+delmarg)],[modh_gmt_flex(mms,where(ord_gmt(g,*) eq 1),0)*ass_c(2)/ass_c(where(ord_gmt(g,*) eq 1)),modh_gmt_flex(mmf,where(ord_gmt(g,*) eq 2),0)*ass_c(2)/ass_c(where(ord_gmt(g,*) eq 2))],/noclip,linestyle=mylin
 mms=7
 mmf=7
-oplot,[my_xposm(4)+my_deltt-4*(1+delmarg),my_xposm(4)+my_deltt-3*(1+delmarg)],[modh_gmt_flex(mms,3,0)*ass_c(2)/ass_c(3),modh_gmt_flex(mmf,4,0)*ass_c(2)/ass_c(4)],/noclip,linestyle=mylin
+oplot,[my_xposm(4)+my_deltt-4*(1+delmarg),my_xposm(4)+my_deltt-3*(1+delmarg)],[modh_gmt_flex(mms,where(ord_gmt(g,*) eq 0),0)*ass_c(2)/ass_c(where(ord_gmt(g,*) eq 0)),modh_gmt_flex(mmf,where(ord_gmt(g,*) eq 1),0)*ass_c(2)/ass_c(where(ord_gmt(g,*) eq 1))],/noclip,linestyle=mylin
 
 ; CESM1.2 lines
 my_deltt=0
@@ -2933,24 +2945,24 @@ ylim_polamp_6=fltarr(ntime,2,npolamp,nvar)
 
 ; meridional temp gradient:
 ; sat:
-ylim_polamp_6(0,*,0,0)=[0,5]
-ylim_polamp_6(1,*,0,0)=[0,10]
-ylim_polamp_6(2,*,0,0)=[0,10]
+ylim_polamp_6(0,*,0,0)=[0,5]*fact_mod_sign(0)
+ylim_polamp_6(1,*,0,0)=[0,-10]*fact_mod_sign(1)
+ylim_polamp_6(2,*,0,0)=[0,10]*fact_mod_sign(2)
 ; sst:
-ylim_polamp_6(0,*,0,1)=[-0.5,2.5]
-ylim_polamp_6(1,*,0,1)=[-0.5,1.5]
-ylim_polamp_6(2,*,0,1)=[-1,16]
+ylim_polamp_6(0,*,0,1)=[-1,2.5]*fact_mod_sign(0)
+ylim_polamp_6(1,*,0,1)=[0.5,-1.5]*fact_mod_sign(1)
+ylim_polamp_6(2,*,0,1)=[-1,16]*fact_mod_sign(2)
 
 
 ; land-sea contrast:
 ; sat:
-ylim_polamp_6(0,*,1,0)=[-1,6]
-ylim_polamp_6(1,*,1,0)=[0,6]
-ylim_polamp_6(2,*,1,0)=[-7,5]
+ylim_polamp_6(0,*,1,0)=[-1,6]*fact_mod_sign(0)
+ylim_polamp_6(1,*,1,0)=[0,-6]*fact_mod_sign(1)
+ylim_polamp_6(2,*,1,0)=[-7,5]*fact_mod_sign(2)
 ; sst:
-ylim_polamp_6(0,*,1,1)=[-4,1]
-ylim_polamp_6(1,*,1,1)=[-8,0]
-ylim_polamp_6(2,*,1,1)=[-10,12]
+ylim_polamp_6(0,*,1,1)=[-4,1]*fact_mod_sign(0)
+ylim_polamp_6(1,*,1,1)=[8,0]*fact_mod_sign(1)
+ylim_polamp_6(2,*,1,1)=[-10,12]*fact_mod_sign(2)
 
 polampname=strarr(npolamp)
 polampname(*)=['a','b']
@@ -2961,7 +2973,7 @@ my_siz(*)=[2,2]
 my_xsize=fltarr(npolamp)
 my_xsize(*)=[18,18]
 my_ytit=strarr(npolamp)
-my_ytit(*)=['meridional temp. gradient anomaly [!Eo!NC]','land-sea contrast anomaly [!Eo!NC]']
+my_ytit(*)=['polar amplification [!Eo!NC]','land-sea warming contrast [!Eo!NC]']
 
 do_leg=intarr(npolamp)
 do_leg(0:npolamp-1)=[1,0]
@@ -3219,11 +3231,11 @@ crossyrange(*,0)=[-5,15]
 crossxrange(*,1)=[-15,25]
 crossyrange(*,1)=[-8,8]
 crosstitle=strarr(ncross)
-crosstitle(0:ncross-1)=['Delta-GMST versus polar amplification','Delta-GMST versus land-sea contrast amplification']
+crosstitle(0:ncross-1)=['Delta-GMST versus polar amplification','Delta-GMST versus land-sea warming contrast']
 crossxtitle=strarr(ncross)
 crossxtitle(0:ncross-1)=['Delta-GMST [!Eo!NC]','Delta-GMST [!Eo!NC]']
 crossytitle=strarr(ncross)
-crossytitle(0:ncross-1)=['Polar amplification [!Eo!NC]','Land-sea contrast amplification [!Eo!NC]']
+crossytitle(0:ncross-1)=['Polar amplification [!Eo!NC]','Land-sea warming contrast [!Eo!NC]']
 swpol=fltarr(ncross)
 swpolmin=fltarr(ncross)
 swpolmax=fltarr(ncross)
@@ -3233,9 +3245,11 @@ print,polamp_data(2,1,0),polamp_data(2,0,1)
 print,polamp_data_min(2,1,0),polamp_data_min(2,0,1)
 print,polamp_data_max(2,1,0),polamp_data_max(2,0,1)
 
+;;;;;;;;;
 swpol(*)=[4.54296,1.19817]
 swpolmin(*)=[1.75341,-0.0313826]
 swpolmax(*)=[7.13771,2.75465]
+;;;;;;;;;
 
 for c=0,ncross-1 do begin
 
@@ -3245,35 +3259,39 @@ print,my_filename
 device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica',xsize=22,ysize=20
 
 ; axes etc:
-plot,[0,0],[0,0],color=0,psym=8,xrange=crossxrange(*,c),yrange=crossyrange(*,c),ystyle=1,xstyle=1,title=crosstitle(c),xtitle=crossxtitle(c),ytitle=crossytitle(c),/nodata,xcharsize=1,ycharsize=1,charsize=1.25,xticks=6
+plot,[0,0],[0,0],color=0,psym=8,xrange=crossxrange(*,c),yrange=crossyrange(*,c),ystyle=1,xstyle=1,title=crosstitle(c),xtitle=crossxtitle(c),ytitle=crossytitle(c),/nodata,xcharsize=1,ycharsize=1,charsize=1.25,xticks=8
 
 
-tvlct,r_0,g_0,b_0
+;tvlct,r_0,g_0,b_0
+tvlct,r_39,g_39,b_39
 Aaa = FINDGEN(17) * (!PI*2/16.)  
 USERSYM, COS(Aaa), SIN(Aaa), /FILL 
+
+; if we have reversed the LGM to be positive, we want to re-reverse this back to
+; negative for this plot.
 
 ; plot proxies
 for t=0,ntime-1 do begin
 
-plots,ass_c(t),polamp_data(t,(1-c),c)*fact_mod_sign(t),color=0,psym=8,symsize=2
-
-oplot,[ass_vlik(t,0),ass_vlik(t,1)],[polamp_data(t,(1-c),c),polamp_data(t,(1-c),c)]*fact_mod_sign(t)
-
-oplot,[ass_c(t),ass_c(t)],[polamp_data_min(t,(1-c),c),polamp_data_max(t,(1-c),c)]*fact_mod_sign(t)
+plots,ass_c(t),polamp_data(t,(1-c),c)*fact_mod_sign(t),color=timcol(t),psym=8,symsize=2
+oplot,[ass_vlik(t,0),ass_vlik(t,1)],[polamp_data(t,(1-c),c),polamp_data(t,(1-c),c)]*fact_mod_sign(t),color=timcol(t)
+oplot,[ass_c(t),ass_c(t)],[polamp_data_min(t,(1-c),c),polamp_data_max(t,(1-c),c)]*fact_mod_sign(t),color=timcol(t)
 
 endfor
 
 ; plot the PI
 plots,0,0,color=0,psym=2,symsize=2
 
-
 ; plot models
 for t=0,ntime-1 do begin
 
 thesem=where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1)
 
-plots,mod_gmt(thesem,t,0),polamp_model(thesem,t,(1-c),c)*fact_mod_sign(t),color=100,psym=8,symsize=1
-plots,mod_gmt(thesem,t,0),polamp_tmodel(thesem,t,(1-c),c)*fact_mod_sign(t),color=200,psym=8,symsize=1
+USERSYM, COS(Aaa), SIN(Aaa), /FILL 
+plots,mod_gmt(thesem,t,0),polamp_model(thesem,t,(1-c),c)*fact_mod_sign(t),psym=8,symsize=1,color=timcol(t)
+
+usersym,[0,1,1,0,0],[1,1,0,0,1] ,/FILL
+plots,mod_gmt(thesem,t,0),polamp_tmodel(thesem,t,(1-c),c)*fact_mod_sign(t),psym=8,symsize=1,color=timcol(t)
 
 endfor
 
@@ -3283,11 +3301,14 @@ endfor
 Aaa = FINDGEN(17) * (!PI*2/16.)  
 USERSYM, COS(Aaa), SIN(Aaa)
 t=2
-plots,ass_c(t),swpol(c)*fact_mod_sign(t),color=0,psym=8,symsize=2
-oplot,[ass_vlik(t,0),ass_vlik(t,1)],[swpol(c),swpol(c)]*fact_mod_sign(t)
-oplot,[ass_c(t),ass_c(t)],[swpolmin(c),swpolmax(c)]*fact_mod_sign(t)
+plots,ass_c(t),swpol(c)*fact_mod_sign(t),psym=8,symsize=2,color=timcol(t)
+oplot,[ass_vlik(t,0),ass_vlik(t,1)],[swpol(c),swpol(c)]*fact_mod_sign(t),color=timcol(t)
+oplot,[ass_c(t),ass_c(t)],[swpolmin(c),swpolmax(c)]*fact_mod_sign(t),color=timcol(t)
 
-nleg=5
+
+tvlct,r_0,g_0,b_0
+
+nleg=8
 
 ; plot legend
 boxvxs=0.025 ; starting x for box
@@ -3318,23 +3339,34 @@ Aaa = FINDGEN(17) * (!PI*2/16.)
 
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
 plots,bxs+bxp,byf-1*byp,color=0,psym=8,symsize=2
-xyouts,bxs+bxp+bxt,byf-byt-1*byp,'proxy-based metric from proxies',color=0,charsize=0.8
+xyouts,bxs+bxp+bxt,byf-byt-1*byp,'site-specific metric from proxies',color=0,charsize=0.8
 
 USERSYM, COS(Aaa), SIN(Aaa)
 plots,bxs+bxp,byf-2*byp,color=0,psym=8,symsize=2
-xyouts,bxs+bxp+bxt,byf-byt-2*byp,'proxy-based metric from proxies (No SW Pacific)',color=0,charsize=0.8
+xyouts,bxs+bxp+bxt,byf-byt-2*byp,'site-specific metric from proxies (No SW Pacific)',color=0,charsize=0.8
 
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
-plots,bxs+bxp,byf-3*byp,color=100,psym=8,symsize=1
-xyouts,bxs+bxp+bxt,byf-byt-3*byp,'proxy-based metric from models',color=0,charsize=0.8
+plots,bxs+bxp,byf-3*byp,color=0,psym=8,symsize=1
+xyouts,bxs+bxp+bxt,byf-byt-3*byp,'site-specific metric from models',color=0,charsize=0.8
 
-USERSYM, COS(Aaa), SIN(Aaa), /FILL
-plots,bxs+bxp,byf-4*byp,color=200,psym=8,symsize=1
-xyouts,bxs+bxp+bxt,byf-byt-4*byp,'idealised metric from models',color=0,charsize=0.8
+usersym,[0,1,1,0,0],[1,1,0,0,1] ,/FILL
+plots,bxs+bxp,byf-4*byp,color=0,psym=8,symsize=1
+xyouts,bxs+bxp+bxt,byf-byt-4*byp,'true metric from models',color=0,charsize=0.8
 
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
 plots,bxs+bxp,byf-5*byp,color=0,psym=2,symsize=2
 xyouts,bxs+bxp+bxt,byf-byt-5*byp,'preindustrial',color=0,charsize=0.8
+
+tvlct,r_39,g_39,b_39
+
+xyouts,bxs+bxp+bxt,byf-byt-6*byp,'LGM',color=timcol(1),charsize=0.8
+
+xyouts,bxs+bxp+bxt,byf-byt-7*byp,'mPWP',color=timcol(0),charsize=0.8
+
+xyouts,bxs+bxp+bxt,byf-byt-8*byp,'EECO',color=timcol(2),charsize=0.8
+
+
+tvlct,r_0,g_0,b_0
 
 endif
 
@@ -3399,16 +3431,16 @@ print,'band_model_mean SST: '+timnames(t)+' '+strtrim(0.5*(band_model_mean(0,t,v
 print,'band_model_aver SST: '+timnames(t)+' '+strtrim(0.5*(band_model_aver(0,t,v)-band_model_aver(1,t,v)+band_model_aver(2,t,v)-band_model_aver(1,t,v)),2)
 print,'FOR PAPER:'
 print,'polamp SST: '+timnames(t)+' '+strtrim(polamp_model_mean(t,v,0,0),2)
-print,'polamp SST idealised: '+timnames(t)+' '+strtrim(polamp_tmodel_mean(t,v,0,0),2)
-print,'polamp SST idealised diff: '+timnames(t)+' '+strtrim(polamp_tmodel_mean(t,v,0,0)-polamp_model_mean(t,v,0,0),2)
+print,'polamp SST true: '+timnames(t)+' '+strtrim(polamp_tmodel_mean(t,v,0,0),2)
+print,'polamp SST true diff: '+timnames(t)+' '+strtrim(polamp_tmodel_mean(t,v,0,0)-polamp_model_mean(t,v,0,0),2)
 endif
 
 
 if (polampshortname(g) eq 'lsc' and varnametitle(v) eq 'SAT') then begin
 print,'FOR PAPER:'
 print,'LSC SAT: '+timnames(t)+' '+strtrim(polamp_model_mean(t,v,1,0),2)
-print,'LSC SAT idealised: '+timnames(t)+' '+strtrim(polamp_tmodel_mean(t,v,1,0),2)
-print,'LSC SAT idealised diff %: '+timnames(t)+' '+strtrim( 100*(polamp_tmodel_mean(t,v,1,0)-polamp_model_mean(t,v,1,0))/polamp_model_mean(t,v,1,0) ,2)
+print,'LSC SAT true: '+timnames(t)+' '+strtrim(polamp_tmodel_mean(t,v,1,0),2)
+print,'LSC SAT true diff %: '+timnames(t)+' '+strtrim( 100*(polamp_tmodel_mean(t,v,1,0)-polamp_model_mean(t,v,1,0))/polamp_model_mean(t,v,1,0) ,2)
 endif
 
 
