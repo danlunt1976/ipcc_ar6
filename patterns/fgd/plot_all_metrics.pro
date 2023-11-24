@@ -14,7 +14,7 @@ pro pa
                                 ; OK: band calculations = polamp
                                 ; calculations (models and ens mean,
                                 ; more differene for the Eocene,
-                                ; especially with rem_swpac.  SOlved
+                                ; especially with rem_swpac.  Solved
                                 ; if use ensaver instead of ensmean in
                                 ; band calculations.)
   ; OK: Seb's checks for model temp at proxy locations global scale.
@@ -29,10 +29,10 @@ pro pa
 read_mod=1
 read_proxy=1
 make_zon_plots=0 ; plot zonal mean ensemble mean [default=0 or 1]
-make_map_plots=1 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
-make_map_mod_plots=1 ; plot maps of each individual model [default=0]
-make_gmt_plots=0                ; plot gmst [default=0 or 1]
-make_polamp_plots=0                ; plot polamp [default=0 or 1]
+make_map_plots=0 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
+make_map_mod_plots=0 ; plot maps of each individual model [default=0]
+make_gmt_plots=1                ; plot gmst [default=0 or 1]
+make_polamp_plots=1                ; plot polamp [default=0 or 1]
 make_cross_plots=0
 make_cleat_plots=0
 make_text=0
@@ -1741,7 +1741,7 @@ band_tmodel_aver(*,*,*)=!Values.F_NAN
 band_tmodel=fltarr(nmodmax,nbands,ntime,nvar)
 band_tmodel(*,*,*,*)=!Values.F_NAN
 
-npolamp=2
+npolamp=3
 npmip=2
 
 polamp_data=fltarr(ntime,nvar,npolamp)
@@ -1813,104 +1813,139 @@ print,'Models Aver: ',band_model_aver(b,t,v)
 endfor
 
 ;; polar amplification
+npa=0
 
 if (finite(band_data(0,t,v)) and finite(band_data(1,t,v)) and finite(band_data(2,t,v))) then begin
-polamp_data(t,v,0)=0.5*((band_data(0,t,v)-band_data(1,t,v))+(band_data(2,t,v)-band_data(1,t,v)))
+polamp_data(t,v,npa)=0.5*((band_data(0,t,v)-band_data(1,t,v))+(band_data(2,t,v)-band_data(1,t,v)))
 
 ; MONTE CARLO
 for mc=0,nmc-1 do begin
-polamp_data_mc(t,v,0,mc)=0.5*((band_data_mc(0,t,v,mc)-band_data_mc(1,t,v,mc))+(band_data_mc(2,t,v,mc)-band_data_mc(1,t,v,mc)))
+polamp_data_mc(t,v,npa,mc)=0.5*((band_data_mc(0,t,v,mc)-band_data_mc(1,t,v,mc))+(band_data_mc(2,t,v,mc)-band_data_mc(1,t,v,mc)))
 endfor
-mcs=sort(polamp_data_mc(t,v,0,0:nmc-1))
-polamp_data_min(t,v,0)=polamp_data_mc(t,v,0,mcs(fix(nmc*0.05)))
-polamp_data_max(t,v,0)=polamp_data_mc(t,v,0,mcs(fix(nmc*0.95)))
+mcs=sort(polamp_data_mc(t,v,npa,0:nmc-1))
+polamp_data_min(t,v,npa)=polamp_data_mc(t,v,npa,mcs(fix(nmc*0.05)))
+polamp_data_max(t,v,npa)=polamp_data_mc(t,v,npa,mcs(fix(nmc*0.95)))
 
 for m=0,nmod(t)-1 do begin
-polamp_model(m,t,v,0)=0.5*((band_model(m,0,t,v)-band_model(m,1,t,v))+(band_model(m,2,t,v)-band_model(m,1,t,v)))
-polamp_tmodel(m,t,v,0)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
+polamp_model(m,t,v,npa)=0.5*((band_model(m,0,t,v)-band_model(m,1,t,v))+(band_model(m,2,t,v)-band_model(m,1,t,v)))
+polamp_tmodel(m,t,v,npa)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
 endfor
 endif
 
 if (finite(band_data(0,t,v)) and finite(band_data(1,t,v)) and ~finite(band_data(2,t,v))) then begin
-polamp_data(t,v,0)=band_data(0,t,v)-band_data(1,t,v)
+polamp_data(t,v,npa)=band_data(0,t,v)-band_data(1,t,v)
 
 ; MONTE CARLO
 for mc=0,nmc-1 do begin
-polamp_data_mc(t,v,0,mc)=band_data_mc(0,t,v,mc)-band_data_mc(1,t,v,mc)
+polamp_data_mc(t,v,npa,mc)=band_data_mc(0,t,v,mc)-band_data_mc(1,t,v,mc)
 endfor
 mcs=sort(polamp_data_mc(t,v,0,0:nmc-1))
-polamp_data_min(t,v,0)=polamp_data_mc(t,v,0,mcs(fix(nmc*0.05)))
-polamp_data_max(t,v,0)=polamp_data_mc(t,v,0,mcs(fix(nmc*0.95)))
+polamp_data_min(t,v,npa)=polamp_data_mc(t,v,npa,mcs(fix(nmc*0.05)))
+polamp_data_max(t,v,npa)=polamp_data_mc(t,v,npa,mcs(fix(nmc*0.95)))
 
 for m=0,nmod(t)-1 do begin
-polamp_model(m,t,v,0)=band_model(m,0,t,v)-band_model(m,1,t,v)
-polamp_tmodel(m,t,v,0)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
+polamp_model(m,t,v,npa)=band_model(m,0,t,v)-band_model(m,1,t,v)
+polamp_tmodel(m,t,v,npa)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
 endfor
 endif
 
 if (~finite(band_data(0,t,v)) and finite(band_data(1,t,v)) and finite(band_data(2,t,v))) then begin
-polamp_data(t,v,0)=band_data(2,t,v)-band_data(1,t,v)
+polamp_data(t,v,npa)=band_data(2,t,v)-band_data(1,t,v)
 
 ; MONTE CARLO
 for mc=0,nmc-1 do begin
-polamp_data_mc(t,v,0,mc)=band_data_mc(2,t,v,mc)-band_data_mc(1,t,v,mc)
+polamp_data_mc(t,v,npa,mc)=band_data_mc(2,t,v,mc)-band_data_mc(1,t,v,mc)
 endfor
-mcs=sort(polamp_data_mc(t,v,0,0:nmc-1))
-polamp_data_min(t,v,0)=polamp_data_mc(t,v,0,mcs(fix(nmc*0.05)))
-polamp_data_max(t,v,0)=polamp_data_mc(t,v,0,mcs(fix(nmc*0.95)))
+mcs=sort(polamp_data_mc(t,v,npa,0:nmc-1))
+polamp_data_min(t,v,npa)=polamp_data_mc(t,v,npa,mcs(fix(nmc*0.05)))
+polamp_data_max(t,v,npa)=polamp_data_mc(t,v,npa,mcs(fix(nmc*0.95)))
 
 for m=0,nmod(t)-1 do begin
-polamp_model(m,t,v,0)=band_model(m,2,t,v)-band_model(m,1,t,v)
-polamp_tmodel(m,t,v,0)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
+polamp_model(m,t,v,npa)=band_model(m,2,t,v)-band_model(m,1,t,v)
+polamp_tmodel(m,t,v,npa)=0.5*((band_tmodel(m,0,t,v)-band_tmodel(m,1,t,v))+(band_tmodel(m,2,t,v)-band_tmodel(m,1,t,v)))
 endfor
 endif
 
 
 ; pmip4 runs
-polamp_model_mean(t,v,0,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,0))
-polamp_tmodel_mean(t,v,0,0)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,0))
+polamp_model_mean(t,v,npa,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,npa))
+polamp_tmodel_mean(t,v,npa,0)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,npa))
 ; pmip3 runs
-polamp_model_mean(t,v,0,1)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,0))
-polamp_tmodel_mean(t,v,0,1)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,0))
+polamp_model_mean(t,v,npa,1)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,npa))
+polamp_tmodel_mean(t,v,npa,1)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,npa))
 
 
 endfor
 endfor
 
 ;; land-sea contrast
+npa=1
+
 for t=0,ntime-1 do begin
 for v=0,nvar-1 do begin
 
-polamp_data(t,v,1)=mean(temps_d(0:ndata(t,v)-1,t,v)) - mean(temps_d(0:ndata(t,(1-v))-1,t,(1-v)))
+polamp_data(t,v,npa)=mean(temps_d(0:ndata(t,v)-1,t,v)) - mean(temps_d(0:ndata(t,(1-v))-1,t,(1-v)))
 
 for mc=0,nmc-1 do begin
-polamp_data_mc(t,v,1,mc)=mean(temps_d_mc(0:ndata(t,v)-1,t,v,mc)) - mean(temps_d_mc(0:ndata(t,(1-v))-1,t,(1-v),mc))
+polamp_data_mc(t,v,npa,mc)=mean(temps_d_mc(0:ndata(t,v)-1,t,v,mc)) - mean(temps_d_mc(0:ndata(t,(1-v))-1,t,(1-v),mc))
 endfor
 ; MONTE CARLO
-mcs=sort(polamp_data_mc(t,v,1,0:nmc-1))
-polamp_data_min(t,v,1)=polamp_data_mc(t,v,1,mcs(fix(nmc*0.05)))
-polamp_data_max(t,v,1)=polamp_data_mc(t,v,1,mcs(fix(nmc*0.95)))
+mcs=sort(polamp_data_mc(t,v,npa,0:nmc-1))
+polamp_data_min(t,v,npa)=polamp_data_mc(t,v,npa,mcs(fix(nmc*0.05)))
+polamp_data_max(t,v,npa)=polamp_data_mc(t,v,npa,mcs(fix(nmc*0.95)))
 
 for m=0,nmod(t)-1 do begin
-polamp_model(m,t,v,1)=mean(temps_m(m,0:ndata(t,v)-1,t,v)) - mean(temps_m(m,0:ndata(t,(1-v))-1,t,(1-v)))
+polamp_model(m,t,v,npa)=mean(temps_m(m,0:ndata(t,v)-1,t,v)) - mean(temps_m(m,0:ndata(t,(1-v))-1,t,(1-v)))
 ; used to do it this way which had a global SAT
 ;polamp_tmodel(m,t,v,1)=mean(mod_map(*,*,m,t,v),/NAN) -
 ;mean(mod_map(*,*,m,t,(1-v)),/NAN)
 ; now do it like this:
 ;polamp_tmodel(m,t,v,1)=mean( mod_map(*,*,m,t,v)-mod_map(*,*,m,t,(1-v)) , /NAN)
 ; and now area weighted:
-polamp_tmodel(m,t,v,1)=mean( mod_map(*,*,m,t,v)-mod_map(*,*,m,t,(1-v)) , /NAN)
-
-polamp_tmodel(m,t,v,1)=total((mod_map(*,*,m,t,v)-mod_map(*,*,m,t,(1-v)))*weight_glo(*,*),/NAN)/total(finite(mod_map(*,*,m,t,v)-mod_map(*,*,m,t,(1-v)))*weight_glo(*,*))
+polamp_tmodel(m,t,v,npa)=total((mod_map(*,*,m,t,v)-mod_map(*,*,m,t,(1-v)))*weight_glo(*,*),/NAN)/total(finite(mod_map(*,*,m,t,v)-mod_map(*,*,m,t,(1-v)))*weight_glo(*,*))
 
 
 endfor
 ; pmip4 runs
-polamp_model_mean(t,v,1,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,1))
-polamp_tmodel_mean(t,v,1,0)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,1))
+polamp_model_mean(t,v,npa,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,npa))
+polamp_tmodel_mean(t,v,npa,0)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,npa))
 ; pmip3 runs
-polamp_model_mean(t,v,1,1)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,1))
-polamp_tmodel_mean(t,v,1,1)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,1))
+polamp_model_mean(t,v,npa,1)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,npa))
+polamp_tmodel_mean(t,v,npa,1)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,npa))
+endfor
+endfor
+
+
+
+;; GMST
+npa=2
+
+for t=0,ntime-1 do begin
+for v=0,nvar-1 do begin
+
+polamp_data(t,v,npa)=mean(temps_d(0:ndata(t,v)-1,t,v))
+
+for mc=0,nmc-1 do begin
+polamp_data_mc(t,v,npa,mc)=mean(temps_d_mc(0:ndata(t,v)-1,t,v,mc))
+endfor
+; MONTE CARLO
+mcs=sort(polamp_data_mc(t,v,npa,0:nmc-1))
+polamp_data_min(t,v,npa)=polamp_data_mc(t,v,npa,mcs(fix(nmc*0.05)))
+polamp_data_max(t,v,npa)=polamp_data_mc(t,v,npa,mcs(fix(nmc*0.95)))
+
+for m=0,nmod(t)-1 do begin
+polamp_model(m,t,v,npa)=mean(temps_m(m,0:ndata(t,v)-1,t,v))
+;polamp_tmodel(m,t,v,npa)=mean(mod_map(*,*,m,t,v),/NAN)
+polamp_tmodel(m,t,v,npa)=total((mod_map(*,*,m,t,v))*weight_glo(*,*),/NAN)/total(finite(mod_map(*,*,m,t,v))*weight_glo(*,*))
+
+
+endfor
+; pmip4 runs
+polamp_model_mean(t,v,npa,0)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,npa))
+polamp_tmodel_mean(t,v,npa,0)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,npa))
+; pmip3 runs
+polamp_model_mean(t,v,npa,1)=mean(polamp_model(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,npa))
+polamp_tmodel_mean(t,v,npa,1)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 0 and plot_zon(t,0:nmod(t)-1) eq 1),t,v,npa))
 endfor
 endfor
 
@@ -2412,6 +2447,9 @@ timnameslongh=strarr(ntimeh)
 timnameslongh(0:2)=timnameslong(*)
 timnameslongh(3:4)=['Historical','post-1975']
 
+label_t=strarr(ntimeh)
+label_t(*)=['(a)','(b)','(c)','(d)','(e)']
+
 nmodh=intarr(ntimeh)
 nmodh(0:2)=nmod(*)
 nmodh(3:4)=42
@@ -2684,10 +2722,10 @@ if (xx eq 0) then this_title='global mean temperature anomaly [!Eo!NC]'
 
 if (xx gt 0) then this_title=''
 if (g lt 5) then begin
-plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_gmt_3(t,*),color=0,ytitle=this_title,/nodata,xcharsize=1,ycharsize=1,charsize=2.5,xstyle=1,ystyle=1,xticks=1,xtickname=['',''],XTickformat='(A1)',title=timnameslongh(t)
+plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_gmt_3(t,*),color=0,ytitle=this_title,/nodata,xcharsize=1,ycharsize=1,charsize=2.5,xstyle=1,ystyle=1,xticks=1,xtickname=['',''],XTickformat='(A1)',title=label_t(xx)+' '+timnameslongh(t)
 endif
 if (g eq 5) then begin
-plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_gmt_4(t,*),color=0,ytitle=this_title,/nodata,xcharsize=1,ycharsize=1,charsize=2.5,xstyle=1,ystyle=1,xticks=1,xtickname=['',''],XTickformat='(A1)',title=timnameslongh(t)
+plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_gmt_4(t,*),color=0,ytitle=this_title,/nodata,xcharsize=1,ycharsize=1,charsize=2.5,xstyle=1,ystyle=1,xticks=1,xtickname=['',''],XTickformat='(A1)',title=label_t(xx)+' '+timnameslongh(t)
 endif
 
 ; plot legend:
@@ -2945,51 +2983,67 @@ ylim_polamp_6=fltarr(ntime,2,npolamp,nvar)
 
 ; meridional temp gradient:
 ; sat:
-ylim_polamp_6(0,*,0,0)=[0,5]*fact_mod_sign(0)
-ylim_polamp_6(1,*,0,0)=[0,-10]*fact_mod_sign(1)
-ylim_polamp_6(2,*,0,0)=[0,10]*fact_mod_sign(2)
+npa=0
+ylim_polamp_6(0,*,npa,0)=[0,5]*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,0)=[0,-10]*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,0)=[0,10]*fact_mod_sign(2)
 ; sst:
-ylim_polamp_6(0,*,0,1)=[-1,2.5]*fact_mod_sign(0)
-ylim_polamp_6(1,*,0,1)=[0.5,-1.5]*fact_mod_sign(1)
-ylim_polamp_6(2,*,0,1)=[-1,16]*fact_mod_sign(2)
+ylim_polamp_6(0,*,npa,1)=[-1,2.5]*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,1)=[0.5,-1.5]*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,1)=[-1,16]*fact_mod_sign(2)
 
 
 ; land-sea contrast:
 ; sat:
-ylim_polamp_6(0,*,1,0)=[-1,6]*fact_mod_sign(0)
-ylim_polamp_6(1,*,1,0)=[0,-6]*fact_mod_sign(1)
-ylim_polamp_6(2,*,1,0)=[-7,5]*fact_mod_sign(2)
+npa=1
+ylim_polamp_6(0,*,npa,0)=[-1,6]*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,0)=[0,-6]*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,0)=[-7,5]*fact_mod_sign(2)
 ; sst:
-ylim_polamp_6(0,*,1,1)=[-4,1]*fact_mod_sign(0)
-ylim_polamp_6(1,*,1,1)=[8,0]*fact_mod_sign(1)
-ylim_polamp_6(2,*,1,1)=[-10,12]*fact_mod_sign(2)
+ylim_polamp_6(0,*,npa,1)=[-4,1]*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,1)=[8,0]*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,1)=[-10,12]*fact_mod_sign(2)
+
+
+; gmst:
+; sat:
+npa=2
+ylim_polamp_6(0,*,npa,0)=[0,10]*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,0)=[0,-15]*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,0)=[0,30]*fact_mod_sign(2)
+; sst:
+ylim_polamp_6(0,*,npa,1)=[0,5]*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,1)=[0,-10]*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,1)=[0,22]*fact_mod_sign(2)
+
 
 polampname=strarr(npolamp)
-polampname(*)=['a','b']
+polampname(*)=['a','b','c']
 polampshortname=strarr(npolamp)
-polampshortname(*)=['mtg','lsc']
+polampshortname(*)=['mtg','lsc','gst']
 my_siz=fltarr(npolamp)
-my_siz(*)=[2,2]
+my_siz(*)=[2,2,2]
 my_xsize=fltarr(npolamp)
-my_xsize(*)=[18,18]
+my_xsize(*)=[18,18,18]
 my_ytit=strarr(npolamp)
-my_ytit(*)=['polar amplification [!Eo!NC]','land-sea warming contrast [!Eo!NC]']
+my_ytit(*)=['polar amplification [!Eo!NC]','land-sea warming contrast [!Eo!NC]','global warming [!Eo!NC]']
 
 do_leg=intarr(npolamp)
-do_leg(0:npolamp-1)=[1,0]
+do_leg(0:npolamp-1)=[1,0,0]
 
 nplot=intarr(npolamp)
-nplot(*)=[3,3]
+nplot(*)=[3,3,3]
 nmaxplot=max(nplot)
 ord_gmt=intarr(npolamp,nmaxplot)
 ord_gmt(0,*)=[1,0,2]
 ord_gmt(1,*)=[1,0,2]
+ord_gmt(2,*)=[1,0,2]
 
 
 for g=0,npolamp-1 do begin
 for v=0,nvar-1 do begin
 
-if (g eq 0 or g eq 1) then begin
+if (g eq 0 or g eq 1 or g eq 2) then begin
 !X.MARGIN=[10,0]*0.8
 !P.MULTI = [0, 3, 1]
 endif
@@ -3100,8 +3154,8 @@ endif
 ;plots,my_xposp(xx),polamp_data_mc(t,v,g,mc),psym=8,symsize=my_siz(g)/3.0
 ;endfor
 oplot,[my_xposp(xx),my_xposp(xx)],[polamp_data_min(t,v,g),polamp_data_max(t,v,g)],thick=obs_thick
-oplot,[my_xposp(xx)-obsl,my_xposp(xx)+obsl],[polamp_data_min(t,v,g),polamp_data_min(t,v,g)],thick=obs_thick
-oplot,[my_xposp(xx)-obsl,my_xposp(xx)+obsl],[polamp_data_max(t,v,g),polamp_data_max(t,v,g)],thick=obs_thick
+oplot,[my_xposp(xx)-my_del2,my_xposp(xx)+my_del2],[polamp_data_min(t,v,g),polamp_data_min(t,v,g)],thick=obs_thick
+oplot,[my_xposp(xx)-my_del2,my_xposp(xx)+my_del2],[polamp_data_max(t,v,g),polamp_data_max(t,v,g)],thick=obs_thick
 
 ; plot multi-model mean
 
