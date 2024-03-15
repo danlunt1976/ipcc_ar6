@@ -2799,7 +2799,25 @@ plots,my_xposp(xx),ass_c(t),psym=8,symsize=my_siz(g)
 if (do_tcheck eq 1) then begin
 plots,my_xposp(xx),ass_ct(t),psym=8,symsize=my_siz(g)/2.0,color=50 ; plot check to see original Thorsten data
 endif
+
+if (g eq 5 and t eq 1) then begin
+; plot Annan et al values
+; 4.5 +- 0.9 is 1 standard deviation.  
+; We want "very likely" range = *1.645
+; see non_co2_biogeochemical_20210129 = sqrt(2)*erf-1(0.66))
+USERSYM, COS(Aaa), SIN(Aaa)
+plots,my_xposp(xx)-0.05,-4.5,psym=8,symsize=my_siz(g)
+oplot,[my_xposp(xx)-0.05,my_xposp(xx)-0.05],[-4.5+0.9*1.645,-4.5-0.9*1.645],thick=obs_thick,linestyle=2
+oplot,[my_xposp(xx)-0.05-my_del2,my_xposp(xx)-0.05+my_del2],[-4.5+0.9*1.645,-4.5+0.9*1.645],thick=obs_thick,linestyle=2
+oplot,[my_xposp(xx)-0.05-my_del2,my_xposp(xx)-0.05+my_del2],[-4.5-0.9*1.645,-4.5-0.9*1.645],thick=obs_thick,linestyle=2
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+
+
+
 endif
+
+endif
+
 
 ; plot multi-model mean
 if (g eq 5) then begin
