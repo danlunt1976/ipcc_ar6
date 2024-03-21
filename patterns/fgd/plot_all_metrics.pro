@@ -3,7 +3,9 @@ pro pa
 ; KNOWN ISSUES/ADDITIONS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; QA: ; CHECK: qa_metrics.jnl : 
+; QA: ; 
+
+; CHECK: qa_metrics.jnl : 
   ; OK: CESM2 LGM,Pliocene,Eocene merid SST temp gradients.
   ; OK: INMN LGM,Eocene merid SAT temp gradients.
   ; OK: INMN and CESM2 land-sea contrasts
@@ -12,7 +14,7 @@ pro pa
   ; OK: check produce old ipcc plot when put back in ensmean/aver.
                                 ; OK: band calculations = polamp
                                 ; calculations (models and ens mean,
-                                ; more differene for the Eocene,
+                                ; more difference for the Eocene,
                                 ; especially with rem_swpac.  Solved
                                 ; if use ensaver instead of ensmean in
                                 ; band calculations.)
@@ -59,7 +61,7 @@ make_qa=0
 endif
 
 
-make_pdf=1
+make_pdf=0
 make_png=0
 
 do_checks=0 ; plot extra lines on zonal mean plots [default=0]
@@ -3021,11 +3023,6 @@ ssname(*)=['sx','sy','sm']
 for ss=0,nss-1 do begin
 
 ylim_polamp_6=fltarr(ntime,2,npolamp,nvar)
-;scal_6=1.5
-;off_6=-0.05
-;ylim_polamp_6(0,*)=[0,polamp_data(0,1)]*scal_6+off_6*polamp_data(0,1)
-;ylim_polamp_6(1,*)=[0,polamp_data(1,1)]*scal_6+off_6*polamp_data(1,1)
-;ylim_polamp_6(2,*)=[0,polamp_data(2,1)]*scal_6+off_6*polamp_data(2,1)
 
 ; meridional temp gradient:
 ; sat:
@@ -3033,6 +3030,7 @@ npa=0
 ylim_polamp_6(0,*,npa,0)=[0,5]*fact_mod_sign(0)
 ylim_polamp_6(1,*,npa,0)=[0,-10]*fact_mod_sign(1)
 ylim_polamp_6(2,*,npa,0)=[0,10]*fact_mod_sign(2)
+
 ; sst:
 if (ss eq 0) then begin
 ylim_polamp_6(0,*,npa,1)=[-1,2.5]*fact_mod_sign(0)
@@ -3085,14 +3083,45 @@ ylim_polamp_6(2,*,npa,1)=[-10,12]*fact_mod_sign(2)
 ; gmst:
 ; sat:
 npa=2
+if (ss eq 0) then begin
 ylim_polamp_6(0,*,npa,0)=[0,10]*fact_mod_sign(0)
 ylim_polamp_6(1,*,npa,0)=[0,-15]*fact_mod_sign(1)
 ylim_polamp_6(2,*,npa,0)=[0,30]*fact_mod_sign(2)
+endif
+if (ss eq 1) then begin
+scal_6_min=0
+scal_6_max=2.2
+ylim_polamp_6(0,*,npa,0)=[scal_6_min,scal_6_max]*polamp_data(0,0,npa)*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,0)=[scal_6_min,scal_6_max]*polamp_data(1,0,npa)*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,0)=[scal_6_min,scal_6_max]*polamp_data(2,0,npa)*fact_mod_sign(2)
+endif
+if (ss eq 2) then begin
+scal_6_min=0
+scal_6_max=2.2
+ylim_polamp_6(0,*,npa,0)=[scal_6_min,scal_6_max]*polamp_model_mean(0,0,npa,0)*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,0)=[scal_6_min,scal_6_max]*polamp_model_mean(1,0,npa,0)*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,0)=[scal_6_min,scal_6_max]*polamp_model_mean(2,0,npa,0)*fact_mod_sign(2)
+endif
 ; sst:
+if (ss eq 0) then begin
 ylim_polamp_6(0,*,npa,1)=[0,5]*fact_mod_sign(0)
 ylim_polamp_6(1,*,npa,1)=[0,-10]*fact_mod_sign(1)
 ylim_polamp_6(2,*,npa,1)=[0,22]*fact_mod_sign(2)
-
+endif
+if (ss eq 1) then begin
+scal_6_min=0
+scal_6_max=2.7
+ylim_polamp_6(0,*,npa,1)=[scal_6_min,scal_6_max]*polamp_data(0,1,npa)*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,1)=[scal_6_min,scal_6_max]*polamp_data(1,1,npa)*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,1)=[scal_6_min,scal_6_max]*polamp_data(2,1,npa)*fact_mod_sign(2)
+endif
+if (ss eq 2) then begin
+scal_6_min=0
+scal_6_max=2.5
+ylim_polamp_6(0,*,npa,1)=[scal_6_min,scal_6_max]*polamp_model_mean(0,1,npa,0)*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,1)=[scal_6_min,scal_6_max]*polamp_model_mean(1,1,npa,0)*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,1)=[scal_6_min,scal_6_max]*polamp_model_mean(2,1,npa,0)*fact_mod_sign(2)
+endif
 
 polampname=strarr(npolamp)
 polampname(*)=['a','b','c']
@@ -3155,10 +3184,24 @@ plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_polamp_6(t,*,g,v),color=0,yt
 
 ; plot legend:
 
+; topleg = 1 (top) or 0 (bottom)
+topleg=1
+
 if (xx eq shiftright) then begin
 tvlct,r_39,g_39,b_39
 tvlct,250,0,0,250 ; red
 tvlct,0,0,250,254 ; blue
+
+boxl=0.39 ; length of box
+boxs=0.11 ; shift from top of box to top of text
+if (topleg eq 1) then begin
+topleft=1.65 ; top of box
+endif
+if (topleg eq 0) then begin
+topleft=0.3 ; top of box
+endif
+boxt=topleft+boxs
+boxb=boxt-boxl
 
 startx=0.65+shiftright
 starty=2 ; number of added things to legend
@@ -3175,12 +3218,12 @@ delys=0.05*scalefacty ; shift down for each part of legend
 delyc=0.01*scalefacty ; shift up for caption
 ;oy=(ylim_polamp_6(tp,0,g,v)+0.3+starty*delys/scalefacty)*scalefacty ;
 ;start point for y
-oy=ylim_polamp_6(tp,0,g,v)+(0.3+starty*delys/scalefacty)*scalefacty ; start point for y
+oy=ylim_polamp_6(tp,0,g,v)+(topleft+starty*delys/scalefacty)*scalefacty ; start point for y
 
 if (do_leg(g) eq 1) then begin
 
 ;box:
-oplot,[0.53,1.45,1.45,0.53,0.53]+shiftright,[0.02,0.02,0.41+starty*delys/scalefacty,0.41+starty*delys/scalefacty,0.02]*scalefacty+ylim_polamp_6(tp,0,g,v),color=0,thick=0.5,/noclip
+oplot,[0.53,1.45,1.45,0.53,0.53]+shiftright,[boxb,boxb,boxt+starty*delys/scalefacty,boxt+starty*delys/scalefacty,boxb]*scalefacty+ylim_polamp_6(tp,0,g,v),color=0,thick=0.5,/noclip
 
 if (do_dots eq 1) then begin
 plots,startx,oy+delyl,psym=8,symsize=my_siz(g),color=0
@@ -3257,7 +3300,7 @@ plots,my_xposp(xx)+0.2,polamp_model_mean(t,v,g,1),psym=8,symsize=my_siz(g)/2.0,c
 
 if (pp eq 1) then begin
 ; true model mean (just for pmip4)
-plots,my_xposm(xx),polamp_tmodel_mean(t,v,g,0),psym=2,symsize=my_siz(g),color=130,thick=3
+plots,my_xposm(xx)-0.18,polamp_tmodel_mean(t,v,g,0),psym=2,symsize=my_siz(g),color=130,thick=3
 endif
 
 
@@ -3273,7 +3316,12 @@ tvlct,r_0,g_0,b_0
 my_sym=8
 my_col=200
 my_thick=0.5
+if (pp eq 1) then begin
 my_delt=0
+endif
+if (pp eq 0) then begin
+my_delt=0
+endif
 endif
 if (high_ecs(t,m) eq 1) then begin
 tvlct,r_39,g_39,b_39
@@ -3281,7 +3329,12 @@ tvlct,250,0,0,250 ; red
 my_sym=8
 my_col=250
 my_thick=0.5
+if (pp eq 1) then begin
+my_delt=0
+endif
+if (pp eq 0) then begin
 my_delt=0.18
+endif
 endif
 if (high_ecs(t,m) eq -1) then begin
 tvlct,r_39,g_39,b_39
@@ -3289,7 +3342,12 @@ tvlct,0,0,250,254 ; blue
 my_sym=8
 my_col=254
 my_thick=0.5
+if (pp eq 1) then begin
+my_delt=0
+endif
+if (pp eq 0) then begin
 my_delt=-0.18
+endif
 endif
 
 
