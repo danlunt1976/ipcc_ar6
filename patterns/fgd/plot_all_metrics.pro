@@ -3,8 +3,7 @@ pro pa
 ; KNOWN ISSUES/ADDITIONS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; QA: 
-; CHECK: qa_metrics.jnl : 
+; QA: ; CHECK: qa_metrics.jnl : 
   ; OK: CESM2 LGM,Pliocene,Eocene merid SST temp gradients.
   ; OK: INMN LGM,Eocene merid SAT temp gradients.
   ; OK: INMN and CESM2 land-sea contrasts
@@ -32,7 +31,7 @@ make_zon_plots=0 ; plot zonal mean ensemble mean [default=0 or 1]
 make_map_plots=0 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
 make_gmt_plots=1                ; plot gmst [default=0 or 1]
-make_polamp_plots=1                ; plot polamp [default=0 or 1]
+make_polamp_plots=1               ; plot polamp [default=0 or 1]
 make_cross_plots=0
 make_cleat_plots=0
 make_text=0
@@ -290,7 +289,7 @@ my_ndecs(*,0)=[1,1,1]
 temp_min_e(*,1)=[-4.5,-4.5,-18]
 temp_max_e(*,1)=[4.5,4.5,18]
 nnstep(*,1)=[0.5,0.5,2]
-my_ndecs(*,1)=[2,2,1]
+my_ndecs(*,1)=[1,1,1]
 endif
 
 legendline=[-45,-35]
@@ -2263,7 +2262,7 @@ endelse
 if ( (make_map_mod_plots eq 0) or ((make_map_mod_plots eq 1) and (plot_modmap(t,map) eq 1)) ) then begin
 
 ; idl guide/4
-map_charsize=100
+map_charsize=120
 ; idl guide/5
 ;map_charsize=230
 
@@ -2331,6 +2330,11 @@ endif
 
 map,/robinson
 LEVS, MIN=temp_min_e(t,v), MAX=temp_max_e(t,v), STEP=nnstep(t,v), ndecs=my_ndecs(t,v)
+
+; FOR IDL GUIDE/4:
+;g_levs=!guide.levels
+;g_levs(2:nncols-2:2)=''
+;!guide.levels=g_levs
 
 if (fact_mod_sign(t) eq 1) then begin
 thistitle=strtrim(varnametitle(v)+' ('+timnameslong(t)+' - preindustrial) '+mapnamelong(map),2)
@@ -2657,16 +2661,16 @@ tvlct,r_39,g_39,b_39
 
 ;;;;;;;;;;;;;;;;;;;;;;
 
-ngmt=6
+ngmt=8
 gmtname=strarr(ngmt)
-gmtname(*)=['a','b','c','d','e','f'] ; f is the current "best" (g eq 5)
+gmtname(*)=['a','b','c','d','e','f','g','h'] ; f is the current "best" (g eq 5)
 my_siz=fltarr(ngmt)
-my_siz(*)=[0.5,2,2,2,2,2]
+my_siz(*)=[0.5,2,2,2,2,2,2,2]
 my_xsize=fltarr(ngmt)
-my_xsize(*)=[10,24,24,30,30,30]
+my_xsize(*)=[10,24,24,30,30,30,30,30]
 
 nplot=intarr(ngmt)
-nplot(*)=[3,4,4,5,5,5]
+nplot(*)=[3,4,4,5,5,5,5,5]
 nmaxplot=max(nplot)
 ord_gmt=intarr(ngmt,nmaxplot)
 ord_gmt(0,*)=[0,1,2,-1,-1]
@@ -2676,6 +2680,8 @@ ord_gmt(3,*)=[0,1,2,3,4]
 ord_gmt(4,*)=[3,2,4,0,1]
 ;ord_gmt(5,*)=[3,2,4,0,1] ; historical first
 ord_gmt(5,*)=[3,2,4,1,0] ; post-1975 first
+ord_gmt(6,*)=[3,2,4,1,0] ; post-1975 first
+ord_gmt(7,*)=[3,2,4,1,0] ; post-1975 first
 
 
 
@@ -2689,7 +2695,7 @@ if (g eq 1 or g eq 2) then begin
 !X.MARGIN=[10,3]*0.8
 !P.MULTI = [0, 4, 1]
 endif
-if (g eq 3 or g eq 4 or g eq 5) then begin
+if (g eq 3 or g eq 4 or g eq 5 or g eq 6 or g eq 7) then begin
 !X.MARGIN=[10,0]*0.8
 !P.MULTI = [0, 5, 1]
 endif
@@ -2724,7 +2730,7 @@ if (xx gt 0) then this_title=''
 if (g lt 5) then begin
 plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_gmt_3(t,*),color=0,ytitle=this_title,/nodata,xcharsize=1,ycharsize=1,charsize=2.5,xstyle=1,ystyle=1,xticks=1,xtickname=['',''],XTickformat='(A1)',title=label_t(xx)+' '+timnameslongh(t)
 endif
-if (g eq 5) then begin
+if (g eq 5 or g eq 6 or g eq 7) then begin
 plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_gmt_4(t,*),color=0,ytitle=this_title,/nodata,xcharsize=1,ycharsize=1,charsize=2.5,xstyle=1,ystyle=1,xticks=1,xtickname=['',''],XTickformat='(A1)',title=label_t(xx)+' '+timnameslongh(t)
 endif
 
@@ -2800,7 +2806,7 @@ if (do_tcheck eq 1) then begin
 plots,my_xposp(xx),ass_ct(t),psym=8,symsize=my_siz(g)/2.0,color=50 ; plot check to see original Thorsten data
 endif
 
-if (g eq 5 and t eq 1) then begin
+if ((g eq 5 or g eq 6 or g eq 7) and t eq 1) then begin
 ; plot Annan et al values
 ; 4.5 +- 0.9 is 1 standard deviation.  
 ; We want "very likely" range = *1.645
@@ -2820,7 +2826,7 @@ endif
 
 
 ; plot multi-model mean
-if (g eq 5) then begin
+if (g eq 5 or g eq 6 or g eq 7) then begin
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
 plots,my_xposp(xx)+0.2,mean(modh_gmt_flex(where(pmip4h(t,0:nmodh(t)-1) eq 1 and existh(t,0:nmodh(t)-1) eq 1),t,0)),psym=8,symsize=my_siz(g),color=130
 ;oplot,[my_xposp(xx)+0.2,my_xposp(xx)+0.2],[mean(modh_gmt(where(pmip4h(t,0:nmodh(t)-1) eq 1),t,0))-stddev(modh_gmt(where(pmip4h(t,0:nmodh(t)-1) eq 1),t,0)),mean(modh_gmt(where(pmip4h(t,0:nmodh(t)-1) eq 1),t,0))+stddev(modh_gmt(where(pmip4h(t,0:nmodh(t)-1) eq 1),t,0))],color=130
@@ -2857,7 +2863,7 @@ my_thick=0.5
 my_delt=0
 endif
 if (high_ecs(t,m) eq 1) then begin
-tvlct,r_39,g_39,b_39
+;tvlct,r_39,g_39,b_39
 tvlct,250,0,0,250 ; red
 my_sym=8
 my_col=250
@@ -2865,7 +2871,7 @@ my_thick=0.5
 my_delt=0.18
 endif
 if (high_ecs(t,m) eq -1) then begin
-tvlct,r_39,g_39,b_39
+;tvlct,r_39,g_39,b_39
 tvlct,0,0,250,254 ; blue
 my_sym=8
 my_col=254
@@ -2902,7 +2908,22 @@ endif
 endif
 endif
 
+if (g eq 6) then begin
+tvlct,r_39,g_39,b_39
+if (modnamesh(t,m) eq 'CESM2' or modnamesh(t,m) eq 'CESM2.0' or modnamesh(t,m) eq 'CESM2_1' or modnamesh(t,m) eq 'CESM2.1slab_3x') then begin
+xyouts,my_xposm(xx)+0.1+my_delt,modh_gmt_flex(m,t,0),'CESM2',size=1,color=100
+endif
+if (modnamesh(t,m) eq 'CESM1.2' or modnamesh(t,m) eq 'CESM1_2' or modnamesh(t,m) eq '' or modnamesh(t,m) eq 'CESM1.2_CAM5-deepmip_stand_6xCO2') then begin
+xyouts,my_xposm(xx)+0.1+my_delt,modh_gmt_flex(m,t,0),'CESM1.2',size=1,color=200
+endif
+tvlct,r_0,g_0,b_0
+endif
 
+if (g eq 7) then begin
+tvlct,r_39,g_39,b_39
+xyouts,my_xposm(xx)+0.1+my_delt,modh_gmt_flex(m,t,0),modnamesh(t,m),size=0.5,color=200
+tvlct,r_0,g_0,b_0
+endif
 
 
 endif ; end if existh
@@ -2952,6 +2973,7 @@ oplot,[my_xposm(4)+my_deltt-2*(1+delmarg),my_xposm(4)+my_deltt-1*(1+delmarg)],[m
 endif
 
 
+
 device,/close
 spawn,'ps2epsi '+my_filename+'.ps '+my_filename+'.eps ; \rm '+my_filename+'.ps',dum
 if (make_pdf eq 1) then begin
@@ -2992,6 +3014,12 @@ endif ; end if make_gmt
 
 if (make_polamp_plots eq 1) then begin
 
+nss=3
+ssname=strarr(nss)
+ssname(*)=['sx','sy','sm']
+
+for ss=0,nss-1 do begin
+
 ylim_polamp_6=fltarr(ntime,2,npolamp,nvar)
 ;scal_6=1.5
 ;off_6=-0.05
@@ -3006,17 +3034,48 @@ ylim_polamp_6(0,*,npa,0)=[0,5]*fact_mod_sign(0)
 ylim_polamp_6(1,*,npa,0)=[0,-10]*fact_mod_sign(1)
 ylim_polamp_6(2,*,npa,0)=[0,10]*fact_mod_sign(2)
 ; sst:
+if (ss eq 0) then begin
 ylim_polamp_6(0,*,npa,1)=[-1,2.5]*fact_mod_sign(0)
 ylim_polamp_6(1,*,npa,1)=[0.5,-1.5]*fact_mod_sign(1)
 ylim_polamp_6(2,*,npa,1)=[-1,16]*fact_mod_sign(2)
-
+endif
+if (ss eq 1) then begin
+scal_6_min=-0.5
+scal_6_max=4
+ylim_polamp_6(0,*,npa,1)=[scal_6_min,scal_6_max]*polamp_data(0,1,npa)*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,1)=[scal_6_min,scal_6_max]*polamp_data(1,1,npa)*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,1)=[scal_6_min,scal_6_max]*polamp_data(2,1,npa)*fact_mod_sign(2)
+endif
+if (ss eq 2) then begin
+scal_6_min=-0.5
+scal_6_max=4.5
+ylim_polamp_6(0,*,npa,1)=[scal_6_min,scal_6_max]*polamp_model_mean(0,1,npa,0)*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,1)=[scal_6_min,scal_6_max]*polamp_model_mean(1,1,npa,0)*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,1)=[scal_6_min,scal_6_max]*polamp_model_mean(2,1,npa,0)*fact_mod_sign(2)
+endif
 
 ; land-sea contrast:
 ; sat:
 npa=1
+if (ss eq 0) then begin
 ylim_polamp_6(0,*,npa,0)=[-1,6]*fact_mod_sign(0)
 ylim_polamp_6(1,*,npa,0)=[0,-6]*fact_mod_sign(1)
 ylim_polamp_6(2,*,npa,0)=[-7,5]*fact_mod_sign(2)
+endif
+if (ss eq 1) then begin
+scal_6_min=-1
+scal_6_max=1.5
+ylim_polamp_6(0,*,npa,0)=[scal_6_min,scal_6_max]*polamp_data(0,0,npa)*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,0)=[scal_6_min,scal_6_max]*polamp_data(1,0,npa)*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,0)=[scal_6_min,scal_6_max]*polamp_data(2,0,npa)*fact_mod_sign(2)
+endif
+if (ss eq 2) then begin
+scal_6_min=-2.5
+scal_6_max=3.5
+ylim_polamp_6(0,*,npa,0)=[scal_6_min,scal_6_max]*polamp_model_mean(0,0,npa,0)*fact_mod_sign(0)
+ylim_polamp_6(1,*,npa,0)=[scal_6_min,scal_6_max]*polamp_model_mean(1,0,npa,0)*fact_mod_sign(1)
+ylim_polamp_6(2,*,npa,0)=[scal_6_min,scal_6_max]*polamp_model_mean(2,0,npa,0)*fact_mod_sign(2)
+endif
 ; sst:
 ylim_polamp_6(0,*,npa,1)=[-4,1]*fact_mod_sign(0)
 ylim_polamp_6(1,*,npa,1)=[8,0]*fact_mod_sign(1)
@@ -3057,7 +3116,11 @@ ord_gmt(0,*)=[1,0,2]
 ord_gmt(1,*)=[1,0,2]
 ord_gmt(2,*)=[1,0,2]
 
+npp=2
+ppname=strarr(npp)
+ppname(*)=['sim','com']
 
+for pp=0,npp-1 do begin
 for g=0,npolamp-1 do begin
 for v=0,nvar-1 do begin
 
@@ -3066,7 +3129,7 @@ if (g eq 0 or g eq 1 or g eq 2) then begin
 !P.MULTI = [0, 3, 1]
 endif
 
-my_filename='polamp_ecs_all_new_metrics_'+gmtname(g)+'_'+varnameshort(v)+lab_swpac(rem_swpac)
+my_filename='polamp_ecs_all_new_metrics_'+gmtname(g)+'_'+varnameshort(v)+lab_swpac(rem_swpac)+'_'+ppname(pp)+'_'+ssname(ss)
 print,my_filename
 device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica',xsize=my_xsize(g),ysize=20
 
@@ -3133,7 +3196,9 @@ xyouts,startx+delx,oy-delyc+delyl,'observations',size=0.9
 xyouts,startx,oy-delyc-delys*1,'models:',size=0.9
 xyouts,startx+delx,oy-delyc-delys*5,'ECS>5.0',size=0.9
 xyouts,startx+delx,oy-delyc-delys*6,'ECS<2.0',size=0.9
+if (pp eq 1) then begin
 xyouts,startx+delx,oy-delyc-delys*7,'true mean',size=0.9
+endif
 
 tvlct,r_0,g_0,b_0
 
@@ -3148,7 +3213,9 @@ xyouts,startx+delx,oy-delyc-delys*4,'2.0<ECS<5.0',size=0.9
 USERSYM, COS(Aaa), SIN(Aaa)
 plots,startx,oy-delys*2,psym=8,symsize=my_siz(g),color=0
 plots,startx,oy-delys*3,psym=8,symsize=my_siz(g)/2.0,color=0
+if (pp eq 1) then begin
 plots,startx,oy-delys*7,psym=2,symsize=my_siz(g),color=200
+endif
 
 endif ; end do_leg
 
@@ -3188,9 +3255,10 @@ plots,my_xposp(xx)+0.2,polamp_model_mean(t,v,g,1),psym=8,symsize=my_siz(g)/2.0,c
 USERSYM, COS(Aaa), SIN(Aaa)
 plots,my_xposp(xx)+0.2,polamp_model_mean(t,v,g,1),psym=8,symsize=my_siz(g)/2.0,color=0
 
-; true model (just for pmip4)
+if (pp eq 1) then begin
+; true model mean (just for pmip4)
 plots,my_xposm(xx),polamp_tmodel_mean(t,v,g,0),psym=2,symsize=my_siz(g),color=130,thick=3
-
+endif
 
 
 
@@ -3205,7 +3273,7 @@ tvlct,r_0,g_0,b_0
 my_sym=8
 my_col=200
 my_thick=0.5
-my_delt=-0.18
+my_delt=0
 endif
 if (high_ecs(t,m) eq 1) then begin
 tvlct,r_39,g_39,b_39
@@ -3213,7 +3281,7 @@ tvlct,250,0,0,250 ; red
 my_sym=8
 my_col=250
 my_thick=0.5
-my_delt=-0.18
+my_delt=0.18
 endif
 if (high_ecs(t,m) eq -1) then begin
 tvlct,r_39,g_39,b_39
@@ -3233,11 +3301,13 @@ plots,my_xposm(xx)+my_delt,polamp_model(m,t,v,g),psym=my_sym,symsize=my_siz(g),c
 endif
 endif
 
+if (pp eq 1) then begin
 if (p eq 0) then begin
 ; plot true model
 if (pmip4(t,m) eq 1 and plot_zon(t,m)) then begin
 plots,my_xposm(xx)+0.18,polamp_tmodel(m,t,v,g),psym=2,symsize=my_siz(g),color=my_col,NOCLIP = 0
 oplot,[my_xposm(xx)+my_delt,my_xposm(xx)+0.18],[polamp_model(m,t,v,g),polamp_tmodel(m,t,v,g)],color=my_col,linestyle=1
+endif
 endif
 endif
 
@@ -3256,12 +3326,9 @@ endif ; plot_names_gmt
 endif; endif pmip4
 endif ; end p eq 1
 
-
 endif ; end if existh
 endfor ; end for m
 endfor ; end for p
-
-
 
 endfor ; end for xx
 
@@ -3279,9 +3346,11 @@ endif
 !X.MARGIN=[10,3]
 !P.Multi = 0
 
-
 endfor ; end for v
 endfor ; end for g
+endfor ; end for pp
+
+endfor ; end for ss
 
 endif ; end if make_polamp
 
@@ -3323,6 +3392,9 @@ swpolmin(*)=[1.75341,-0.0313826]
 swpolmax(*)=[7.13771,2.75465]
 ;;;;;;;;;
 
+ss1=2.5
+ss2=1.5
+
 for c=0,ncross-1 do begin
 
 ; filename
@@ -3331,7 +3403,7 @@ print,my_filename
 device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica',xsize=22,ysize=20
 
 ; axes etc:
-plot,[0,0],[0,0],color=0,psym=8,xrange=crossxrange(*,c),yrange=crossyrange(*,c),ystyle=1,xstyle=1,title=crosstitle(c),xtitle=crossxtitle(c),ytitle=crossytitle(c),/nodata,xcharsize=1,ycharsize=1,charsize=1.25,xticks=8
+plot,[0,0],[0,0],color=0,psym=8,xrange=crossxrange(*,c),yrange=crossyrange(*,c),ystyle=1,xstyle=1,title=crosstitle(c),xtitle=crossxtitle(c),ytitle=crossytitle(c),/nodata,xcharsize=1.2,ycharsize=1.2,charsize=1.7,xticks=8;,position=[0.05,0.05,0.95,0.95] 
 
 
 ;tvlct,r_0,g_0,b_0
@@ -3345,14 +3417,14 @@ USERSYM, COS(Aaa), SIN(Aaa), /FILL
 ; plot proxies
 for t=0,ntime-1 do begin
 
-plots,ass_c(t),polamp_data(t,(1-c),c)*fact_mod_sign(t),color=timcol(t),psym=8,symsize=2
+plots,ass_c(t),polamp_data(t,(1-c),c)*fact_mod_sign(t),color=timcol(t),psym=8,symsize=ss1
 oplot,[ass_vlik(t,0),ass_vlik(t,1)],[polamp_data(t,(1-c),c),polamp_data(t,(1-c),c)]*fact_mod_sign(t),color=timcol(t)
 oplot,[ass_c(t),ass_c(t)],[polamp_data_min(t,(1-c),c),polamp_data_max(t,(1-c),c)]*fact_mod_sign(t),color=timcol(t)
 
 endfor
 
 ; plot the PI
-plots,0,0,color=0,psym=2,symsize=2
+plots,0,0,color=0,psym=2,symsize=ss1
 
 ; plot models
 for t=0,ntime-1 do begin
@@ -3360,10 +3432,11 @@ for t=0,ntime-1 do begin
 thesem=where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1)
 
 USERSYM, COS(Aaa), SIN(Aaa), /FILL 
-plots,mod_gmt(thesem,t,0),polamp_model(thesem,t,(1-c),c)*fact_mod_sign(t),psym=8,symsize=1,color=timcol(t)
+plots,mod_gmt(thesem,t,0),polamp_model(thesem,t,(1-c),c)*fact_mod_sign(t),psym=8,symsize=ss2,color=timcol(t)
 
-usersym,[0,1,1,0,0],[1,1,0,0,1] ,/FILL
-plots,mod_gmt(thesem,t,0),polamp_tmodel(thesem,t,(1-c),c)*fact_mod_sign(t),psym=8,symsize=1,color=timcol(t)
+sss=1.0*sqrt(!pi/4.0)
+USERSYM, [-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss];, /FILL
+plots,mod_gmt(thesem,t,0),polamp_tmodel(thesem,t,(1-c),c)*fact_mod_sign(t),psym=8,symsize=ss2,color=timcol(t)
 
 endfor
 
@@ -3373,18 +3446,20 @@ endfor
 Aaa = FINDGEN(17) * (!PI*2/16.)  
 USERSYM, COS(Aaa), SIN(Aaa)
 t=2
-plots,ass_c(t),swpol(c)*fact_mod_sign(t),psym=8,symsize=2,color=timcol(t)
+plots,ass_c(t),swpol(c)*fact_mod_sign(t),psym=8,symsize=ss1,color=timcol(t)
 oplot,[ass_vlik(t,0),ass_vlik(t,1)],[swpol(c),swpol(c)]*fact_mod_sign(t),color=timcol(t)
 oplot,[ass_c(t),ass_c(t)],[swpolmin(c),swpolmax(c)]*fact_mod_sign(t),color=timcol(t)
 
 
 tvlct,r_0,g_0,b_0
 
-nleg=8
+nleg=9
+
+charsize_cross_leg=1.4
 
 ; plot legend
 boxvxs=0.025 ; starting x for box
-boxvxf=0.500 ; ending x for box 
+boxvxf=0.600 ; ending x for box 
 boxvyf=0.975 ; ending y for box
 boxvxp=0.025 ; delta along from box start for point
 boxvyp=0.040 ; delta down from box end for point
@@ -3410,32 +3485,34 @@ oplot,[bxs,bxf,bxf,bxs,bxs],[byf,byf,bys,bys,byf],linestyle=0,thick=3,color=0
 Aaa = FINDGEN(17) * (!PI*2/16.)  
 
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
-plots,bxs+bxp,byf-1*byp,color=0,psym=8,symsize=2
-xyouts,bxs+bxp+bxt,byf-byt-1*byp,'site-specific metric from proxies',color=0,charsize=0.8
+plots,bxs+bxp,byf-1*byp,color=0,psym=8,symsize=ss1
+xyouts,bxs+bxp+bxt,byf-byt-1*byp,'site-specific metric from proxies',color=0,charsize=charsize_cross_leg
 
 USERSYM, COS(Aaa), SIN(Aaa)
-plots,bxs+bxp,byf-2*byp,color=0,psym=8,symsize=2
-xyouts,bxs+bxp+bxt,byf-byt-2*byp,'site-specific metric from proxies (No SW Pacific)',color=0,charsize=0.8
+plots,bxs+bxp,byf-2*byp,color=0,psym=8,symsize=ss1
+xyouts,bxs+bxp+bxt,byf-byt-2*byp,'site-specific metric from proxies',color=0,charsize=charsize_cross_leg
+xyouts,bxs+bxp+bxt,byf-byt-3*byp,'(No SW Pacific)',color=0,charsize=charsize_cross_leg
 
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
-plots,bxs+bxp,byf-3*byp,color=0,psym=8,symsize=1
-xyouts,bxs+bxp+bxt,byf-byt-3*byp,'site-specific metric from models',color=0,charsize=0.8
+plots,bxs+bxp,byf-4*byp,color=0,psym=8,symsize=ss2
+xyouts,bxs+bxp+bxt,byf-byt-4*byp,'site-specific metric from models',color=0,charsize=charsize_cross_leg
 
-usersym,[0,1,1,0,0],[1,1,0,0,1] ,/FILL
-plots,bxs+bxp,byf-4*byp,color=0,psym=8,symsize=1
-xyouts,bxs+bxp+bxt,byf-byt-4*byp,'true metric from models',color=0,charsize=0.8
+sss=1.0*sqrt(!pi/4.0)
+USERSYM, [-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss];, /FILL
+plots,bxs+bxp,byf-5*byp,color=0,psym=8,symsize=ss2
+xyouts,bxs+bxp+bxt,byf-byt-5*byp,'true metric from models',color=0,charsize=charsize_cross_leg
 
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
-plots,bxs+bxp,byf-5*byp,color=0,psym=2,symsize=2
-xyouts,bxs+bxp+bxt,byf-byt-5*byp,'preindustrial',color=0,charsize=0.8
+plots,bxs+bxp,byf-6*byp,color=0,psym=2,symsize=ss1
+xyouts,bxs+bxp+bxt,byf-byt-6*byp,'preindustrial',color=0,charsize=charsize_cross_leg
 
 tvlct,r_39,g_39,b_39
 
-xyouts,bxs+bxp+bxt,byf-byt-6*byp,'LGM',color=timcol(1),charsize=0.8
+xyouts,bxs+bxp+bxt,byf-byt-7*byp,'LGM',color=timcol(1),charsize=charsize_cross_leg
 
-xyouts,bxs+bxp+bxt,byf-byt-7*byp,'mPWP',color=timcol(0),charsize=0.8
+xyouts,bxs+bxp+bxt,byf-byt-8*byp,'mPWP',color=timcol(0),charsize=charsize_cross_leg
 
-xyouts,bxs+bxp+bxt,byf-byt-8*byp,'EECO',color=timcol(2),charsize=0.8
+xyouts,bxs+bxp+bxt,byf-byt-9*byp,'EECO',color=timcol(2),charsize=charsize_cross_leg
 
 
 tvlct,r_0,g_0,b_0
