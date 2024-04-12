@@ -34,7 +34,7 @@ make_map_plots=0 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
 make_gmt_plots=1                ; plot gmst [default=0 or 1]
 make_polamp_plots=1               ; plot polamp [default=0 or 1]
-make_cross_plots=0
+make_cross_plots=1
 make_cleat_plots=0
 make_text=0
 make_latex=0
@@ -70,9 +70,10 @@ do_mod_leg=0 ; plot model names on model zonal mean lines [default=0]
 plot_names_gmt=0 ; plot model names on gmst plot [default=0]
 do_dots=1 ; plot circles at centre of assessed obs of GMST [default=1]
 rep_ipcc=0 ; reproduce original IPCC plot (regarding ensmean/aver mix)
-rem_swpac=0 ; remove SW Pacific
+rem_swpac=0 ; remove SW Pacific [default=0]
 inc_cesm=1 ; include CESM2 (0 if reproducing IPCC; if =1 then maps and zonal mean plots are inconsistent with bar plots)
 ave_aver=1 ; use aver for bands and text in zonal images
+mod_circ=0 ; plot circle around model results
 
 ;;;;;;;;;;
 ;;;;;;;;;;
@@ -107,6 +108,9 @@ do_opp=0 ; =1 to overplot SAT on SST and vice-versa
 ; definitions and names
 
 ntime=3
+ntimeh=ntime+2
+
+
 
 ; ** change ntime
 timnames=strarr(ntime)
@@ -145,13 +149,29 @@ nmod=intarr(ntime)
 nmod(0:ntime-1)=[25,15,14]
 nmodmax=max(nmod)
 
+nmodh=intarr(ntimeh)
+nmodh(0:2)=nmod(*)
+nmodh(3:4)=42
+nmodmaxh=max(nmodh)
+
 pmip4=intarr(ntime,nmodmax)
 pmip4(0,0:nmod(0)-1)=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0]
 pmip4(1,0:nmod(1)-1)=[1,1,1,1,1,1,1,1,1,0,0,0,0,0,0]
 pmip4(2,0:nmod(2)-1)=[1,1,1,1,1,1,1,0,0,0,0,0,0,0]
 
+
+pmip4l=intarr(ntimeh,nmodmaxh)
+pmip4l(*,*)=999
+pmip4l(0,0:nmod(0)-1)=pmip4(0,0:nmod(0)-1)
+pmip4l(1,0:nmod(1)-1)=pmip4(1,0:nmod(1)-1)
+pmip4l(2,0:nmod(2)-1)=pmip4(2,0:nmod(2)-1)
+pmip4l(3:4,*)=2
+
 pmip4name=strarr(2)
 pmip4name(0:1)=['PMIP3/CMIP5','PMIP4/CMIP6']
+
+pmip4lname=strarr(3)
+pmip4lname(0:2)=['PMIP3/CMIP5','PMIP4/CMIP6','CMIP6']
 
 plot_modmap=intarr(ntime,nmodmax+2)
 ; just plot LGM CESM2 and CESM1.2
@@ -165,7 +185,7 @@ modnames(0,0:nmod(0)-1)=['CCSM4','CCSM4-UoT','CCSM4-Utrecht','CESM1.2','CESM2.0'
 modnames(1,0:nmod(1)-1)=['MPI-ESM1-2-LR','AWIESM1','AWIESM2','CESM1_2','CESM2_1','INM-CM4-8','IPSLCM5A2','MIROC-ES2L','UofT-CCSM4','CCSM4_pmip3','GISS-E2-R_pmip3','IPSL-CM5A-LR_pmip3','MIROC-ESM_pmip3','MPI-ESM-P_pmip3','MRI-CGCM3_pmip3']
 modnames(2,0:nmod(2)-1)=['CESM1.2_CAM5-deepmip_stand_6xCO2','COSMOS-landveg_r2413-deepmip_sens_4xCO2','GFDL_CM2.1-deepmip_stand_6xCO2','GFDL_CM2.1-deepmip_sens_4xCO2','INM-CM4-8-deepmip_stand_6xCO2','NorESM1_F-deepmip_sens_4xCO2','CESM2.1slab_3x','cch4x','cch8x','ccw4x','ccw8x','gis4x','had4x','had6x']
 
-modnameslatex=strarr(ntime,nmodmax)
+modnameslatex=strarr(ntimeh,nmodmaxh)
 modnameslatex(0,0:nmod(0)-1)=['CCSM4','CCSM4-UoT','CCSM4-Utrecht','CESM1.2','CESM2.0','COSMOS','EC-Earth3.3','GISS-E2-1-G','HadCM3','HadGEM3','IPSL-CM6A-LR','IPSLCM5A','IPSLCM5A2','MIROC4m','MRI-CGCM2.3','NorESM-L','NorESM1-F','CCSM4\_plio1','COSMOS\_plio1','GISS-E2-R\_plio1','HadCM3\_plio1','IPSLCM5A\_plio1','MIROC4m\_plio1','MRI2.3\_plio1','NORESM-L\_plio1']
 modnameslatex(1,0:nmod(1)-1)=['MPI-ESM1-2-LR','AWIESM1','AWIESM2','CESM1\_2','CESM2\_1','INM-CM4-8','IPSLCM5A2','MIROC-ES2L','UofT-CCSM4','CCSM4\_pmip3','GISS-E2-R\_pmip3','IPSL-CM5A-LR\_pmip3','MIROC-ESM\_pmip3','MPI-ESM-P\_pmip3','MRI-CGCM3\_pmip3']
 modnameslatex(2,0:nmod(2)-1)=['CESM1.2\_CAM5\_6xCO2','COSMOS-landveg\_r2413\_4xCO2','GFDL\_CM2.1\_6xCO2','GFDL\_CM2.1\_4xCO2','INM-CM4-8\_6xCO2','NorESM1\_F\_4xCO2','CESM2.1slab\_3x','CCSM3h4x','CCSM3h8x','CCSM3w4x','CCSM3w8x','GISS4x','HadCM34x','HadCM36x']
@@ -1744,6 +1764,7 @@ band_tmodel(*,*,*,*)=!Values.F_NAN
 
 npolamp=3
 npmip=2
+ncross=2
 
 polamp_data=fltarr(ntime,nvar,npolamp)
 polamp_data(*,*,*)=!Values.F_NAN
@@ -1755,6 +1776,11 @@ polamp_data_min=fltarr(ntime,nvar,npolamp)
 polamp_data_min(*,*,*)=!Values.F_NAN
 polamp_data_max=fltarr(ntime,nvar,npolamp)
 polamp_data_max(*,*,*)=!Values.F_NAN
+
+polamp_data_swpac=fltarr(ntime,nvar,npolamp)
+polamp_data_min_swpac=fltarr(ntime,nvar,npolamp)
+polamp_data_max_swpac=fltarr(ntime,nvar,npolamp)
+
 
 polamp_model=fltarr(nmodmax,ntime,nvar,npolamp)
 polamp_model(*,*,*,*)=!Values.F_NAN
@@ -1950,6 +1976,27 @@ polamp_tmodel_mean(t,v,npa,1)=mean(polamp_tmodel(where(pmip4(t,0:nmod(t)-1) eq 0
 endfor
 endfor
 
+
+
+if (rem_swpac eq 1) then begin
+close,1
+openw,1,'swpac.txt'
+printf,1,polamp_data
+printf,1,polamp_data_min
+printf,1,polamp_data_max
+close,1
+;stop
+endif
+
+
+;if (rem_swpac eq 0) then begin
+close,1
+openr,1,'swpac.txt'
+readf,1,polamp_data_swpac
+readf,1,polamp_data_min_swpac
+readf,1,polamp_data_max_swpac
+close,1
+;endif
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2447,19 +2494,12 @@ endif ; end make map plots
 
 if (make_gmt_plots eq 1) then begin
 
-ntimeh=ntime+2
-
 timnameslongh=strarr(ntimeh)
 timnameslongh(0:2)=timnameslong(*)
 timnameslongh(3:4)=['Historical','post-1975']
 
 label_t=strarr(ntimeh)
 label_t(*)=['(a)','(b)','(c)','(d)','(e)']
-
-nmodh=intarr(ntimeh)
-nmodh(0:2)=nmod(*)
-nmodh(3:4)=42
-nmodmaxh=max(nmodh)
 
 pmip4h=intarr(ntimeh,nmodmaxh)
 pmip4h(0,0:nmodh(0)-1)=pmip4(0,0:nmod(0)-1)
@@ -2478,6 +2518,8 @@ modnamesh=strarr(ntimeh,nmodmaxh)
 modnamesh(0:2,0:nmodmax-1)=modnames(*,*)
 modnamesh(3,0:nmodh(3)-1)=['ACCESS-CM2','ACCESS-ESM1-5','AWI-CM-1-1-MR','BCC-CSM2-MR','BCC-ESM1','CAMS-CSM1-0','CAS-ESM2-0','CESM2','CESM2-FV2','CESM2-WACCM','CESM2-WACCM-FV2','CMCC-CM2-SR5','CNRM-CM6-1','CNRM-CM6-1-HR','CNRM-ESM2-1','CanESM5','E3SM-1-0','EC-Earth3-Veg','FGOALS-f3-L','FGOALS-g3','GISS-E2-1-G','GISS-E2-1-H','HadGEM3-GC31-LL','HadGEM3-GC31-MM','INM-CM4-8','INM-CM5-0','IPSL-CM6A-LR','KACE-1-0-G','MCM-UA-1-0','MIROC-ES2L','MIROC6','MPI-ESM-1-2-HAM','MPI-ESM1-2-HR','MPI-ESM1-2-LR','MRI-ESM2-0','NESM3','NorCPM1','NorESM2-LM','NorESM2-MM','SAM0-UNICON','TaiESM1','UKESM1-0-LL']
 modnamesh(4,0:nmodh(4)-1)=modnamesh(3,0:nmodh(3)-1)
+modnameslatex(3,0:nmodh(3)-1)=modnamesh(3,0:nmodh(3)-1)
+modnameslatex(4,0:nmodh(4)-1)=modnamesh(4,0:nmodh(4)-1)
 
 
 ecsh=fltarr(ntimeh,nmodmaxh)
@@ -3137,13 +3179,13 @@ my_ytit(*)=['polar amplification [!Eo!NC]','land-sea warming contrast [!Eo!NC]',
 do_leg=intarr(npolamp)
 do_leg(0:npolamp-1)=[1,0,0]
 
-nplot=intarr(npolamp)
-nplot(*)=[3,3,3]
-nmaxplot=max(nplot)
-ord_gmt=intarr(npolamp,nmaxplot)
-ord_gmt(0,*)=[1,0,2]
-ord_gmt(1,*)=[1,0,2]
-ord_gmt(2,*)=[1,0,2]
+nplotp=intarr(npolamp)
+nplotp(*)=[3,3,3]
+nmaxplotp=max(nplotp)
+ord_gmtp=intarr(npolamp,nmaxplotp)
+ord_gmtp(0,*)=[1,0,2]
+ord_gmtp(1,*)=[1,0,2]
+ord_gmtp(2,*)=[1,0,2]
 
 npp=2
 ppname=strarr(npp)
@@ -3163,16 +3205,16 @@ print,my_filename
 device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica',xsize=my_xsize(g),ysize=20
 
 
-for xx=0,nplot(g)-1 do begin
+for xx=0,nplotp(g)-1 do begin
 
 
 ; axes and legend etc:
 
-ttt=where(ord_gmt(g,*) eq xx)
+ttt=where(ord_gmtp(g,*) eq xx)
 t=ttt(0)
 
 shiftright=1
-ttt=where(ord_gmt(g,*) eq shiftright)
+ttt=where(ord_gmtp(g,*) eq shiftright)
 tp=ttt(0)
 
 if (xx eq 0) then this_title=varnametitle(v)+' '+my_ytit(g)
@@ -3225,6 +3267,7 @@ if (do_leg(g) eq 1) then begin
 ;box:
 oplot,[0.53,1.45,1.45,0.53,0.53]+shiftright,[boxb,boxb,boxt+starty*delys/scalefacty,boxt+starty*delys/scalefacty,boxb]*scalefacty+ylim_polamp_6(tp,0,g,v),color=0,thick=0.5,/noclip
 
+;proxies legend
 if (do_dots eq 1) then begin
 plots,startx,oy+delyl,psym=8,symsize=my_siz(g),color=0
 endif
@@ -3232,6 +3275,7 @@ oplot,[startx,startx],[oy+delyl+obsl,oy+delyl-obsl],thick=obs_thick
 oplot,[startx-my_del2,startx+my_del2],[oy+delyl-obsl,oy+delyl-obsl],thick=obs_thick
 oplot,[startx-my_del2,startx+my_del2],[oy+delyl+obsl,oy+delyl+obsl],thick=obs_thick
 
+; high or low ECS models dots legend
 plots,startx,oy-delys*5,psym=8,symsize=my_siz(g),color=250
 plots,startx,oy-delys*6,psym=8,symsize=my_siz(g),color=254
 
@@ -3285,6 +3329,17 @@ oplot,[my_xposp(xx),my_xposp(xx)],[polamp_data_min(t,v,g),polamp_data_max(t,v,g)
 oplot,[my_xposp(xx)-my_del2,my_xposp(xx)+my_del2],[polamp_data_min(t,v,g),polamp_data_min(t,v,g)],thick=obs_thick
 oplot,[my_xposp(xx)-my_del2,my_xposp(xx)+my_del2],[polamp_data_max(t,v,g),polamp_data_max(t,v,g)],thick=obs_thick
 
+; plot likely range (no swpac, only for EECO)
+if (t eq 2) then begin
+USERSYM, COS(Aaa), SIN(Aaa)
+if (do_dots eq 1) then begin
+plots,my_xposp(xx),polamp_data_swpac(t,v,g),psym=8,symsize=my_siz(g)
+endif
+oplot,[my_xposp(xx),my_xposp(xx)],[polamp_data_min_swpac(t,v,g),polamp_data_max_swpac(t,v,g)],thick=obs_thick,linestyle=1
+oplot,[my_xposp(xx)-my_del2,my_xposp(xx)+my_del2],[polamp_data_min_swpac(t,v,g),polamp_data_min_swpac(t,v,g)],thick=obs_thick,linestyle=1
+oplot,[my_xposp(xx)-my_del2,my_xposp(xx)+my_del2],[polamp_data_max_swpac(t,v,g),polamp_data_max_swpac(t,v,g)],thick=obs_thick,linestyle=1
+endif
+
 ; plot multi-model mean
 
 ; pmip4
@@ -3300,6 +3355,7 @@ plots,my_xposp(xx)+0.2,polamp_model_mean(t,v,g,1),psym=8,symsize=my_siz(g)/2.0,c
 
 if (pp eq 1) then begin
 ; true model mean (just for pmip4)
+oplot,[my_xposp(xx)+0.2,my_xposm(xx)-0.18],[polamp_model_mean(t,v,g,0),polamp_tmodel_mean(t,v,g,0)],color=my_130,linestyle=1
 plots,my_xposm(xx)-0.18,polamp_tmodel_mean(t,v,g,0),psym=2,symsize=my_siz(g),color=130,thick=3
 endif
 
@@ -3372,8 +3428,10 @@ endif
 if (p eq 1) then begin
 ; plot line around model at proxy locations
 if (pmip4(t,m) eq 1 and plot_zon(t,m)) then begin
+if (mod_circ eq 1) then begin
 USERSYM, COS(Aaa), SIN(Aaa)
 plots,my_xposm(xx)+my_delt,polamp_model(m,t,v,g),psym=my_sym,symsize=my_siz(g),color=0,thick=my_thick,NOCLIP=0 ; for extra black circle around model points
+endif
 ; plot model names
 if (plot_names_gmt eq 1) then begin
 xyouts,my_xposm(xx)+0.1+my_delt,polamp_model(m,t,v,g),modnamesh(t,m),size=0.5
@@ -3416,7 +3474,6 @@ endif ; end if make_polamp
 
 if (make_cross_plots eq 1) then begin
 
-ncross=2
 crossnames=strarr(ncross)
 crossnames(*)=['gmst-pol','gmst-lsc']
 
@@ -3435,20 +3492,6 @@ crossxtitle=strarr(ncross)
 crossxtitle(0:ncross-1)=['Delta-GMST [!Eo!NC]','Delta-GMST [!Eo!NC]']
 crossytitle=strarr(ncross)
 crossytitle(0:ncross-1)=['Polar amplification [!Eo!NC]','Land-sea warming contrast [!Eo!NC]']
-swpol=fltarr(ncross)
-swpolmin=fltarr(ncross)
-swpolmax=fltarr(ncross)
-
-print,'HARD_WIRED VALUES FOR SWPAC (run with rem_swpac=1):'
-print,polamp_data(2,1,0),polamp_data(2,0,1)
-print,polamp_data_min(2,1,0),polamp_data_min(2,0,1)
-print,polamp_data_max(2,1,0),polamp_data_max(2,0,1)
-
-;;;;;;;;;
-swpol(*)=[4.54296,1.19817]
-swpolmin(*)=[1.75341,-0.0313826]
-swpolmax(*)=[7.13771,2.75465]
-;;;;;;;;;
 
 ss1=2.5
 ss2=1.5
@@ -3464,10 +3507,7 @@ device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica',xsize
 plot,[0,0],[0,0],color=0,psym=8,xrange=crossxrange(*,c),yrange=crossyrange(*,c),ystyle=1,xstyle=1,title=crosstitle(c),xtitle=crossxtitle(c),ytitle=crossytitle(c),/nodata,xcharsize=1.2,ycharsize=1.2,charsize=1.7,xticks=8;,position=[0.05,0.05,0.95,0.95] 
 
 
-;tvlct,r_0,g_0,b_0
-tvlct,r_39,g_39,b_39
-Aaa = FINDGEN(17) * (!PI*2/16.)  
-USERSYM, COS(Aaa), SIN(Aaa), /FILL 
+
 
 ; if we have reversed the LGM to be positive, we want to re-reverse this back to
 ; negative for this plot.
@@ -3475,26 +3515,34 @@ USERSYM, COS(Aaa), SIN(Aaa), /FILL
 ; plot proxies
 for t=0,ntime-1 do begin
 
+tvlct,r_39,g_39,b_39
+Aaa = FINDGEN(17) * (!PI*2/16.)  
+USERSYM, COS(Aaa), SIN(Aaa), /FILL 
+
 plots,ass_c(t),polamp_data(t,(1-c),c)*fact_mod_sign(t),color=timcol(t),psym=8,symsize=ss1
 oplot,[ass_vlik(t,0),ass_vlik(t,1)],[polamp_data(t,(1-c),c),polamp_data(t,(1-c),c)]*fact_mod_sign(t),color=timcol(t)
 oplot,[ass_c(t),ass_c(t)],[polamp_data_min(t,(1-c),c),polamp_data_max(t,(1-c),c)]*fact_mod_sign(t),color=timcol(t)
+USERSYM, COS(Aaa), SIN(Aaa)
+plots,ass_c(t),polamp_data(t,(1-c),c)*fact_mod_sign(t),color=0,psym=8,symsize=ss1
 
 endfor
 
 ; plot the PI
-plots,0,0,color=0,psym=2,symsize=ss1
+sss=1.0*sqrt(!pi/4.0)
+USERSYM, [-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss], /FILL
+plots,0,0,color=0,psym=8,symsize=ss1
 
 ; plot models
 for t=0,ntime-1 do begin
 
 thesem=where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1)
 
+; site-specific models
 USERSYM, COS(Aaa), SIN(Aaa), /FILL 
 plots,mod_gmt(thesem,t,0),polamp_model(thesem,t,(1-c),c)*fact_mod_sign(t),psym=8,symsize=ss2,color=timcol(t)
 
-sss=1.0*sqrt(!pi/4.0)
-USERSYM, [-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss];, /FILL
-plots,mod_gmt(thesem,t,0),polamp_tmodel(thesem,t,(1-c),c)*fact_mod_sign(t),psym=8,symsize=ss2,color=timcol(t)
+; "true" models
+plots,mod_gmt(thesem,t,0),polamp_tmodel(thesem,t,(1-c),c)*fact_mod_sign(t),psym=2,symsize=ss2,color=timcol(t)
 
 endfor
 
@@ -3504,9 +3552,17 @@ endfor
 Aaa = FINDGEN(17) * (!PI*2/16.)  
 USERSYM, COS(Aaa), SIN(Aaa)
 t=2
-plots,ass_c(t),swpol(c)*fact_mod_sign(t),psym=8,symsize=ss1,color=timcol(t)
-oplot,[ass_vlik(t,0),ass_vlik(t,1)],[swpol(c),swpol(c)]*fact_mod_sign(t),color=timcol(t)
-oplot,[ass_c(t),ass_c(t)],[swpolmin(c),swpolmax(c)]*fact_mod_sign(t),color=timcol(t)
+if (c eq 0) then begin
+vvv=1 ; SST for polamp
+ppp=0 ; polamp
+endif
+if (c eq 1) then begin
+vvv=0 ; SAT for LSC
+ppp=1 ; LSC
+endif
+plots,ass_c(t),polamp_data_swpac(t,vvv,ppp)*fact_mod_sign(t),psym=8,symsize=ss1,color=timcol(t)
+oplot,[ass_vlik(t,0),ass_vlik(t,1)],[polamp_data_swpac(t,vvv,ppp),polamp_data_swpac(t,vvv,ppp)]*fact_mod_sign(t),color=timcol(t)
+oplot,[ass_c(t),ass_c(t)],[polamp_data_min_swpac(t,vvv,ppp),polamp_data_max_swpac(t,vvv,ppp)]*fact_mod_sign(t),color=timcol(t)
 
 
 tvlct,r_0,g_0,b_0
@@ -3542,26 +3598,30 @@ oplot,[bxs,bxf,bxf,bxs,bxs],[byf,byf,bys,bys,byf],linestyle=0,thick=3,color=0
 
 Aaa = FINDGEN(17) * (!PI*2/16.)  
 
+tvlct,r_0,g_0,b_0
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
+plots,bxs+bxp,byf-1*byp,color=150,psym=8,symsize=ss1
+USERSYM, COS(Aaa), SIN(Aaa)
 plots,bxs+bxp,byf-1*byp,color=0,psym=8,symsize=ss1
 xyouts,bxs+bxp+bxt,byf-byt-1*byp,'site-specific metric from proxies',color=0,charsize=charsize_cross_leg
 
 USERSYM, COS(Aaa), SIN(Aaa)
 plots,bxs+bxp,byf-2*byp,color=0,psym=8,symsize=ss1
 xyouts,bxs+bxp+bxt,byf-byt-2*byp,'site-specific metric from proxies',color=0,charsize=charsize_cross_leg
-xyouts,bxs+bxp+bxt,byf-byt-3*byp,'(No SW Pacific)',color=0,charsize=charsize_cross_leg
+xyouts,bxs+bxp+bxt,byf-byt-3*byp,'(EECO, no SW Pacific)',color=0,charsize=charsize_cross_leg
 
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
-plots,bxs+bxp,byf-4*byp,color=0,psym=8,symsize=ss2
+plots,bxs+bxp,byf-4*byp,color=150,psym=8,symsize=ss2
 xyouts,bxs+bxp+bxt,byf-byt-4*byp,'site-specific metric from models',color=0,charsize=charsize_cross_leg
 
-sss=1.0*sqrt(!pi/4.0)
-USERSYM, [-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss];, /FILL
-plots,bxs+bxp,byf-5*byp,color=0,psym=8,symsize=ss2
+
+plots,bxs+bxp,byf-5*byp,color=0,psym=2,symsize=ss2
 xyouts,bxs+bxp+bxt,byf-byt-5*byp,'true metric from models',color=0,charsize=charsize_cross_leg
 
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
-plots,bxs+bxp,byf-6*byp,color=0,psym=2,symsize=ss1
+sss=1.0*sqrt(!pi/4.0)
+USERSYM, [-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss], /FILL
+plots,bxs+bxp,byf-6*byp,color=0,psym=8,symsize=ss1
 xyouts,bxs+bxp+bxt,byf-byt-6*byp,'preindustrial',color=0,charsize=charsize_cross_leg
 
 tvlct,r_39,g_39,b_39
@@ -3681,22 +3741,58 @@ endif
 
 if (make_latex eq 1) then begin
 
-print,''
-print,'LATEX TABLE:'
-print,''
-print,'Model name & Time Period & Model generation & ECS \\'
-print,'\hline'
-for t=0,ntime-1 do begin
-for m=0,nmod(t)-1 do begin
-print,modnameslatex(t,m),timnameslong(t),pmip4name(pmip4(t,m)),high_ecs_name(high_ecs(t,m)+1),' \\',FORMAT = '(A, " & ",2(A, " & "),A,A)'
+close,1
+openw,1,'latex_tables.txt'
+
+for xx=0,nplot(5)-1 do begin
+ttt=where(ord_gmt(5,*) eq xx)
+t=ttt(0)
+
+printf,1,''
+printf,1,'\begin{table*}[t]'
+printf,1,'\caption{Summary of the '+strtrim(timnameslongh(t),2)+' model simulations used in the main paper.}'
+printf,1,'\begin{tabularx}{\textwidth}{l|lll}'
+printf,1,'Model name & Model generation & ECS & GMST \\'
+printf,1,'\hline'
+
+print,'xx =',xx
+print,'t =',t
+
+if (t eq 1) then begin
+sorted=sort(modh_gmt_flex(0:nmodh(t)-1,t,0))
+endif
+if (t ne 1) then begin
+sorted=reverse(sort(modh_gmt_flex(0:nmodh(t)-1,t,0)))
+endif
+
+
+for p=0,2 do begin
+
+nnn=where(pmip4l(t,0:nmodh(t)-1) eq p,count)
+
+for m=0,nmodh(t)-1 do begin
+if(existh(t,sorted(m)) eq 1 and pmip4l(t,sorted(m)) eq p) then begin
+printf,1,modnameslatex(t,sorted(m)),pmip4lname(pmip4l(t,sorted(m))),high_ecs_name(high_ecs(t,sorted(m))+1),modh_gmt_flex(sorted(m),t,0),' \\',FORMAT = '(A, " & ",2(A, " & "),F6.2,A)'
+endif
 endfor
-if (t ne ntime-1) then print,'\hline'
+
+if (count ne 0) then begin
+printf,1,'\hline'
+endif
+
+endfor ; end p
+
+printf,1,'\end{tabularx}'
+printf,1,'\label{tab:mods'+strtrim(t,2)+'}'
+printf,1,'\end{table*}'
+
 endfor
-print,'\hline'
+
+close,1
 
 endif
 
-stop
+
 
 
 if (make_text eq 1) then begin
@@ -3714,7 +3810,6 @@ printf,1,'ensemble mean: ',mean(mod_gmt(where(pmip4(t,0:nmod(t)-1) eq 1),t,0))
 printf,1,'ensemble std: ',stddev(mod_gmt(where(pmip4(t,0:nmod(t)-1) eq 1),t,0))
 printf,1,'!!!!!!'
 endfor
-
 
 close,1
 openw,1,'temp_sstzonmean_models.txt'

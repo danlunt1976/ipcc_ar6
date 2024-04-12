@@ -7,6 +7,7 @@
 \usepackage{color}
 \usepackage{pdflscape}
 
+\usepackage[absolute,overlay]{textpos}
 
 
 % Page setup
@@ -37,9 +38,16 @@
 
 \begin{document}
 
-
 \begin{figure}[!h]
 \centering
+
+\begin{textblock*}{10cm}(2cm,3.5cm) % {block width} (coords) 
+Surface Air Temperature (SAT)
+\end{textblock*}
+
+\begin{textblock*}{10cm}(10.3cm,3.5cm) % {block width} (coords) 
+Sea Surface Temperature (SST)
+\end{textblock*}
 
 \subfigure[]{
 \begin{minipage}[b]{0.49\textwidth}
