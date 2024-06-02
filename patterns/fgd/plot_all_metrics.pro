@@ -33,8 +33,8 @@ make_zon_plots=0 ; plot zonal mean ensemble mean [default=0 or 1]
 make_map_plots=0 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
 make_gmt_plots=1                ; plot gmst [default=0 or 1]
-make_polamp_plots=1               ; plot polamp [default=0 or 1]
-make_cross_plots=1
+make_polamp_plots=0               ; plot polamp [default=0 or 1]
+make_cross_plots=0
 make_cleat_plots=0
 make_text=0
 make_latex=0
@@ -135,6 +135,9 @@ name_sign(1)='_-1'
 ;make_zon_plots=0
 ;make_gmt_plots=0
 endif
+fact_mod_signh=fltarr(ntimeh)
+fact_mod_signh[0:2]=fact_mod_sign(*)
+fact_mod_signh[3:4]=[1,1]
 
 
 ; ** change ntime
@@ -2707,7 +2710,10 @@ tvlct,r_39,g_39,b_39
 
 ngmt=8
 gmtname=strarr(ngmt)
-gmtname(*)=['a','b','c','d','e','f','g','h'] ; f is the current "best" (g eq 5)
+gmtname(*)=['a','b','c','d','e','f','g','h'] 
+; f is the previous "best" (g eq 5)
+; g is the new best (g eq 6)
+; h is for supp info (g eq 7)
 my_siz=fltarr(ngmt)
 my_siz(*)=[0.5,2,2,2,2,2,2,2]
 my_xsize=fltarr(ngmt)
@@ -2761,9 +2767,16 @@ ttt=where(ord_gmt(g,*) eq xx)
 t=ttt(0)
 
 shiftright=0 ; legend in first box
+shiftright2=4
 ;shiftright=1 ; legend in second box
 ttt=where(ord_gmt(g,*) eq shiftright)
+ttt2=where(ord_gmt(g,*) eq shiftright2)
 tp=ttt(0)
+tp2=ttt2(0)
+
+scalefacty=(ylim_gmt_4(tp,1)-ylim_gmt_4(tp,0))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0))
+scalefacty2=(ylim_gmt_4(tp2,1)-ylim_gmt_4(tp2,0))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0))
+scalefactyall=(ylim_gmt_4(t,1)-ylim_gmt_4(t,0))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0))
 
 ; axes and legend etc:
 if (g gt 0) then begin
@@ -2777,6 +2790,8 @@ endif
 if (g eq 5 or g eq 6 or g eq 7) then begin
 plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_gmt_4(t,*),color=0,ytitle=this_title,/nodata,xcharsize=1,ycharsize=1,charsize=2.5,xstyle=1,ystyle=1,xticks=1,xtickname=['',''],XTickformat='(A1)',title=label_t(xx)+' '+timnameslongh(t)
 endif
+
+
 
 ; plot legend:
 
@@ -2792,8 +2807,6 @@ delx=0.1
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
 
 ; these scale:
-scalefacty=(ylim_gmt_4(tp,1)-ylim_gmt_4(tp,0))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0))
-
 delyl=0.04*scalefacty ; shift up for observation legend
 obsl=0.04*scalefacty ; length of obs legend in y 
 delys=0.05*scalefacty ; shift down for each part of legend
@@ -2833,6 +2846,51 @@ plots,startx,oy-delys*2,psym=8,symsize=my_siz(g),color=0
 plots,startx,oy-delys*3,psym=8,symsize=my_siz(g)/2.0,color=0
 
 endif ; xx eq 0
+
+if (g eq 6) then begin
+if (xx eq shiftright2) then begin
+tvlct,r_39,g_39,b_39
+tvlct,250,0,0,250 ; red
+
+startx=0.65+shiftright2
+starty=-4 ; number of added things to legend
+delx=0.1
+; circles:
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+
+; these scale:
+delyl=0.04*scalefacty2 ; shift up for observation legend
+obsl=0.04*scalefacty2 ; length of obs legend in y 
+delys=0.05*scalefacty2 ; shift down for each part of legend
+delyc=0.01*scalefacty2 ; shift up for caption
+oy=(0.3+starty*delys/scalefacty2)*scalefacty2 ; start point for y
+
+;box:
+oplot,[0.53,1.45,1.45,0.53,0.53]+shiftright2,[0.02,0.02,0.41+starty*delys/scalefacty2,0.41+starty*delys/scalefacty2,0.02]*scalefacty2+ylim_gmt_4(tp2,0),color=0,thick=0.5,/noclip
+
+
+
+sss=1.0*sqrt(!pi/4.0)
+USERSYM, [-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss], /FILL
+plots,startx,oy-delys*(-1),psym=8,symsize=my_siz(g),color=250
+plots,startx,oy-delys*(-1),psym=6,symsize=0.5,color=0,NOCLIP = 0
+
+tvlct,r_0,g_0,b_0
+aaaa=sqrt(4*!pi/sqrt(3))
+uuu=aaaa/2.0
+vvv=aaaa/sqrt(3)
+www=aaaa/(2.0*sqrt(3))
+USERSYM, [0,uuu,-uuu,0], [vvv,-www,-www,vvv], /FILL
+plots,startx,oy-delys*1,psym=8,symsize=my_siz(g),color=200
+plots,startx,oy-delys*1,psym=5,symsize=0.5,color=0,NOCLIP = 0
+
+xyouts,startx+delx,oy-delyc-delys*(-1),'CESM2',size=0.9
+xyouts,startx+delx,oy-delyc-delys*1,'CESM1.2',size=0.9
+
+
+
+endif ; xx eq 0
+endif ; g eq 6
 
 endif; g ne 0
 
@@ -2897,6 +2955,9 @@ for p=0,1 do begin
 
 for m=0,nmodh(t)-1 do begin
 
+;;;;  I AM HERE!!!
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+
 if (existh(t,m) eq 1) then begin
 
 if (high_ecs(t,m) eq 0) then begin
@@ -2923,19 +2984,36 @@ my_thick=0.5
 my_delt=-0.18
 endif
 
+if (g eq 6) then begin
+if (modnamesh(t,m) eq 'CESM2' or modnamesh(t,m) eq 'CESM2.0' or modnamesh(t,m) eq 'CESM2_1' or modnamesh(t,m) eq 'CESM2.1slab_3x') then begin
+sss=1.0*sqrt(!pi/4.0)
+USERSYM, [-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss], /FILL
+my_sym=8
+endif
+if (modnamesh(t,m) eq 'CESM1.2' or modnamesh(t,m) eq 'CESM1_2' or modnamesh(t,m) eq '' or modnamesh(t,m) eq 'CESM1.2_CAM5-deepmip_stand_6xCO2') then begin
+aaaa=sqrt(4*!pi/sqrt(3))
+uuu=aaaa/2.0
+vvv=aaaa/sqrt(3)
+www=aaaa/(2.0*sqrt(3))
+USERSYM, [0,uuu,-uuu,0], [vvv,-www,-www,vvv], /FILL
+my_sym=8
+endif
+endif
+
+
 
 if (p eq 0) then begin
-USERSYM, COS(Aaa), SIN(Aaa), /FILL
+;USERSYM, COS(Aaa), SIN(Aaa), /FILL
 if (pmip4h(t,m) eq 1) then begin
 plots,my_xposm(xx)+my_delt,modh_gmt_flex(m,t,0),psym=my_sym,symsize=my_siz(g),color=my_col,NOCLIP = 0
 endif
 endif
 
 if (p eq 1) then begin
-USERSYM, COS(Aaa), SIN(Aaa)
 ;plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g),color=0,thick=my_thick,NOCLIP=0 ; for extra blak circle around model points
 if (do_tcheck eq 1) then begin
 if (pmip4h(t,m) eq 1) then begin
+USERSYM, COS(Aaa), SIN(Aaa)
 plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g)/2.0,color=0,NOCLIP = 0 ; plot thorsten's original model output
 endif
 endif
@@ -2953,19 +3031,26 @@ endif
 endif
 
 if (g eq 6) then begin
-tvlct,r_39,g_39,b_39
+
 if (modnamesh(t,m) eq 'CESM2' or modnamesh(t,m) eq 'CESM2.0' or modnamesh(t,m) eq 'CESM2_1' or modnamesh(t,m) eq 'CESM2.1slab_3x') then begin
-xyouts,my_xposm(xx)+0.1+my_delt,modh_gmt_flex(m,t,0),'CESM2',size=1,color=100
+;tvlct,r_39,g_39,b_39
+;xyouts,my_xposm(xx)+0.1+my_delt,modh_gmt_flex(m,t,0)+0.05*scalefactyall*fact_mod_signh(t),'CESM2',size=0.7
+;tvlct,r_0,g_0,b_0
+;oplot,[my_xposm(xx)+my_delt,my_xposm(xx)+0.1+my_delt],[modh_gmt_flex(m,t,0),modh_gmt_flex(m,t,0)+0.05*scalefactyall*fact_mod_signh(t)]
+plots,my_xposm(xx)+my_delt,modh_gmt_flex(m,t,0),psym=6,symsize=0.5,color=0,NOCLIP = 0
 endif
 if (modnamesh(t,m) eq 'CESM1.2' or modnamesh(t,m) eq 'CESM1_2' or modnamesh(t,m) eq '' or modnamesh(t,m) eq 'CESM1.2_CAM5-deepmip_stand_6xCO2') then begin
-xyouts,my_xposm(xx)+0.1+my_delt,modh_gmt_flex(m,t,0),'CESM1.2',size=1,color=200
+;xyouts,my_xposm(xx)+0.1+my_delt,modh_gmt_flex(m,t,0)+0.05*scalefactyall*fact_mod_signh(t),'CESM1.2',size=0.7
+;oplot,[my_xposm(xx)+my_delt,my_xposm(xx)+0.1+my_delt],[modh_gmt_flex(m,t,0),modh_gmt_flex(m,t,0)+0.05*scalefactyall*fact_mod_signh(t)]
+plots,my_xposm(xx)+my_delt,modh_gmt_flex(m,t,0),psym=5,symsize=0.5,color=0,NOCLIP = 0
 endif
-tvlct,r_0,g_0,b_0
+
 endif
 
 if (g eq 7) then begin
-tvlct,r_39,g_39,b_39
-xyouts,my_xposm(xx)+0.1+my_delt,modh_gmt_flex(m,t,0),modnamesh(t,m),size=0.5,color=200
+if (pmip4h(t,m) eq 1) then begin
+xyouts,my_xposm(xx)+0.1+my_delt,modh_gmt_flex(m,t,0),modnamesh(t,m),size=0.4,color=0
+endif
 tvlct,r_0,g_0,b_0
 endif
 
@@ -3217,6 +3302,8 @@ shiftright=1
 ttt=where(ord_gmtp(g,*) eq shiftright)
 tp=ttt(0)
 
+scalefacty=(ylim_polamp_6(tp,1,g,v)-ylim_polamp_6(tp,0,g,v))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0))
+
 if (xx eq 0) then this_title=varnametitle(v)+' '+my_ytit(g)
 if (xx gt 0) then this_title=''
 
@@ -3252,8 +3339,6 @@ delx=0.1
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
 
 ; these scale:
-scalefacty=(ylim_polamp_6(tp,1,g,v)-ylim_polamp_6(tp,0,g,v))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0))
-
 delyl=0.04*scalefacty ; shift up for observation legend
 obsl=0.04*scalefacty ; length of obs legend in y 
 delys=0.05*scalefacty ; shift down for each part of legend
