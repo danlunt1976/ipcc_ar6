@@ -39,7 +39,7 @@ make_cleat_plots=0
 make_text=0
 make_latex=0
 make_qa=0
-rev_lgm=1 ; re-reverse LGM [default=0;=1 for TS]
+rev_lgm=0 ; re-reverse LGM [default=0;=1 for TS]
 all_proxies=0 ; plot all proxies [default=0;=1 for TS]
 make_nodata=0 ; plot maps without data [default=0;=1 for TS version B]
 latlonlabels=0 ; label lats/lons [default=0;=1 for TS]
@@ -2501,6 +2501,10 @@ timnameslongh=strarr(ntimeh)
 timnameslongh(0:2)=timnameslong(*)
 timnameslongh(3:4)=['Historical','post-1975']
 
+timnameslonghng=strarr(ntimeh)
+timnameslonghng(0:2)=['mid-Pliocene Warm Period','Last Glacial Maximum','early Eocene']
+timnameslonghng(3:4)=['Historical','post-1975']
+
 label_t=strarr(ntimeh)
 label_t(*)=['(a)','(b)','(c)','(d)','(e)']
 
@@ -2708,19 +2712,20 @@ tvlct,r_39,g_39,b_39
 
 ;;;;;;;;;;;;;;;;;;;;;;
 
-ngmt=8
+ngmt=9
 gmtname=strarr(ngmt)
-gmtname(*)=['a','b','c','d','e','f','g','h'] 
+gmtname(*)=['a','b','c','d','e','f','g','h','i'] 
 ; f is the previous "best" (g eq 5)
 ; g is the new best (g eq 6)
 ; h is for supp info (g eq 7)
+; i is for NG
 my_siz=fltarr(ngmt)
-my_siz(*)=[0.5,2,2,2,2,2,2,2]
+my_siz(*)=[0.5,2,2,2,2,2,2,2,2]
 my_xsize=fltarr(ngmt)
-my_xsize(*)=[10,24,24,30,30,30,30,30]
+my_xsize(*)=[10,24,24,30,30,30,30,30,20]
 
 nplot=intarr(ngmt)
-nplot(*)=[3,4,4,5,5,5,5,5]
+nplot(*)=[3,4,4,5,5,5,5,5,3]
 nmaxplot=max(nplot)
 ord_gmt=intarr(ngmt,nmaxplot)
 ord_gmt(0,*)=[0,1,2,-1,-1]
@@ -2732,6 +2737,7 @@ ord_gmt(4,*)=[3,2,4,0,1]
 ord_gmt(5,*)=[3,2,4,1,0] ; post-1975 first
 ord_gmt(6,*)=[3,2,4,1,0] ; post-1975 first
 ord_gmt(7,*)=[3,2,4,1,0] ; post-1975 first
+ord_gmt(8,*)=[1,0,2,-1,-1]
 
 
 
@@ -2748,6 +2754,10 @@ endif
 if (g eq 3 or g eq 4 or g eq 5 or g eq 6 or g eq 7) then begin
 !X.MARGIN=[10,0]*0.8
 !P.MULTI = [0, 5, 1]
+endif
+if (g eq 8) then begin
+!X.MARGIN=[12,3]*0.8
+!P.MULTI = [0, 3, 1]
 endif
 
 my_filename='gmt_ecs_all_new_metrics_'+gmtname(g)
@@ -2778,6 +2788,7 @@ scalefacty=(ylim_gmt_4(tp,1)-ylim_gmt_4(tp,0))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0))
 scalefacty2=(ylim_gmt_4(tp2,1)-ylim_gmt_4(tp2,0))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0))
 scalefactyall=(ylim_gmt_4(t,1)-ylim_gmt_4(t,0))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0))
 
+
 ; axes and legend etc:
 if (g gt 0) then begin
 
@@ -2790,7 +2801,26 @@ endif
 if (g eq 5 or g eq 6 or g eq 7) then begin
 plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_gmt_4(t,*),color=0,ytitle=this_title,/nodata,xcharsize=1,ycharsize=1,charsize=2.5,xstyle=1,ystyle=1,xticks=1,xtickname=['',''],XTickformat='(A1)',title=label_t(xx)+' '+timnameslongh(t)
 endif
+if (g eq 8) then begin
+plot,[0,0],[0,0],xrange=[0.5+xx,1.5+xx],yrange=ylim_gmt_4(t,*),color=0,ytitle=this_title,/nodata,xcharsize=1,ycharsize=1.5,charsize=1.7,xstyle=1,ystyle=1,xticks=1,xtickname=['',''],XTickformat='(A1)',title=timnameslonghng(t)
+endif
 
+
+if (g eq 8) then begin
+tvlct,r_39,g_39,b_39
+tvlct,255,182,193,250 ; LightPink
+tvlct,176,226,255,254 ; LightSkyBlue1
+
+myind=1-(1+fact_mod_sign(t))/2
+llp=ass_vlik(t,myind) 
+polyfill,[-0.5,0.5,0.5,-0.5,-0.5]+my_xpos(xx),[llp,llp,0,0,llp],color=254
+
+myind=(1+fact_mod_sign(t))/2
+llp=ass_vlik(t,myind) 
+polyfill,[-0.5,0.5,0.5,-0.5,-0.5]+my_xpos(xx),[llp,llp,ylim_gmt_4(t,1),ylim_gmt_4(t,1),llp],color=250
+
+tvlct,r_39,g_39,b_39
+endif
 
 
 ; plot legend:
@@ -2803,6 +2833,7 @@ tvlct,0,0,250,254 ; blue
 startx=0.65+shiftright
 starty=1 ; number of added things to legend
 delx=0.1
+delx2=0.15
 ; circles:
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
 
@@ -2814,6 +2845,10 @@ delyc=0.01*scalefacty ; shift up for caption
 oy=(0.3+starty*delys/scalefacty)*scalefacty ; start point for y
 
 ;box:
+if (g eq 8) then begin
+polyfill,[0.53,1.45,1.45,0.53,0.53]+shiftright,[0.02,0.02,0.41+starty*delys/scalefacty,0.41+starty*delys/scalefacty,0.02]*scalefacty+ylim_gmt_4(tp,0),color=255
+endif
+
 oplot,[0.53,1.45,1.45,0.53,0.53]+shiftright,[0.02,0.02,0.41+starty*delys/scalefacty,0.41+starty*delys/scalefacty,0.02]*scalefacty+ylim_gmt_4(tp,0),color=0,thick=0.5,/noclip
 
 if (do_dots eq 1) then begin
@@ -2823,16 +2858,32 @@ oplot,[startx,startx],[oy+delyl+obsl,oy+delyl-obsl],thick=obs_thick
 oplot,[startx-my_del2,startx+my_del2],[oy+delyl-obsl,oy+delyl-obsl],thick=obs_thick
 oplot,[startx-my_del2,startx+my_del2],[oy+delyl+obsl,oy+delyl+obsl],thick=obs_thick
 
+
+if (g ne 8) then begin
 plots,startx,oy-delys*5,psym=8,symsize=my_siz(g),color=250
 plots,startx,oy-delys*6,psym=8,symsize=my_siz(g),color=254
-
 xyouts,startx+delx,oy-delyc+delyl,'observations',size=0.9
 xyouts,startx,oy-delyc-delys*1,'models:',size=0.9
 xyouts,startx+delx,oy-delyc-delys*5,'ECS>5.0',size=0.9
 xyouts,startx+delx,oy-delyc-delys*6,'ECS<2.0',size=0.9
+endif
+
+
+if (g eq 8) then begin
+tvlct,r_0,g_0,b_0
+xyouts,startx+delx2,oy-delyc+delyl,'IODP-informed',size=0.9
+xyouts,startx+delx2,oy-delyc,'observations',size=0.9
+
+plots,startx,oy-delys*4,psym=8,symsize=my_siz(g),color=200
+xyouts,startx+delx2,oy-delyc-delys*4,'Climate Models',size=0.9
+
+endif
+
+
 
 tvlct,r_0,g_0,b_0
 
+if (g ne 8) then begin
 plots,startx,oy-delys*2,psym=8,symsize=my_siz(g),color=130
 xyouts,startx+delx,oy-delyc-delys*2,'CMIP6 mean',size=0.9
 
@@ -2841,9 +2892,15 @@ xyouts,startx+delx,oy-delyc-delys*3,'CMIP5 mean',size=0.9
 
 plots,startx,oy-delys*4,psym=8,symsize=my_siz(g),color=200
 xyouts,startx+delx,oy-delyc-delys*4,'2.0<ECS<5.0',size=0.9
+
+endif
+
+
+if (g ne 8) then begin
 USERSYM, COS(Aaa), SIN(Aaa)
 plots,startx,oy-delys*2,psym=8,symsize=my_siz(g),color=0
 plots,startx,oy-delys*3,psym=8,symsize=my_siz(g)/2.0,color=0
+endif
 
 endif ; xx eq 0
 
@@ -2969,19 +3026,33 @@ my_delt=0
 endif
 if (high_ecs(t,m) eq 1) then begin
 ;tvlct,r_39,g_39,b_39
-tvlct,250,0,0,250 ; red
 my_sym=8
-my_col=250
 my_thick=0.5
+if (g ne 8) then begin
+tvlct,250,0,0,250 ; red
 my_delt=0.18
+my_col=250
+endif
+if (g eq 8) then begin
+tvlct,r_0,g_0,b_0
+my_delt=0
+my_col=200
+endif
 endif
 if (high_ecs(t,m) eq -1) then begin
 ;tvlct,r_39,g_39,b_39
-tvlct,0,0,250,254 ; blue
 my_sym=8
-my_col=254
 my_thick=0.5
+if (g ne 8) then begin
+tvlct,0,0,250,254 ; blue
 my_delt=-0.18
+my_col=254
+endif
+if (g eq 8) then begin
+tvlct,r_0,g_0,b_0
+my_delt=0
+my_col=200
+endif
 endif
 
 if (g eq 6) then begin
@@ -3010,7 +3081,13 @@ endif
 endif
 
 if (p eq 1) then begin
-;plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g),color=0,thick=my_thick,NOCLIP=0 ; for extra blak circle around model points
+if (g eq 8) then begin
+if (pmip4h(t,m) eq 1) then begin
+USERSYM, COS(Aaa), SIN(Aaa)
+plots,my_xposm(xx)+my_delt,modh_gmt(m,t,0),psym=my_sym,symsize=my_siz(g),color=0,thick=my_thick,NOCLIP=0 ; for extra black circle around model points
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+endif
+endif
 if (do_tcheck eq 1) then begin
 if (pmip4h(t,m) eq 1) then begin
 USERSYM, COS(Aaa), SIN(Aaa)
@@ -3363,7 +3440,6 @@ oplot,[startx-my_del2,startx+my_del2],[oy+delyl+obsl,oy+delyl+obsl],thick=obs_th
 ; high or low ECS models dots legend
 plots,startx,oy-delys*5,psym=8,symsize=my_siz(g),color=250
 plots,startx,oy-delys*6,psym=8,symsize=my_siz(g),color=254
-
 xyouts,startx+delx,oy-delyc+delyl,'observations',size=0.9
 xyouts,startx,oy-delyc-delys*1,'models:',size=0.9
 xyouts,startx+delx,oy-delyc-delys*5,'ECS>5.0',size=0.9
