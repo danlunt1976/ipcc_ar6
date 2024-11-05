@@ -2762,7 +2762,7 @@ endif
 
 my_filename='gmt_ecs_all_new_metrics_'+gmtname(g)
 print,my_filename
-device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica',xsize=my_xsize(g),ysize=20
+device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica',xsize=my_xsize(g),ysize=20;,language_level=2
 
 
 if (g eq 0) then begin
@@ -2778,6 +2778,8 @@ t=ttt(0)
 
 shiftright=0 ; legend in first box
 shiftright2=4
+shiftright3=2
+
 ;shiftright=1 ; legend in second box
 ttt=where(ord_gmt(g,*) eq shiftright)
 ttt2=where(ord_gmt(g,*) eq shiftright2)
@@ -2792,7 +2794,13 @@ scalefactyall=(ylim_gmt_4(t,1)-ylim_gmt_4(t,0))/(ylim_gmt_4(3,1)-ylim_gmt_4(3,0)
 ; axes and legend etc:
 if (g gt 0) then begin
 
+if (g ne 8) then begin
 if (xx eq 0) then this_title='global mean temperature anomaly [!Eo!NC]'
+endif
+
+if (g eq 8) then begin
+if (xx eq 0) then this_title='global mean temperature relative to preindustrial [!Eo!NC]'
+endif
 
 if (xx gt 0) then this_title=''
 if (g lt 5) then begin
@@ -2807,17 +2815,29 @@ endif
 
 
 if (g eq 8) then begin
+; shading
+
 tvlct,r_39,g_39,b_39
 tvlct,255,182,193,250 ; LightPink
 tvlct,176,226,255,254 ; LightSkyBlue1
+tvlct,255,0,0,251 ; red
+tvlct,0,0,255,252 ; blue
 
+; Define pattern array as 10 by 10:
+;PAT = BYTARR(50,50);, /NOZERO)
+;pat(*,*)=!values.f_nan
+ ; Set center pixel to bright:
+;PAT[5,5] = 255
+
+; lower shading
 myind=1-(1+fact_mod_sign(t))/2
 llp=ass_vlik(t,myind) 
-polyfill,[-0.5,0.5,0.5,-0.5,-0.5]+my_xpos(xx),[llp,llp,0,0,llp],color=254
+polyfill,[-0.5,0.5,0.5,-0.5,-0.5]+my_xpos(xx),[llp,llp,0,0,llp],color=254,/line_fill,orientation=45
 
+; upper shading
 myind=(1+fact_mod_sign(t))/2
 llp=ass_vlik(t,myind) 
-polyfill,[-0.5,0.5,0.5,-0.5,-0.5]+my_xpos(xx),[llp,llp,ylim_gmt_4(t,1),ylim_gmt_4(t,1),llp],color=250
+polyfill,[-0.5,0.5,0.5,-0.5,-0.5]+my_xpos(xx),[llp,llp,ylim_gmt_4(t,1),ylim_gmt_4(t,1),llp],color=250,/line_fill,orientation=-45
 
 tvlct,r_39,g_39,b_39
 endif
@@ -2846,13 +2866,26 @@ oy=(0.3+starty*delys/scalefacty)*scalefacty ; start point for y
 
 ;box:
 if (g eq 8) then begin
+; white box to hide shading
 polyfill,[0.53,1.45,1.45,0.53,0.53]+shiftright,[0.02,0.02,0.41+starty*delys/scalefacty,0.41+starty*delys/scalefacty,0.02]*scalefacty+ylim_gmt_4(tp,0),color=255
 endif
 
 oplot,[0.53,1.45,1.45,0.53,0.53]+shiftright,[0.02,0.02,0.41+starty*delys/scalefacty,0.41+starty*delys/scalefacty,0.02]*scalefacty+ylim_gmt_4(tp,0),color=0,thick=0.5,/noclip
 
+
+; plot proxy symbol
 if (do_dots eq 1) then begin
+if (g eq 8) then begin
+sss=1.0*sqrt(!pi/4.0)
+USERSYM, [-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss], /FILL
 plots,startx,oy+delyl,psym=8,symsize=my_siz(g),color=0
+USERSYM, COS(Aaa), SIN(Aaa), /FILL 
+endif
+
+if (g ne 8) then begin
+plots,startx,oy+delyl,psym=8,symsize=my_siz(g),color=0
+endif
+
 endif
 oplot,[startx,startx],[oy+delyl+obsl,oy+delyl-obsl],thick=obs_thick
 oplot,[startx-my_del2,startx+my_del2],[oy+delyl-obsl,oy+delyl-obsl],thick=obs_thick
@@ -2870,12 +2903,23 @@ endif
 
 
 if (g eq 8) then begin
-tvlct,r_0,g_0,b_0
-xyouts,startx+delx2,oy-delyc+delyl,'IODP-informed',size=0.9
-xyouts,startx+delx2,oy-delyc,'observations',size=0.9
 
+; words for proxy legend
+tvlct,r_0,g_0,b_0
+xyouts,startx+delx2,oy-delyc+delys,'IODP-',size=1.3
+xyouts,startx+delx2,oy-delyc,'informed',size=1.3
+xyouts,startx+delx2-0.1,oy-delyc-delys,'paleo proxy',size=1.3
+xyouts,startx+delx2-0.1,oy-delyc-2*delys,'observations',size=1.3
+
+; words and symbol for model legend
 plots,startx,oy-delys*4,psym=8,symsize=my_siz(g),color=200
-xyouts,startx+delx2,oy-delyc-delys*4,'Climate Models',size=0.9
+xyouts,startx+delx2-0.02,oy-delyc-delys*4,'CMIP/PMIP',size=1.3
+xyouts,startx+delx2-0.02,oy-delyc-delys*5,'Climate',size=1.3
+xyouts,startx+delx2-0.02,oy-delyc-delys*6,'Models',size=1.3
+USERSYM, COS(Aaa), SIN(Aaa)
+plots,startx,oy-delys*4,psym=8,symsize=my_siz(g),color=0
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+
 
 endif
 
@@ -2949,6 +2993,37 @@ xyouts,startx+delx,oy-delyc-delys*1,'CESM1.2',size=0.9
 endif ; xx eq 0
 endif ; g eq 6
 
+
+if (g eq 8) then begin
+if (xx eq shiftright3) then begin
+
+startx=0.65+shiftright3
+delx=0.1
+dely=1
+
+
+tvlct,r_39,g_39,b_39
+
+tvlct,250,0,0,250 ; red
+tvlct,0,0,250,254 ; blue
+
+startyy=27
+xyouts,startx+2*delx,startyy,'models',size=1.2,color=250
+xyouts,startx+2*delx,startyy-dely,'over-',size=1.2,color=250
+xyouts,startx+2*delx,startyy-2*dely,'sensitive',size=1.2,color=250
+
+startyy=4
+xyouts,startx+2*delx,startyy,'models',size=1.2,color=254
+xyouts,startx+2*delx,startyy-dely,'under-',size=1.2,color=254
+xyouts,startx+2*delx,startyy-2*dely,'sensitive',size=1.2,color=254
+
+tvlct,r_0,g_0,b_0
+
+
+endif ; xx eq 0
+endif ; g eq 8
+
+
 endif; g ne 0
 
 
@@ -2959,8 +3034,22 @@ oplot,[my_xposp(xx),my_xposp(xx)],[ass_vlik(t,0),ass_vlik(t,1)],thick=obs_thick
 oplot,[my_xposp(xx)-my_del2,my_xposp(xx)+my_del2],[ass_vlik(t,0),ass_vlik(t,0)],thick=obs_thick
 oplot,[my_xposp(xx)-my_del2,my_xposp(xx)+my_del2],[ass_vlik(t,1),ass_vlik(t,1)],thick=obs_thick
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
+
 if (do_dots eq 1) then begin
+
+if (g ne 8) then begin
 plots,my_xposp(xx),ass_c(t),psym=8,symsize=my_siz(g)
+endif
+
+if (g eq 8) then begin
+sss=1.0*sqrt(!pi/4.0)
+USERSYM, [-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss], /FILL
+plots,my_xposp(xx),ass_c(t),psym=8,symsize=my_siz(g)
+USERSYM, COS(Aaa), SIN(Aaa), /FILL 
+endif
+
+endif
+
 if (do_tcheck eq 1) then begin
 plots,my_xposp(xx),ass_ct(t),psym=8,symsize=my_siz(g)/2.0,color=50 ; plot check to see original Thorsten data
 endif
@@ -2976,12 +3065,9 @@ oplot,[my_xposp(xx)-0.05,my_xposp(xx)-0.05],[-4.5+0.9*1.645,-4.5-0.9*1.645],thic
 oplot,[my_xposp(xx)-0.05-my_del2,my_xposp(xx)-0.05+my_del2],[-4.5+0.9*1.645,-4.5+0.9*1.645],thick=obs_thick,linestyle=2
 oplot,[my_xposp(xx)-0.05-my_del2,my_xposp(xx)-0.05+my_del2],[-4.5-0.9*1.645,-4.5-0.9*1.645],thick=obs_thick,linestyle=2
 USERSYM, COS(Aaa), SIN(Aaa), /FILL
-
-
-
 endif
 
-endif
+
 
 
 ; plot multi-model mean
