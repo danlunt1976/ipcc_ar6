@@ -33,6 +33,7 @@ make_zon_plots=0 ; plot zonal mean ensemble mean [default=0 or 1]
 make_map_plots=0 ; plot maps ensemble mean [default=0 or 1;=1 for TS]
 make_map_mod_plots=0 ; plot maps of each individual model [default=0]
 make_gmt_plots=1                ; plot gmst [default=0 or 1]
+  make_cot_plots=1  ; only if make_gmt_plots=1
 make_polamp_plots=0               ; plot polamp [default=0 or 1]
 make_cross_plots=0
 make_cleat_plots=0
@@ -192,6 +193,14 @@ modnameslatex=strarr(ntimeh,nmodmaxh)
 modnameslatex(0,0:nmod(0)-1)=['CCSM4','CCSM4-UoT','CCSM4-Utrecht','CESM1.2','CESM2.0','COSMOS','EC-Earth3.3','GISS-E2-1-G','HadCM3','HadGEM3','IPSL-CM6A-LR','IPSLCM5A','IPSLCM5A2','MIROC4m','MRI-CGCM2.3','NorESM-L','NorESM1-F','CCSM4\_plio1','COSMOS\_plio1','GISS-E2-R\_plio1','HadCM3\_plio1','IPSLCM5A\_plio1','MIROC4m\_plio1','MRI2.3\_plio1','NORESM-L\_plio1']
 modnameslatex(1,0:nmod(1)-1)=['MPI-ESM1-2-LR','AWIESM1','AWIESM2','CESM1\_2','CESM2\_1','INM-CM4-8','IPSLCM5A2','MIROC-ES2L','UofT-CCSM4','CCSM4\_pmip3','GISS-E2-R\_pmip3','IPSL-CM5A-LR\_pmip3','MIROC-ESM\_pmip3','MPI-ESM-P\_pmip3','MRI-CGCM3\_pmip3']
 modnameslatex(2,0:nmod(2)-1)=['CESM1.2\_CAM5\_6xCO2','COSMOS-landveg\_r2413\_4xCO2','GFDL\_CM2.1\_6xCO2','GFDL\_CM2.1\_4xCO2','INM-CM4-8\_6xCO2','NorESM1\_F\_4xCO2','CESM2.1slab\_3x','CCSM3h4x','CCSM3h8x','CCSM3w4x','CCSM3w8x','GISS4x','HadCM34x','HadCM36x']
+
+; ** change ntime
+; ** change nmod
+modco2=fltarr(ntime,nmodmax)
+modco2(0,0:nmod(0)-1)=400.0
+modco2(1,0:nmod(1)-1)=190.0
+modco2(2,0:nmod(2)-1)=280.0*[6,4,6,4,6,4,3,4,8,4,8,4,4,6]
+modco2=force(modco2)
 
 ; ** change ntime
 extenszon=strarr(ntime)
@@ -1768,6 +1777,7 @@ band_tmodel(*,*,*,*)=!Values.F_NAN
 npolamp=3
 npmip=2
 ncross=2
+ncot=1
 
 polamp_data=fltarr(ntime,nvar,npolamp)
 polamp_data(*,*,*)=!Values.F_NAN
@@ -2528,6 +2538,10 @@ modnamesh(4,0:nmodh(4)-1)=modnamesh(3,0:nmodh(3)-1)
 modnameslatex(3,0:nmodh(3)-1)=modnamesh(3,0:nmodh(3)-1)
 modnameslatex(4,0:nmodh(4)-1)=modnamesh(4,0:nmodh(4)-1)
 
+modco2h=fltarr(ntimeh,nmodmaxh)
+modco2h(0:2,0:nmodmax-1)=modco2(*,*)
+modco2h(3,0:nmodh(3)-1)=force(390.0)
+modco2h(4,0:nmodh(4)-1)=force(400.0)
 
 ecsh=fltarr(ntimeh,nmodmaxh)
 
@@ -2679,6 +2693,15 @@ ass_c(3:4)=[mean( hi_temp( where(hi_year ge def_hi(2) and hi_year le def_hi(3)))
 ass_s(3:4)=[0.2,0.15]
 ass_vlik(3:4,0)=ass_c(3:4)-ass_s(3:4)
 ass_vlik(3:4,1)=ass_c(3:4)+ass_s(3:4)
+
+
+co2_vlik=fltarr(ntimeh,2)
+co2_c=fltarr(ntimeh)
+co2_vlik(0:4,0)=[360,188.4,1150,350,400]
+co2_vlik(0:4,1)=[420,194.2,2500,380,420]
+co2_vlik=force(co2_vlik)
+co2_pi=force(280.0)
+co2_c(0:4)=0.5*(co2_vlik(0:4,0)+co2_vlik(0:4,1))
 
 my_xpos=[1,2,3,4,5]
 my_xposp=my_xpos-0.35
@@ -3837,6 +3860,7 @@ byf=crossyrange(0,c)+(crossyrange(1,c)-crossyrange(0,c))*boxvyf
 bxp=(crossxrange(1,c)-crossxrange(0,c))*boxvxp
 byp=(crossyrange(1,c)-crossyrange(0,c))*boxvyp
 bxt=(crossxrange(1,c)-crossxrange(0,c))*boxvxt
+; should the below be crossyrange?
 byt=(crossxrange(1,c)-crossxrange(0,c))*boxvyt
 
 if (do_legc(c) eq 1) then begin
@@ -3883,6 +3907,155 @@ xyouts,bxs+bxp+bxt,byf-byt-9*byp,'EECO',color=timcol(2),charsize=charsize_cross_
 tvlct,r_0,g_0,b_0
 
 endif
+
+device,/close
+spawn,'ps2epsi '+my_filename+'.ps '+my_filename+'.eps ; \rm '+my_filename+'.ps',dum
+
+endfor
+
+
+endif
+
+
+if (make_cot_plots eq 1) then begin
+
+cotnames=strarr(ncot)
+cotnames(*)=['co2-gmst']
+
+do_legc=intarr(ncot)
+do_legc(0:ncot-1)=[1]
+
+cotxrange=fltarr(2,ncot)
+cotyrange=fltarr(2,ncot)
+;cotxrange(*,0)=[0,2600]
+cotxrange(*,0)=[-4,14]
+cotyrange(*,0)=[-15,25]
+cottitle=strarr(ncot)
+cottitle(0:ncot-1)=['CO2 versus Delta-GMST']
+cotxtitle=strarr(ncot)
+cotxtitle(0:ncot-1)=['CO2 [W m!E-2!N]']
+cotytitle=strarr(ncot)
+cotytitle(0:ncot-1)=['Delta-GMST [!Eo!NC]']
+
+ss1=2.5
+ss2=1.5
+
+for c=0,ncot-1 do begin
+
+; filename
+my_filename='co2_'+cotnames(c)
+print,my_filename
+device,filename=my_filename+'.ps',/encapsulate,/color,set_font='Helvetica',xsize=22,ysize=20
+
+; axes etc:
+plot,[0,0],[0,0],color=0,psym=8,xrange=cotxrange(*,c),yrange=cotyrange(*,c),ystyle=1,xstyle=1,title=cottitle(c),xtitle=cotxtitle(c),ytitle=cotytitle(c),/nodata,xcharsize=1.2,ycharsize=1.2,charsize=1.7,xticks=8;,position=[0.05,0.05,0.95,0.95] 
+
+
+; if we have reversed the LGM to be positive, we want to re-reverse this back to
+; negative for this plot.
+
+; plot the PI
+sss=1.0*sqrt(!pi/4.0)
+USERSYM, [-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss], /FILL
+plots,co2_pi,0,color=0,psym=8,symsize=ss1
+
+tvlct,r_39,g_39,b_39
+
+; plot models
+for t=0,ntime-1 do begin
+
+thesem=where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1)
+
+USERSYM, COS(Aaa), SIN(Aaa), /FILL 
+plots,modco2h(t,thesem),mod_gmt(thesem,t,0),psym=8,symsize=ss2,color=timcol(t)
+
+endfor
+
+tvlct,r_0,g_0,b_0
+t=4
+; plot future
+USERSYM, COS(Aaa), SIN(Aaa), /FILL 
+plots,modco2h(t,0:nmodh(t)-1),modh_gmt(0:nmodh(t)-1,t,0),psym=8,symsize=ss2/2.0,color=150
+USERSYM, COS(Aaa), SIN(Aaa)
+plots,4.0,3,color=150,psym=8,symsize=ss1
+oplot,[4.0,4.0],[2.0,5.0],color=150
+
+
+; plot proxies
+for t=0,ntime-1 do begin
+
+tvlct,r_39,g_39,b_39
+Aaa = FINDGEN(17) * (!PI*2/16.)  
+USERSYM, COS(Aaa), SIN(Aaa), /FILL 
+
+plots,co2_c(t),ass_c(t),color=timcol(t),psym=8,symsize=ss1
+oplot,[co2_c(t),co2_c(t)],[ass_vlik(t,0),ass_vlik(t,1)];,color=timcol(t)
+oplot,[co2_vlik(t,0),co2_vlik(t,1)],[ass_c(t),ass_c(t)];,color=timcol(t)
+USERSYM, COS(Aaa), SIN(Aaa)
+plots,co2_c(t),ass_c(t),color=0,psym=8,symsize=ss1
+
+endfor
+
+tvlct,r_0,g_0,b_0
+
+nleg=6
+
+charsize_cot_leg=1.4
+
+; plot legend
+boxvxs=0.025 ; starting x for box
+boxvxf=0.300 ; ending x for box 
+boxvyf=0.975 ; ending y for box
+boxvxp=0.025 ; delta along from box start for point
+boxvyp=0.040 ; delta down from box end for point
+boxvxt=0.030 ; delta along from point for text
+boxvyt=0.003 ; delta down from point for text
+boxvye=0.035 ; delta at bottom of box beyond final point
+
+boxvys=boxvyf-nleg*boxvyp-boxvye ; starting y for box
+
+bxs=cotxrange(0,c)+(cotxrange(1,c)-cotxrange(0,c))*boxvxs
+bxf=cotxrange(0,c)+(cotxrange(1,c)-cotxrange(0,c))*boxvxf
+bys=cotyrange(0,c)+(cotyrange(1,c)-cotyrange(0,c))*boxvys
+byf=cotyrange(0,c)+(cotyrange(1,c)-cotyrange(0,c))*boxvyf
+bxp=(cotxrange(1,c)-cotxrange(0,c))*boxvxp
+byp=(cotyrange(1,c)-cotyrange(0,c))*boxvyp
+bxt=(cotxrange(1,c)-cotxrange(0,c))*boxvxt
+byt=(cotyrange(1,c)-cotyrange(0,c))*boxvyt
+
+; plot box
+oplot,[bxs,bxf,bxf,bxs,bxs],[byf,byf,bys,bys,byf],linestyle=0,thick=3,color=0
+
+; plot proxy point and label
+Aaa = FINDGEN(17) * (!PI*2/16.)  
+tvlct,r_0,g_0,b_0
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+plots,bxs+bxp,byf-1*byp,color=150,psym=8,symsize=ss1
+USERSYM, COS(Aaa), SIN(Aaa)
+plots,bxs+bxp,byf-1*byp,color=0,psym=8,symsize=ss1
+xyouts,bxs+bxp+bxt,byf-byt-1*byp,'proxies',color=0,charsize=charsize_cot_leg
+
+; plot model point and label
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+plots,bxs+bxp,byf-2*byp,color=150,psym=8,symsize=ss2
+xyouts,bxs+bxp+bxt,byf-byt-2*byp,'models',color=0,charsize=charsize_cot_leg
+
+; plot PI
+USERSYM, COS(Aaa), SIN(Aaa), /FILL
+sss=1.0*sqrt(!pi/4.0)
+USERSYM, [-1*sss,sss,sss,-1*sss,-1*sss], [sss,sss,-1*sss,-1*sss,sss], /FILL
+plots,bxs+bxp,byf-3*byp,color=0,psym=8,symsize=ss1
+xyouts,bxs+bxp+bxt,byf-byt-3*byp,'preindustrial',color=0,charsize=charsize_cot_leg
+
+tvlct,r_39,g_39,b_39
+
+xyouts,bxs+bxp+bxt,byf-byt-4*byp,'LGM',color=timcol(1),charsize=charsize_cot_leg
+
+xyouts,bxs+bxp+bxt,byf-byt-5*byp,'mPWP',color=timcol(0),charsize=charsize_cot_leg
+
+xyouts,bxs+bxp+bxt,byf-byt-6*byp,'EECO',color=timcol(2),charsize=charsize_cot_leg
+
+tvlct,r_0,g_0,b_0
 
 device,/close
 spawn,'ps2epsi '+my_filename+'.ps '+my_filename+'.eps ; \rm '+my_filename+'.ps',dum
@@ -4266,3 +4439,6 @@ endif ; end if missing
 end
 
 
+FUNCTION FORCE, arr
+    RETURN, 4.0*alog2(arr/280.0)
+END
