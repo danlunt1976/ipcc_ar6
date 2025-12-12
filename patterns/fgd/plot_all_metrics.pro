@@ -24,7 +24,8 @@ pro pa
   ; OK: model and proxy polamps
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+;rootdir='/home/bridge/ggdjl/'
+rootdir='/home/ggdjl/'
 
 ;;;;;;;;;;
 read_mod=1
@@ -678,7 +679,7 @@ all_lower=fltarr(nrows_d)
 
 row_temp=strarr(1)
 close,2
-openr,2,'/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/eo_data/Hollis_2019_DeepMIP_compilation_Inglis.csv'
+openr,2,rootdir+'ipcc_ar6/patterns/fgd/eo_data/Hollis_2019_DeepMIP_compilation_Inglis.csv'
 ;print,'STARTING READ'
 
 readf,2,row_temp
@@ -908,7 +909,7 @@ if (pl_data_sst eq 'dowsett') then begin
 row_temp=''
 row_head=''
 close,2
-openr,2,'/home/bridge/ggdjl/ipcc_ar6/patterns/sod/pl_data/cs_mp_sst_data_30k_plusNOAA_djl.csv'
+openr,2,rootdir+'ipcc_ar6/patterns/sod/pl_data/cs_mp_sst_data_30k_plusNOAA_djl.csv'
 readf,2,row_head
 ;print,row_head
 for i=0,ndata(0,1)-1 do begin
@@ -943,7 +944,7 @@ if (pl_data_sst eq 'pliovar') then begin
 row_temp=''
 row_head=''
 close,2
-openr,2,'/home/bridge/ggdjl/ipcc_ar6/patterns/sod/pl_data/PlioVAR-KM5c_T_only_-_for_DanIPCC_djl.csv'
+openr,2,rootdir+'ipcc_ar6/patterns/sod/pl_data/PlioVAR-KM5c_T_only_-_for_DanIPCC_djl.csv'
 readf,2,row_head
 ;print,row_head
 xx=0
@@ -988,7 +989,7 @@ names_d=strarr(100)
 row_temp=''
 row_head=strarr(98)
 close,2
-openr,2,'/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/pl_data/PlioVAR-KM5c_T_jess.tab'
+openr,2,rootdir+'ipcc_ar6/patterns/fgd/pl_data/PlioVAR-KM5c_T_jess.tab'
 readf,2,row_head
 ;print,row_head
 
@@ -1055,7 +1056,7 @@ jess_file='new'
 n_j1=12
 row_temp=strarr(1)
 close,2
-openr,2,'/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/pl_data/PlioVar_mgca_'+jess_file+'_unix_erin.csv'
+openr,2,rootdir+'ipcc_ar6/patterns/fgd/pl_data/PlioVar_mgca_'+jess_file+'_unix_erin.csv'
 print,'STARTING READ Jess'
 print,'mg/ca'
 ; file created by manually removing ^M symbols (dos2unix didn't
@@ -1110,7 +1111,7 @@ print,'end matching mg/ca'
 n_j2=23
 row_temp=strarr(1)
 close,2
-openr,2,'/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/pl_data/PlioVar_uk_new_unix.csv'
+openr,2,rootdir+'ipcc_ar6/patterns/fgd/pl_data/PlioVar_uk_new_unix.csv'
 print,'STARTING READ Jess'
 print,'uk37'
 
@@ -1234,7 +1235,7 @@ if (pl_data_sat eq 'salzmann') then begin
 row_temp=''
 row_head=strarr(3)
 close,2
-openr,2,'/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/pl_data/ShortData_for_IPCC_NatClim_djl_Tab.txt'
+openr,2,rootdir+'ipcc_ar6/patterns/fgd/pl_data/ShortData_for_IPCC_NatClim_djl_Tab.txt'
 readf,2,row_head
 ;print,row_head
 
@@ -1276,7 +1277,7 @@ endif
 
 ; now find the preind temperatures at these sites.
 
-filenamecru='/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/pl_data/cru_ts4.04.1901.1930.tmp.dat_annmean.nc'
+filenamecru=rootdir+'ipcc_ar6/patterns/fgd/pl_data/cru_ts4.04.1901.1930.tmp.dat_annmean.nc'
 varname='tmp'
 print,filenamecru
 id1=ncdf_open(filenamecru)
@@ -1350,7 +1351,7 @@ if (lg_data_sst eq 'tierney-2019-grid') then begin
 
 nxd=72
 nyd=36
-filenamex='/home/bridge/ggdjl/ipcc_ar6/patterns/sod/lg_data/LGM_5x5_deltaSST.nc'
+filenamex=rootdir+'ipcc_ar6/patterns/sod/lg_data/LGM_5x5_deltaSST.nc'
 print,filenamex
 id1=ncdf_open(filenamex)
 ncdf_varget,id1,'deltaSST',dummy_sst
@@ -1389,7 +1390,7 @@ if (lg_data_sst eq 'tierney-2020-grid') then begin
 
 nxd=72
 nyd=36
-filenamex='/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/lg_data/Tierney2020_ProxyData_5x5_deltaSST.nc'
+filenamex=rootdir+'ipcc_ar6/patterns/fgd/lg_data/Tierney2020_ProxyData_5x5_deltaSST.nc'
 print,filenamex
 id1=ncdf_open(filenamex)
 ncdf_varget,id1,'deltaSST',dummy_sst
@@ -1428,7 +1429,7 @@ if (lg_data_sst eq 'tierney-2020') then begin
 row_temp=''
 row_head=strarr(1)
 close,2
-openr,2,'/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/lg_data/Tierney2020_ProxyDataPaired.csv'
+openr,2,rootdir+'ipcc_ar6/patterns/fgd/lg_data/Tierney2020_ProxyDataPaired.csv'
 readf,2,row_head
 ;print,row_head
 
@@ -1473,7 +1474,7 @@ if (lg_data_sat eq 'bartlein') then begin
 
 nxd=180
 nyd=90
-filenamex='/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/lg_data/bartlein_mat_delta_21ka_ALL_grid_2x2.nc'
+filenamex=rootdir+'ipcc_ar6/patterns/fgd/lg_data/bartlein_mat_delta_21ka_ALL_grid_2x2.nc'
 varname='mat_anm_mean'
 print,filenamex
 id1=ncdf_open(filenamex)
@@ -1534,7 +1535,7 @@ errs_d_cleat=fltarr(ndata(1,0))
 row_head=strarr(22)
 row_temp=''
 close,2
-openr,2,'/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/lg_data/cleator_LGM_reconstruction.csv'
+openr,2,rootdir+'ipcc_ar6/patterns/fgd/lg_data/cleator_LGM_reconstruction.csv'
 print,'STARTING READ CLEATOR'
 nrows_d=2566
 
@@ -1777,7 +1778,7 @@ band_tmodel(*,*,*,*)=!Values.F_NAN
 npolamp=3
 npmip=2
 ncross=2
-ncot=1
+ncot=3
 
 polamp_data=fltarr(ntime,nvar,npolamp)
 polamp_data(*,*,*)=!Values.F_NAN
@@ -2619,7 +2620,7 @@ hi_temp=fltarr(nrows_d)
 row_head=strarr(2)
 row_temp=strarr(1)
 close,2
-openr,2,'/home/bridge/ggdjl/ipcc_ar6/patterns/fgd/hi_data/AR6_FGD_assessment_time_series-GMST_and_GSAT_ipcc.csv'
+openr,2,rootdir+'ipcc_ar6/patterns/fgd/hi_data/AR6_FGD_assessment_time_series-GMST_and_GSAT_ipcc.csv'
 print,'STARTING READ THISTORICAL'
 readf,2,row_head
 for i=0,nrows_d-1 do begin
@@ -3920,16 +3921,20 @@ endif
 if (make_cot_plots eq 1) then begin
 
 cotnames=strarr(ncot)
-cotnames(*)=['co2-gmst']
+cotnames(*)=['co2-gmst-p','co2-gmst-pm','co2-gmst-pmc']
 
 do_legc=intarr(ncot)
-do_legc(0:ncot-1)=[1]
+do_legc(0:ncot-1)=[1,1,1]
 
 cotxrange=fltarr(2,ncot)
 cotyrange=fltarr(2,ncot)
-;cotxrange(*,0)=[0,2600]
 cotxrange(*,0)=[-4,14]
 cotyrange(*,0)=[-15,25]
+cotxrange(*,1)=cotxrange(*,0)
+cotyrange(*,1)=cotyrange(*,0)
+cotxrange(*,2)=cotxrange(*,0)
+cotyrange(*,2)=cotyrange(*,0)
+
 cottitle=strarr(ncot)
 cottitle(0:ncot-1)=['CO2 versus Delta-GMST']
 cotxtitle=strarr(ncot)
@@ -3962,6 +3967,7 @@ plots,co2_pi,0,color=0,psym=8,symsize=ss1
 tvlct,r_39,g_39,b_39
 
 ; plot models
+if (c eq 1 or c eq 2) then begin
 for t=0,ntime-1 do begin
 
 thesem=where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1)
@@ -3970,7 +3976,9 @@ USERSYM, COS(Aaa), SIN(Aaa), /FILL
 plots,modco2h(t,thesem),mod_gmt(thesem,t,0),psym=8,symsize=ss2,color=timcol(t)
 
 endfor
+endif
 
+if (c eq 2) then begin
 tvlct,r_0,g_0,b_0
 t=4
 ; plot future
@@ -3979,7 +3987,7 @@ plots,modco2h(t,0:nmodh(t)-1),modh_gmt(0:nmodh(t)-1,t,0),psym=8,symsize=ss2/2.0,
 USERSYM, COS(Aaa), SIN(Aaa)
 plots,4.0,3,color=150,psym=8,symsize=ss1
 oplot,[4.0,4.0],[2.0,5.0],color=150
-
+endif
 
 ; plot proxies
 for t=0,ntime-1 do begin
@@ -3995,6 +4003,19 @@ USERSYM, COS(Aaa), SIN(Aaa)
 plots,co2_c(t),ass_c(t),color=0,psym=8,symsize=ss1
 
 endfor
+
+; calculate fit to proxies plus preindustrial:
+coeffs_p=svdfit([co2_c,0],[ass_c,0],3)
+print,coeffs_p
+ccc=100
+my_cc=(cotxrange(1,c)-cotxrange(0,c))*findgen(ccc)/(ccc-1.0)+cotxrange(0,c)
+my_ss=coeffs_p(0)+coeffs_p(1)*my_cc+coeffs_p(2)*my_cc*my_cc
+oplot,my_cc,my_ss
+
+coeffs_p1=svdfit([co2_c,0],[ass_c,0],2)
+print,coeffs_p1
+my_ss1=coeffs_p1(0)+coeffs_p1(1)*my_cc
+oplot,my_cc,my_ss1,linestyle=2
 
 tvlct,r_0,g_0,b_0
 
