@@ -1778,7 +1778,7 @@ band_tmodel(*,*,*,*)=!Values.F_NAN
 npolamp=3
 npmip=2
 ncross=2
-ncot=3
+ncot=4
 
 polamp_data=fltarr(ntime,nvar,npolamp)
 polamp_data(*,*,*)=!Values.F_NAN
@@ -3921,19 +3921,19 @@ endif
 if (make_cot_plots eq 1) then begin
 
 cotnames=strarr(ncot)
-cotnames(*)=['co2-gmst-p','co2-gmst-pm','co2-gmst-pmc']
+cotnames(*)=['co2-gmst-p','co2-gmst-pm','co2-gmst-pmc','co2-gmst-pmj']
 
 do_legc=intarr(ncot)
-do_legc(0:ncot-1)=[1,1,1]
+do_legc(0:ncot-1)=[1,1,1,1]
 
 cotxrange=fltarr(2,ncot)
 cotyrange=fltarr(2,ncot)
 cotxrange(*,0)=[-4,14]
 cotyrange(*,0)=[-15,25]
-cotxrange(*,1)=cotxrange(*,0)
-cotyrange(*,1)=cotyrange(*,0)
-cotxrange(*,2)=cotxrange(*,0)
-cotyrange(*,2)=cotyrange(*,0)
+for c=1,ncot-1 do begin
+cotxrange(*,c)=cotxrange(*,0)
+cotyrange(*,c)=cotyrange(*,0)
+endfor
 
 cottitle=strarr(ncot)
 cottitle(0:ncot-1)=['CO2 versus Delta-GMST']
@@ -3967,7 +3967,7 @@ plots,co2_pi,0,color=0,psym=8,symsize=ss1
 tvlct,r_39,g_39,b_39
 
 ; plot models
-if (c eq 1 or c eq 2) then begin
+if (c eq 1 or c eq 2 or c eq 3) then begin
 for t=0,ntime-1 do begin
 
 thesem=where(pmip4(t,0:nmod(t)-1) eq 1 and plot_zon(t,0:nmod(t)-1) eq 1)
@@ -3976,6 +3976,21 @@ USERSYM, COS(Aaa), SIN(Aaa), /FILL
 plots,modco2h(t,thesem),mod_gmt(thesem,t,0),psym=8,symsize=ss2,color=timcol(t)
 
 endfor
+endif
+
+if (c eq 3) then begin
+; join up CESM
+; lgm:   
+;cx=where(modnames(1,0:nmod(1)-1) eq 'CESM2_1',im_lgm)
+im_lgm=4
+; plio:
+;cx=where(modnames(0,0:nmod(0)-1) eq 'CESM2.0',im_pli)
+im_pli=4
+; eocene:
+;cx=where(modnames(2,0:nmod(2)-1) eq 'CESM2.1slab_3x',im_eoc)
+im_eoc=6
+
+oplot,[modco2h(1,im_lgm),0,modco2h(0,im_pli),modco2h(2,im_eoc)],[mod_gmt(im_lgm,1,0),0,mod_gmt(im_pli,0,0),mod_gmt(im_eoc,2,0)],linestyle=2
 endif
 
 if (c eq 2) then begin
@@ -4005,17 +4020,34 @@ plots,co2_c(t),ass_c(t),color=0,psym=8,symsize=ss1
 endfor
 
 ; calculate fit to proxies plus preindustrial:
-coeffs_p=svdfit([co2_c,0],[ass_c,0],3)
+
+; quadratic:
+coeffs_p=svdfit([co2_c(0:2),0],[ass_c(0:2),0],3)
 print,coeffs_p
 ccc=100
 my_cc=(cotxrange(1,c)-cotxrange(0,c))*findgen(ccc)/(ccc-1.0)+cotxrange(0,c)
 my_ss=coeffs_p(0)+coeffs_p(1)*my_cc+coeffs_p(2)*my_cc*my_cc
-oplot,my_cc,my_ss
+oplot,my_cc,my_ss,linestyle=1
 
-coeffs_p1=svdfit([co2_c,0],[ass_c,0],2)
+; linear:
+coeffs_p1=svdfit([co2_c(0:2),0],[ass_c(0:2),0],2)
 print,coeffs_p1
 my_ss1=coeffs_p1(0)+coeffs_p1(1)*my_cc
-oplot,my_cc,my_ss1,linestyle=2
+;oplot,my_cc,my_ss1,linestyle=2
+
+; linear constrained to 0-0:
+eee=10000
+slopmin=0
+slopmax=2.0
+sgrads=slopmin+(slopmax-slopmin)*findgen(eee)/(eee-1.0)
+myerrs=fltarr(eee)
+for e=0,eee-1 do begin
+   myerrs(e)=total( (co2_c(0:2)*sgrads(e) - ass_c(0:2))^2 )
+endfor
+print,'min err = ',min(myerrs,minind)
+print,'min grad = ',sgrads(minind)
+my_ss2=sgrads(minind)*my_cc
+oplot,my_cc,my_ss2,linestyle=0
 
 tvlct,r_0,g_0,b_0
 
